@@ -1,0 +1,152 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 41, 59, 0.13);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: #fffdf4;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px #e7ce8b66;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 26px 10px 26px;
+  border-bottom: 2px solid #ffe066;
+  font-weight: bold;
+  font-size: 1.19em;
+  color: #b99a2a;
+  background: #fffdf4;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 2.2em;
+  color: #bdb176;
+  cursor: pointer;
+  transition: color 0.13s;
+  padding: 0 6px;
+  margin-right: -8px;
+  line-height: 1;
+}
+.closeBtn:hover {
+  color: #b99a2a;
+}
+
+.body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 22px 26px 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #fffdf4;
+}
+
+label {
+  font-weight: 600;
+  color: #b99a2a;
+  margin-bottom: 7px;
+  font-size: 1em;
+  display: block;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1.5px solid #ffe066;
+  border-radius: 7px;
+  background: #fffbe4;
+  font-size: 1em;
+  color: #7d6836;
+  font-family: inherit;
+  transition: border 0.14s, background 0.14s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border: 1.5px solid #b99a2a;
+  outline: none;
+  background: #fffad1;
+}
+
+.footer {
+  flex: 0 0 auto;
+  border-top: 2px solid #ffe066;
+  padding: 15px 26px 18px 26px;
+  background: #fffdf4;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+}
+
+button {
+  font-weight: 600;
+  font-size: 1em;
+  padding: 7px 22px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 2px solid #b99a2a;
+  background: #fff;
+  color: #b99a2a;
+  transition: background 0.15s, color 0.15s, border 0.15s;
+}
+button[type="submit"] {
+  background: #ffd600;
+  color: #232323;
+  border: 2px solid #ffd600;
+}
+button[type="submit"]:hover {
+  background: #fffbe4;
+  color: #b99a2a;
+  border-color: #ffd600;
+}
+button[type="button"]:hover {
+  background: #fffbe4;
+  color: #a58917;
+  border-color: #ffd600;
+}
+
+/* Diğer kontaklar (yan yana inputlar için) */
+.body > div {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+/* Responsive: mobile */
+@media (max-width: 600px) {
+  .modal {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+  }
+  .header,
+  .body,
+  .footer {
+    padding-left: 5vw;
+    padding-right: 5vw;
+  }
+}

@@ -1,0 +1,86 @@
+.monthLayoutWrapper {
+  display: grid;
+  grid-template-columns: 220px 1fr 250px;
+  gap: 12px;
+  width: 100%;
+  min-height: 80vh;
+}
+
+.staffSidebar {
+  background: #fffbea;
+  border-right: 2px solid #f5e39b;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.staffTitle {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.staffCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.dayCell {
+  min-height: 120px;
+  background: #fffdfa;
+  border: 1px solid #f2e5a4;
+  border-radius: 6px;
+  padding: 4px;
+  position: relative;
+}
+
+.dayNumber {
+  font-weight: bold;
+  color: #665200;
+  margin-bottom: 4px;
+}
+
+.jobsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jobBox {
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.jobBox:hover {
+  transform: scale(1.03);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.jobTitle {
+  font-weight: bold;
+}
+
+.jobCustomer {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.sidebarJobs {
+  background: #fffbea;
+  border-left: 2px solid #f5e39b;
+  border-radius: 8px;
+  padding: 10px;
+}

@@ -1,0 +1,161 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18); /* biraz daha opak */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalCard {
+  background: #fff;
+  padding: 36px 36px 24px 36px;
+  border-radius: 17px;
+  min-width: 340px;
+  max-width: 96vw;
+  box-shadow: 0 8px 40px #ffd60044;
+  position: relative;
+  animation: modalIn 0.17s cubic-bezier(0.5, 1.6, 0.4, 1) backwards;
+}
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: color 0.13s;
+}
+.closeBtn:hover {
+  color: #b99a2a;
+}
+
+.fieldGroup {
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fieldGroup label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #b99a2a;
+  margin-bottom: 2px;
+  letter-spacing: 0.01em;
+}
+
+.input {
+  width: 100%;
+  padding: 11px;
+  border-radius: 7px;
+  border: 2px solid #ffe066;
+  font-size: 1rem;
+  background: #fffde4;
+  color: #232323;
+  font-family: inherit;
+  transition: border 0.13s;
+}
+.input:focus {
+  border: 2px solid #b99a2a;
+  background: #fff;
+}
+
+.employeeSelect {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.employeeChip {
+  display: flex;
+  align-items: center;
+  background: #fffbe4;
+  border-radius: 20px;
+  border: 1.5px solid #ffe066;
+  padding: 5px 12px 5px 5px;
+  cursor: pointer;
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: #232323;
+  transition: border 0.13s, background 0.13s, color 0.13s;
+}
+.employeeChip.selected {
+  border-color: #b99a2a;
+  background: #ffd600;
+  color: #232323;
+}
+.avatar {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  margin-right: 7px;
+  border: 1.5px solid #ffe066;
+  object-fit: cover;
+}
+.removeChip {
+  margin-left: 6px;
+  color: #c44;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+  gap: 9px;
+}
+
+/* BUTON (siteyle aynı!) */
+.detailsBtn {
+  background: none;
+  color: #b99a2a;
+  border: 2px solid #b99a2a;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 1.03rem;
+  padding: 8px 22px;
+  transition: background 0.16s, color 0.13s, border 0.13s, transform 0.13s;
+  cursor: pointer;
+  box-shadow: 0 1px 7px #ffd6000c;
+}
+.detailsBtn:hover,
+.detailsBtn:focus {
+  background: #fffde4;
+  color: #232323;
+  border-color: #ffd600;
+  transform: translateY(-2px) scale(1.04);
+}
+.detailsBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.required {
+  color: #e04;
+  font-size: 1.06em;
+  margin-left: 2px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .modalCard {
+    padding: 16px 8vw 18px 8vw;
+    min-width: unset;
+  }
+}

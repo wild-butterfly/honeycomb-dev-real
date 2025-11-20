@@ -1,0 +1,82 @@
+/* ======= Base reset ======= */
+:root {
+  --header-h: 0px;
+  --footer-h: 72px;
+}
+@media (max-width: 480px) {
+  :root {
+    --footer-h: 92px;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+html,
+body {
+  background: linear-gradient(110deg, #fffbe4 82%, #fcf7e3 130%);
+  overflow-x: hidden;
+}
+
+/* ======= Uygulama iskeleti (App.tsx’deki <div id="root-layout">) ======= */
+#root-layout {
+  min-height: 100vh; /* desktop */
+  min-height: 100dvh; /* mobile güvenli */
+  display: flex;
+  flex-direction: column; /* header | content | footer */
+}
+
+/* Header fixed kullanıyorsan body class’ı ile üstten boşluk ver */
+body.has-fixed-header #root-layout {
+  padding-top: var(--header-h);
+}
+
+/* Orta alan (App.tsx’deki <main id="app-content">) – içerik burayı doldurur */
+#app-content {
+  flex: 1 1 auto; /* kritik: sayfayı esnetir, footer’ı dibe iter */
+  min-height: 0; /* shrink/overflow fix */
+  display: block;
+  padding-bottom: 0;
+}
+
+/* Sayfa kökleri (main kullanmadığın sayfalarda da güvenli olsun) */
+.page,
+.homepage,
+.featuresBg,
+.pricingBg,
+.aboutPage,
+.helpBg {
+  min-height: 0;
+  padding-bottom: clamp(8px, 2vw, 16px);
+}
+
+/* Son bloklarda gereksiz alt boşluk kalmasın */
+#app-content > :last-child,
+.page > :last-child,
+.homepage > :last-child,
+.featuresBg > :last-child,
+.pricingBg > :last-child,
+.aboutPage > :last-child,
+.helpBg > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* iOS alt güvenli alan */
+@media (max-width: 768px) {
+  #app-content,
+  .page,
+  .homepage,
+  .featuresBg,
+  .pricingBg,
+  .aboutPage,
+  .helpBg {
+    padding-bottom: 0px;
+  }
+}

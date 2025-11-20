@@ -1,0 +1,99 @@
+.controlsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fffbea;
+  border: 1px solid #f2e0a2;
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- SOL (Staff Seçimi) ---------- */
+.staffSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.staffLabel {
+  font-weight: 600;
+  color: #5a4d00;
+}
+
+.staffDropdown {
+  border: 1px solid #f2d77a;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.95rem;
+  background-color: #fffef2;
+  color: #5a4d00;
+}
+
+/* ---------- ORTA (Tarih) ---------- */
+.dateSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateLabel {
+  font-weight: 600;
+  color: #5a4d00;
+  font-size: 1rem;
+  min-width: 180px;
+  text-align: center;
+}
+
+.navButton {
+  background: #fff6d4;
+  border: 1px solid #f2d77a;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #5a4d00;
+}
+
+.navButton:hover {
+  background: #ffefb5;
+}
+
+/* ---------- SAĞ (Day / Week / Month) ---------- */
+.viewButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.viewButton {
+  background: #fffef2;
+  border: 1px solid #f2d77a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #5a4d00;
+}
+
+.viewButton:hover {
+  background: #fff6d4;
+}
+
+.active {
+  background-color: #ffd84a;
+  border-color: #e1c43b;
+  font-weight: 600;
+}
+
+/* ---------- Mobil ---------- */
+@media (max-width: 768px) {
+  .controlsContainer {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dateLabel {
+    min-width: unset;
+  }
+}

@@ -1,0 +1,208 @@
+.pricingBg {
+  background: linear-gradient(110deg, #fffde4 82%, #f6e6c4 130%);
+  /* Reserve space for fixed footer (and header if you have one) */
+  min-height: calc(100vh - var(--footer-h, 72px) - var(--header-h, 0px));
+  font-family: "Roboto", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+
+  /* Keep content above the footer, incl. iOS safe area */
+  padding-bottom: 50px;
+}
+
+.hero {
+  text-align: center;
+  padding: 58px 16px 28px 16px;
+}
+
+.title {
+  font-size: 2.3rem;
+  color: #232323;
+  margin-bottom: 9px;
+  font-weight: 800;
+}
+
+.subtitle {
+  font-size: 1.13rem;
+  color: #595959;
+  margin-bottom: 26px;
+  font-weight: 500;
+}
+
+.plansGrid {
+  display: flex;
+  justify-content: center;
+  gap: 42px;
+  margin: 0 auto 32px auto; /* slightly smaller bottom space */
+  flex-wrap: wrap;
+  max-width: 1080px;
+  width: 100%;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20px;
+  border: 2px solid #ffe066;
+  box-shadow: 0 4px 32px #f5b40116, 0 1px 24px #ffe0660c inset;
+  min-width: 280px;
+  max-width: 330px;
+  flex: 1;
+  padding: 36px 28px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.17s, box-shadow 0.18s, border 0.13s;
+}
+
+.card:hover {
+  transform: translateY(-6px) scale(1.025);
+  border-color: #f9b300;
+  box-shadow: 0 12px 42px #ffd6003e;
+  z-index: 2;
+}
+
+.mostPopular {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #b99a2a;
+  color: #fff;
+  font-size: 0.99rem;
+  font-weight: 700;
+  padding: 3.5px 18px;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px #ffe06642;
+  letter-spacing: 0.04em;
+}
+
+.popular {
+  border: 2.6px solid #b99a2a;
+  box-shadow: 0 10px 32px #ffd6002e, 0 2px 32px #ffd60014;
+  z-index: 5;
+}
+
+.planName {
+  font-size: 1.13rem;
+  color: #b99a2a;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.priceRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-bottom: 17px;
+}
+
+.price {
+  font-size: 2.18rem;
+  color: #232323;
+  font-weight: 800;
+}
+
+.period {
+  font-size: 1.07rem;
+  color: #8b8004;
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.featuresList {
+  list-style: none;
+  margin: 0 0 26px 0;
+  padding: 0;
+  width: 100%;
+}
+
+.featuresList li {
+  font-size: 1.01rem;
+  color: #474747;
+  font-weight: 500;
+  margin: 0 0 9px 0;
+  padding-left: 19px;
+  position: relative;
+}
+
+.featuresList li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #b99a2a;
+  font-weight: 700;
+}
+
+.pricingBtn {
+  display: inline-block;
+  padding: 10px 26px;
+  border-radius: 8px;
+  border: 2px solid #b99a2a;
+  background: #fffde4;
+  color: #b99a2a;
+  font-weight: 700;
+  font-size: 1.07rem;
+  letter-spacing: 0.03em;
+  margin-top: 18px;
+  box-shadow: 0 2px 8px #ffd60010;
+  text-align: center;
+  transition: background 0.16s, color 0.16s, border-color 0.15s, transform 0.14s;
+  cursor: pointer;
+  outline: none;
+}
+
+.pricingBtn:hover,
+.pricingBtn:focus {
+  background: #b99a2a;
+  color: #fff;
+  border-color: #050505;
+  box-shadow: 0 6px 20px #ffd60026;
+  transform: translateY(-2px) scale(1.045);
+  text-decoration: none;
+}
+
+.fineprint {
+  text-align: center;
+  color: #b99a2a;
+  font-size: 0.97rem;
+  font-weight: 600;
+  opacity: 0.92;
+  margin: 0 0 8px 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .plansGrid {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .card {
+    min-width: 245px;
+    max-width: 370px;
+    width: 90vw;
+  }
+}
+
+/* 📱 Mobile optimization */
+@media (max-width: 700px) {
+  .fineprint {
+    line-height: 1.4;
+    padding: 0 16px;
+    /* 🟡 Daha az alt boşluk */
+    margin: 10px auto calc(var(--footer-h, 72px) + 14px) auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 28px 8px 12px 8px;
+  }
+
+  .title {
+    font-size: 1.26rem;
+  }
+}
