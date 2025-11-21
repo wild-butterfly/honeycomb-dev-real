@@ -118,11 +118,13 @@ const CalendarPage: React.FC = () => {
   const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
+  /* Selected Job */
   const selectedJob = useMemo(
     () => jobs.find((j) => j.id === selectedJobId) ?? null,
     [jobs, selectedJobId]
   );
 
+  /* Day view job mapping */
   const jobsByEmployee = useMemo(() => {
     const map: { [empId: number]: CalendarJob[] } = {};
     employees.forEach((emp) => {
@@ -170,7 +172,7 @@ const CalendarPage: React.FC = () => {
     setSelectedJobId(newId);
   };
 
-  /* Move Job (shared by Week + Month + Day) */
+  /* Move Job */
   const handleMoveJob = (
     jobId: number,
     employeeId: number,
@@ -182,7 +184,7 @@ const CalendarPage: React.FC = () => {
         j.id === jobId
           ? {
               ...j,
-              assignedTo: [employeeId], // OPTION A — keep same employee
+              assignedTo: [employeeId],
               start: newStart.toISOString(),
               end: newEnd.toISOString(),
             }
@@ -233,6 +235,7 @@ const CalendarPage: React.FC = () => {
             onJobClick={handleJobClick}
             onJobMove={handleMoveJob}
           />
+
         ) : rangeMode === "week" ? (
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
@@ -246,10 +249,11 @@ const CalendarPage: React.FC = () => {
                 />
               </div>
               <aside className={styles.sidebarWrapper}>
-                <SidebarJobs jobs={jobs} />
+                <SidebarJobs jobs={jobs} onJobClick={handleJobClick} />
               </aside>
             </div>
           </div>
+
         ) : (
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
@@ -270,6 +274,7 @@ const CalendarPage: React.FC = () => {
                       isSameDay(j.start, selectedDate) &&
                       jobMatchesStaff(j, staffFilter)
                   )}
+                  onJobClick={handleJobClick}
                 />
               </aside>
             </div>

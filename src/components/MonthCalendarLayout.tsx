@@ -79,7 +79,8 @@ function DroppableDayCell({
   id: string;
   date: Date;
   jobs: CalendarJob[];
-  onJobClick: (id: number) => void;
+  onJobClick: (jobId: number) => void;
+
 }) {
   const { setNodeRef } = useDroppable({ id });
 
@@ -217,7 +218,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
 
         {/* RIGHT: Sidebar Job List */}
         <aside className={styles.sidebarJobs}>
-          <SidebarJobs jobs={jobs} />
+          <SidebarJobs jobs={jobs} onJobClick={onJobClick} />
         </aside>
       </div>
     </DndContext>
