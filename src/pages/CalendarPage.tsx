@@ -10,8 +10,6 @@ import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
 
-/* ───────── Types ───────── */
-
 export type Employee = {
   id: number;
   name: string;
@@ -23,21 +21,13 @@ export type CalendarJob = {
   title: string;
   customer: string;
   location?: string;
-  assignedTo: number[]; // ALWAYS number[]
+  assignedTo: number[];
   start: string;
   end: string;
   color?: string;
 };
 
-export type CalendarTask = {
-  id: number;
-  desc: string;
-  assigned: number[];
-  due: string;
-};
-
 /* ───────── Seed Data ───────── */
-
 const employeesSeed: Employee[] = [
   { id: 1, name: "Aşkın Fear", avatar: "/avatar2.png" },
   { id: 2, name: "Daniel Fear", avatar: "/avatar1.png" },
@@ -104,7 +94,6 @@ const jobsSeed: CalendarJob[] = [
 ];
 
 /* ───────── Helpers ───────── */
-
 function isSameDay(dateStr: string, day: Date) {
   const d = new Date(dateStr);
   return (
@@ -119,7 +108,6 @@ function jobMatchesStaff(job: CalendarJob, staff: number | "all") {
 }
 
 /* ───────── Component ───────── */
-
 const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("day");
@@ -135,10 +123,8 @@ const CalendarPage: React.FC = () => {
     [jobs, selectedJobId]
   );
 
-  /* ───── Day-mode jobsByEmployee ───── */
   const jobsByEmployee = useMemo(() => {
     const map: { [empId: number]: CalendarJob[] } = {};
-
     employees.forEach((emp) => {
       map[emp.id] = jobs.filter(
         (j) =>
@@ -147,12 +133,10 @@ const CalendarPage: React.FC = () => {
           jobMatchesStaff(j, staffFilter)
       );
     });
-
     return map;
   }, [employees, jobs, selectedDate, staffFilter]);
 
-  /* ───── Navigation ───── */
-
+  /* Navigation */
   const goPrevDay = () => {
     const d = new Date(selectedDate);
     if (rangeMode === "month") d.setMonth(d.getMonth() - 1);
@@ -169,28 +153,24 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
-  /* ───── Add Job (+) ───── */
-
+  /* Add Job */
   const handleAddJobAt = (employeeId: number, start: Date, end: Date) => {
     const newId = Math.floor(Math.random() * 999999);
-
     const newJob: CalendarJob = {
       id: newId,
       title: "New Job",
       customer: "",
       location: "",
-      assignedTo: [employeeId], // ALWAYS ARRAY
+      assignedTo: [employeeId],
       start: start.toISOString(),
       end: end.toISOString(),
       color: "#fffef9",
     };
-
     setJobs((prev) => [...prev, newJob]);
     setSelectedJobId(newId);
   };
 
-  /* ───── Move Job (drag) ───── */
-
+  /* Move Job (shared by Week + Month + Day) */
   const handleMoveJob = (
     jobId: number,
     employeeId: number,
@@ -202,7 +182,7 @@ const CalendarPage: React.FC = () => {
         j.id === jobId
           ? {
               ...j,
-              assignedTo: [employeeId], // drag → tek kişi
+              assignedTo: [employeeId], // OPTION A — keep same employee
               start: newStart.toISOString(),
               end: newEnd.toISOString(),
             }
@@ -211,16 +191,13 @@ const CalendarPage: React.FC = () => {
     );
   };
 
-  /* ───── Job modal ───── */
-
+  /* Job Modal */
   const handleJobClick = (id: number) => setSelectedJobId(id);
   const handleCloseJobDetails = () => setSelectedJobId(null);
   const handleDeleteJob = (jobId: number) =>
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
   const handleSaveJob = (updated: CalendarJob) =>
     setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
-
-  /* ───── Render ───── */
 
   return (
     <div className={styles.dashboardBg}>
@@ -242,7 +219,6 @@ const CalendarPage: React.FC = () => {
           onStaffFilterChange={setStaffFilter}
         />
 
-        {/* ───── MONTH ───── */}
         {rangeMode === "month" ? (
           <MonthCalendarLayout
             date={selectedDate}
@@ -255,9 +231,8 @@ const CalendarPage: React.FC = () => {
             selectedStaff={monthStaffFilter}
             onStaffChange={setMonthStaffFilter}
             onJobClick={handleJobClick}
+            onJobMove={handleMoveJob}
           />
-
-        /* ───── WEEK ───── */
         ) : rangeMode === "week" ? (
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
@@ -267,6 +242,7 @@ const CalendarPage: React.FC = () => {
                   jobs={jobs.filter((j) => jobMatchesStaff(j, staffFilter))}
                   employees={employees}
                   onJobClick={handleJobClick}
+                  onJobMove={handleMoveJob}
                 />
               </div>
               <aside className={styles.sidebarWrapper}>
@@ -274,8 +250,6 @@ const CalendarPage: React.FC = () => {
               </aside>
             </div>
           </div>
-
-        /* ───── DAY ───── */
         ) : (
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
@@ -289,7 +263,6 @@ const CalendarPage: React.FC = () => {
                   onJobClick={handleJobClick}
                 />
               </div>
-
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
                   jobs={jobs.filter(
