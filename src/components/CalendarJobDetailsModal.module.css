@@ -2,14 +2,14 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(255, 248, 214, 0.55); /* soft honey */
+  background: rgba(255, 248, 214, 0.55);
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
   z-index: 2000;
 }
 
-/* Sağdan gelen kart */
+/* Panel */
 .panel {
   width: 380px;
   max-width: 100%;
@@ -18,37 +18,33 @@
   border-left: 4px solid #ffe066;
   border-top-left-radius: 18px;
   border-bottom-left-radius: 18px;
-
   display: flex;
   flex-direction: column;
   padding: 18px 20px 20px;
   font-family: "Roboto", Arial, sans-serif;
 }
 
-/* ───────── HEADER ───────── */
-
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .title {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #4a3f00;
 }
 
 .subtitle {
-  margin-top: 2px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  margin-top: 4px;
   color: #a58b33;
 }
 
-/* bal peteği kapatma butonu */
 .closeBtn {
   border: none;
   background: #ffb300;
@@ -67,10 +63,9 @@
   background: #ffd600;
 }
 
-/* ───────── SECTIONS ───────── */
-
+/* Section */
 .section {
-  padding: 10px 0;
+  padding: 12px 0;
   border-top: 1px dashed rgba(212, 184, 74, 0.5);
 }
 
@@ -79,7 +74,7 @@
 }
 
 .sectionLabel {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -92,7 +87,7 @@
   color: #4a3f00;
 }
 
-/* süre “1h” etiketi */
+/* TIME chip */
 .chip {
   display: inline-block;
   margin-left: 8px;
@@ -102,53 +97,14 @@
   color: #6f601a;
   font-size: 0.75rem;
   font-weight: 700;
-  box-shadow: 0 1px 2px rgba(185, 154, 42, 0.3);
 }
 
-/* ───────── STAFF satırı ───────── */
-
-.staffRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.staffAvatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #ffd600;
-  border: 2px solid #f0a400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.8rem;
-  color: #2a2200;
-  box-shadow: 0 2px 4px rgba(185, 154, 42, 0.35);
-}
-
-.staffInfo {
-  display: flex;
-  flex-direction: column;
-}
-
-.staffName {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #4a3f00;
-}
-
-.staffHint {
-  font-size: 0.75rem;
-  color: #a9a174;
-}
-
+/* STAFF */
 .staffContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .staffChip {
@@ -164,7 +120,6 @@
 
 .staffChip:hover {
   background: #ffefb3;
-  border-color: #e3be3c;
 }
 
 .staffAvatar2 {
@@ -178,7 +133,6 @@
   justify-content: center;
   align-items: center;
   margin-right: 8px;
-  font-size: 14px;
 }
 
 .staffName {
@@ -190,82 +144,40 @@
   font-size: 18px;
   margin-left: 6px;
   color: #b30000;
-  font-weight: bold;
 }
 
-.staffDropdown {
-  margin-top: 10px;
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #d9d9d9;
-}
-
-/* ───────── INPUTLAR ───────── */
-
-.titleInput {
-  width: 100%;
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: #2f2413;
-  background-color: #fffdf7;
-  border: 1px solid #e3d2a0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin-top: 4px;
-  margin-bottom: 6px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-  outline: none;
-  transition: all 0.15s ease;
-}
-
-.titleInput:focus {
-  border-color: #d7b74c;
-  box-shadow: 0 0 0 2px rgba(215, 183, 76, 0.25);
-}
-.titleClickable {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #3a2d10;
-  background: #fff9e7;
-  padding: 8px 10px;
-  border-radius: 8px;
-  display: inline-block;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.titleClickable:hover {
-  background: #fff3c8;
-}
+/* Inputs */
+.titleInput,
 .fieldInput,
-.fieldSelect,
 .fieldTextarea {
   width: 100%;
   border-radius: 8px;
   border: 1px solid #e4ce7a;
-  padding: 6px 9px;
+  padding: 8px 10px;
   font-size: 0.9rem;
-  font-family: inherit;
-  color: #4a3f00;
   background: #fffdf5;
+  color: #4a3f00;
 }
 
 .fieldTextarea {
   resize: vertical;
-  min-height: 48px;
 }
 
+.titleInput:focus,
 .fieldInput:focus,
-.fieldSelect:focus,
 .fieldTextarea:focus {
   outline: none;
   border-color: #ffb300;
   box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
 }
 
-/* ───────── FOOTER BUTONLAR ───────── */
+/* Time inputs */
+.timeEditContainer {
+  display: flex;
+  gap: 12px;
+}
 
+/* FOOTER buttons */
 .footer {
   margin-top: 18px;
   padding-top: 10px;
@@ -277,31 +189,29 @@
 
 .primaryBtn,
 .deleteBtn,
-.secondaryBtn {
+.secondaryBtn,
+.viewAllBtn {
   flex: 1;
-  border-radius: 6px; /* ✅ Eskisi 999px idi */
-  padding: 8px 10px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   border: none;
-  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+  transition: 0.15s ease;
 }
 
-/* Edit event = koyu sarı buton */
+/* Edit */
 .primaryBtn {
   background: #ffb300;
   color: #4a3f00;
-  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.35);
 }
 
 .primaryBtn:hover {
   background: #ffd600;
-  box-shadow: 0 3px 8px rgba(185, 154, 42, 0.45);
-  transform: translateY(-1px);
 }
 
-/* Delete event = soft pembe */
+/* Delete */
 .deleteBtn {
   background: #ffe6e2;
   color: #c23030;
@@ -309,11 +219,9 @@
 
 .deleteBtn:hover {
   background: #ffd2cb;
-  box-shadow: 0 2px 6px rgba(194, 48, 48, 0.25);
-  transform: translateY(-1px);
 }
 
-/* Cancel = beyaz / outline */
+/* Cancel */
 .secondaryBtn {
   border: 1px solid #e4ce7a;
   background: #fffef7;
@@ -322,51 +230,38 @@
 
 .secondaryBtn:hover {
   background: #fff7d8;
-  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.25);
-  transform: translateY(-1px);
 }
 
-/* ───────── TIME INPUTS (bal peteği temalı) ───────── */
-
-.timeInputs {
+/* RELATED EVENTS */
+.relatedRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
 }
 
-.timeInput {
-  border: 1px solid #e4ce7a;
-  background: linear-gradient(180deg, #fffdf5 0%, #fff8dd 100%);
-  border-radius: 8px;
-  padding: 6px 8px;
-  font-size: 0.9rem;
-  color: #4a3f00;
+.relatedTag {
+  font-size: 0.75rem;
   font-weight: 600;
-  text-align: center;
-  width: 95px;
-  box-shadow: 0 1px 3px rgba(185, 154, 42, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: all 0.15s ease;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff8d6;
+  border: 1px solid #e8d27a;
+  color: #5c4a00;
 }
 
-.timeInput:hover {
-  background: linear-gradient(180deg, #fffbe0 0%, #fff6c7 100%);
-  border-color: #e0b84e;
-  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.25);
+.relatedTag:hover {
+  background: #ffefb3;
 }
 
-.timeInput:focus {
-  outline: none;
-  border-color: #ffb300;
-  box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.35),
-    0 2px 8px rgba(185, 154, 42, 0.35);
-  background: #fffad1;
+.viewAllBtn {
+  margin-left: auto;
+  border: 1px solid #e8d27a;
+  background: #fffdf3;
+  color: #5c4a00;
 }
 
-.timeDash {
-  font-weight: 800;
-  color: #b99a2a;
-  font-size: 1rem;
-  user-select: none;
+.viewAllBtn:hover {
+  background: #fff7c8;
 }

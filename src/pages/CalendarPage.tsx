@@ -6,9 +6,11 @@ import DashboardNavbar from "../components/DashboardNavbar";
 import CalendarControlsBar from "../components/CalendarControlsBar";
 import DesktopCalendarLayout from "../components/DesktopCalendarLayout";
 import SidebarJobs from "../components/SidebarJobs";
-import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
+
+// HONEYCOMB PANEL
+import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
 export type Employee = {
   id: number;
@@ -21,10 +23,18 @@ export type CalendarJob = {
   title: string;
   customer: string;
   location?: string;
+
   assignedTo: number[];
   start: string;
   end: string;
   color?: string;
+
+  // Honeycomb panel new fields
+  siteContact?: string;
+  contactInfo?: string;
+  notes?: string;
+  pastEvents?: CalendarJob[];
+  futureEvents?: CalendarJob[];
 };
 
 /* ───────── Seed Data ───────── */
@@ -49,6 +59,9 @@ const jobsSeed: CalendarJob[] = [
     assignedTo: [1],
     start: "2025-11-03T09:00",
     end: "2025-11-03T10:30",
+    siteContact: "Aşkın Fear",
+    contactInfo: "0400 123 456",
+    notes: "Check fire extinguishers + kitchen appliances.",
     color: "#e4f4de",
   },
   {
@@ -59,37 +72,10 @@ const jobsSeed: CalendarJob[] = [
     assignedTo: [2],
     start: "2025-11-04T08:30",
     end: "2025-11-04T10:00",
+    siteContact: "Daniel Fear",
+    contactInfo: "0400 555 444",
+    notes: "Warehouse + office testing.",
     color: "#dff5f5",
-  },
-  {
-    id: 103,
-    title: "Site Inspection",
-    customer: "Doors Plus Newcastle",
-    location: "Broadmeadow, NSW",
-    assignedTo: [3],
-    start: "2025-11-05T11:00",
-    end: "2025-11-05T13:30",
-    color: "#eadcf8",
-  },
-  {
-    id: 104,
-    title: "Install Lights",
-    customer: "AG Coombs Pty Ltd",
-    location: "Tower 4, 305 Manns Rd",
-    assignedTo: [4],
-    start: "2025-11-06T14:00",
-    end: "2025-11-06T16:00",
-    color: "#f5ecd9",
-  },
-  {
-    id: 105,
-    title: "Test & Tag",
-    customer: "Coles Distribution",
-    location: "Laverton",
-    assignedTo: [5],
-    start: "2025-11-07T09:00",
-    end: "2025-11-07T11:30",
-    color: "#d8f8e4",
   },
 ];
 
@@ -116,15 +102,14 @@ const CalendarPage: React.FC = () => {
 
   const [employees] = useState<Employee[]>(employeesSeed);
   const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
 
-  /* Selected Job */
-  const selectedJob = useMemo(
-    () => jobs.find((j) => j.id === selectedJobId) ?? null,
-    [jobs, selectedJobId]
+  /* Quick Panel state */
+  const [openJobId, setOpenJobId] = useState<number | null>(null);
+  const openJob = useMemo(
+    () => jobs.find((j) => j.id === openJobId) ?? null,
+    [jobs, openJobId]
   );
 
-  /* Day view job mapping */
   const jobsByEmployee = useMemo(() => {
     const map: { [empId: number]: CalendarJob[] } = {};
     employees.forEach((emp) => {
@@ -166,10 +151,13 @@ const CalendarPage: React.FC = () => {
       assignedTo: [employeeId],
       start: start.toISOString(),
       end: end.toISOString(),
-      color: "#fffef9",
+      siteContact: "",
+      contactInfo: "",
+      notes: "",
+      color: "#fffdf0",
     };
     setJobs((prev) => [...prev, newJob]);
-    setSelectedJobId(newId);
+    setOpenJobId(newId);
   };
 
   /* Move Job */
@@ -193,13 +181,18 @@ const CalendarPage: React.FC = () => {
     );
   };
 
-  /* Job Modal */
-  const handleJobClick = (id: number) => setSelectedJobId(id);
-  const handleCloseJobDetails = () => setSelectedJobId(null);
-  const handleDeleteJob = (jobId: number) =>
-    setJobs((prev) => prev.filter((j) => j.id !== jobId));
+  /* Open Job */
+  const handleJobClick = (id: number) => {
+    setOpenJobId(id);
+  };
+
+  /* Save Job */
   const handleSaveJob = (updated: CalendarJob) =>
     setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+
+  /* Delete Job */
+  const handleDeleteJob = (jobId: number) =>
+    setJobs((prev) => prev.filter((j) => j.id !== jobId));
 
   return (
     <div className={styles.dashboardBg}>
@@ -221,6 +214,7 @@ const CalendarPage: React.FC = () => {
           onStaffFilterChange={setStaffFilter}
         />
 
+        {/* MONTH VIEW */}
         {rangeMode === "month" ? (
           <MonthCalendarLayout
             date={selectedDate}
@@ -235,8 +229,8 @@ const CalendarPage: React.FC = () => {
             onJobClick={handleJobClick}
             onJobMove={handleMoveJob}
           />
-
         ) : rangeMode === "week" ? (
+          /* WEEK VIEW */
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
               <div className={styles.timelineCardWrapper}>
@@ -253,8 +247,8 @@ const CalendarPage: React.FC = () => {
               </aside>
             </div>
           </div>
-
         ) : (
+          /* DAY VIEW */
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
               <div className={styles.timelineCardWrapper}>
@@ -282,13 +276,14 @@ const CalendarPage: React.FC = () => {
         )}
       </div>
 
-      {selectedJob && (
+      {/* ───────── HONEYCOMB SLIDE-IN PANEL ───────── */}
+      {openJob && (
         <CalendarJobDetailsModal
-          job={selectedJob}
+          job={openJob}
           employees={employees}
-          onClose={handleCloseJobDetails}
-          onDelete={() => handleDeleteJob(selectedJob.id)}
+          onClose={() => setOpenJobId(null)}
           onSave={handleSaveJob}
+          onDelete={() => handleDeleteJob(openJob.id)}
         />
       )}
     </div>

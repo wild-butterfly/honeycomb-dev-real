@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./CalendarJobDetailsModal.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import TimePicker from "../components/TimePicker";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   job: CalendarJob;
@@ -47,47 +48,54 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   onDelete,
   onSave,
 }) => {
+  const navigate = useNavigate();
+
   const { dateLabel, timeLabel, durationLabel } = formatDateLine(
     job.start,
     job.end
   );
 
-  // 🟦 Edit Mode
   const [editMode, setEditMode] = useState(false);
 
-  // 🟦 Editable fields
   const [title, setTitle] = useState(job.title);
   const [customer, setCustomer] = useState(job.customer);
   const [location, setLocation] = useState(job.location || "");
+  const [siteContact, setSiteContact] = useState(job.siteContact || "");
+  const [contactInfo, setContactInfo] = useState(job.contactInfo || "");
+  const [notes, setNotes] = useState(job.notes || "");
 
-  // 🟦 Assigned staff (ALWAYS ARRAY)
   const [assignedTo, setAssignedTo] = useState<number[]>(
     Array.isArray(job.assignedTo) ? job.assignedTo : [job.assignedTo]
   );
 
-  // 🟦 Time fields
   const [localStart, setLocalStart] = useState(new Date(job.start));
   const [localEnd, setLocalEnd] = useState(new Date(job.end));
 
-  // Reset when job changes
   useEffect(() => {
     setEditMode(false);
     setTitle(job.title);
     setCustomer(job.customer);
     setLocation(job.location || "");
-    setAssignedTo(Array.isArray(job.assignedTo) ? job.assignedTo : [job.assignedTo]);
+    setSiteContact(job.siteContact || "");
+    setContactInfo(job.contactInfo || "");
+    setNotes(job.notes || "");
+    setAssignedTo(
+      Array.isArray(job.assignedTo) ? job.assignedTo : [job.assignedTo]
+    );
     setLocalStart(new Date(job.start));
     setLocalEnd(new Date(job.end));
   }, [job]);
 
-  // 🟦 SAVE
   const handleSaveClick = () => {
     const updated: CalendarJob = {
       ...job,
       title,
       customer,
       location,
-      assignedTo, // ALWAYS number[]
+      siteContact,
+      contactInfo,
+      notes,
+      assignedTo,
       start: localStart.toISOString(),
       end: localEnd.toISOString(),
     };
@@ -111,7 +119,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             ) : (
               <div className={styles.title}>{job.title}</div>
             )}
-
             <div className={styles.subtitle}>{dateLabel}</div>
           </div>
 
@@ -136,68 +143,66 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* STAFF */}
-<div className={styles.section}>
-  <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
+        {/* ASSIGNED STAFF */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
 
-  <div className={styles.staffContainer}>
-    {assignedTo.map((id) => {
-      const emp = employees.find((e) => e.id === id);
-      if (!emp) return null;
+          <div className={styles.staffContainer}>
+            {assignedTo.map((id) => {
+              const emp = employees.find((e) => e.id === id);
+              if (!emp) return null;
 
-      return (
-        <div
-          key={id}
-          className={styles.staffChip}
-          onClick={() =>
-            editMode &&
-            setAssignedTo((prev) => prev.filter((x) => x !== id))
-          }
-        >
-          <div className={styles.staffAvatar2}>
-            {emp.name
-              .split(" ")
-              .map((p) => p[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
+              return (
+                <div
+                  key={id}
+                  className={styles.staffChip}
+                  onClick={() =>
+                    editMode &&
+                    setAssignedTo((prev) => prev.filter((x) => x !== id))
+                  }
+                >
+                  <div className={styles.staffAvatar2}>
+                    {emp.name
+                      .split(" ")
+                      .map((p) => p[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </div>
+
+                  <span className={styles.staffName}>{emp.name}</span>
+
+                  {editMode && <span className={styles.removeX}>×</span>}
+                </div>
+              );
+            })}
           </div>
 
-          <span className={styles.staffName}>{emp.name}</span>
-
-          {editMode && <span className={styles.removeX}>×</span>}
+          {editMode && (
+            <select
+              className={styles.staffDropdown}
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                if (id && !assignedTo.includes(id)) {
+                  setAssignedTo((prev) => [...prev, id]);
+                }
+              }}
+            >
+              <option value="">Select staff…</option>
+              {employees
+                .filter((e) => !assignedTo.includes(e.id))
+                .map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.name}
+                  </option>
+                ))}
+            </select>
+          )}
         </div>
-      );
-    })}
-  </div>
-
-  {editMode && (
-    <select
-      className={styles.staffDropdown}
-      onChange={(e) => {
-        const id = Number(e.target.value);
-        if (id && !assignedTo.includes(id)) {
-          setAssignedTo((prev) => [...prev, id]);
-        }
-      }}
-    >
-      <option value="">Select staff…</option>
-      {employees
-        .filter((e) => !assignedTo.includes(e.id))
-        .map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.name}
-          </option>
-        ))}
-    </select>
-  )}
-</div>
-
 
         {/* CUSTOMER */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>CUSTOMER</div>
-
           {editMode ? (
             <input
               className={styles.fieldInput}
@@ -212,17 +217,81 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         {/* LOCATION */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>SITE ADDRESS</div>
-
           {editMode ? (
             <textarea
               className={styles.fieldTextarea}
-              rows={2}
               value={location}
+              rows={2}
               onChange={(e) => setLocation(e.target.value)}
             />
           ) : (
             <div className={styles.sectionValue}>{location || "—"}</div>
           )}
+        </div>
+
+        {/* SITE CONTACT */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>SITE CONTACT</div>
+          {editMode ? (
+            <input
+              className={styles.fieldInput}
+              value={siteContact}
+              onChange={(e) => setSiteContact(e.target.value)}
+            />
+          ) : (
+            <div className={styles.sectionValue}>{siteContact || "—"}</div>
+          )}
+        </div>
+
+        {/* CONTACT INFO */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>CONTACT INFO</div>
+          {editMode ? (
+            <input
+              className={styles.fieldInput}
+              value={contactInfo}
+              onChange={(e) => setContactInfo(e.target.value)}
+            />
+          ) : (
+            <div className={styles.sectionValue}>{contactInfo || "—"}</div>
+          )}
+        </div>
+
+        {/* NOTES */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>NOTES</div>
+          {editMode ? (
+            <textarea
+              className={styles.fieldTextarea}
+              value={notes}
+              rows={3}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          ) : (
+            <div className={styles.sectionValue}>{notes || "—"}</div>
+          )}
+        </div>
+
+        {/* RELATED EVENTS */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>RELATED EVENTS</div>
+
+          <div className={styles.relatedRow}>
+            <div className={styles.relatedTag}>
+              {job.futureEvents?.length ?? 0} FUTURE EVENTS
+            </div>
+
+            <div className={styles.relatedTag}>
+              {job.pastEvents?.length ?? 0} PAST EVENTS
+            </div>
+
+            <button
+              className={styles.viewAllBtn}
+              onClick={() => navigate(`/jobs/${job.id}`)}
+            >
+              View full job →
+            </button>
+          </div>
         </div>
 
         {/* FOOTER */}
@@ -237,7 +306,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   setTitle(job.title);
                   setCustomer(job.customer);
                   setLocation(job.location || "");
-                  setAssignedTo(Array.isArray(job.assignedTo) ? job.assignedTo : [job.assignedTo]);
+                  setSiteContact(job.siteContact || "");
+                  setContactInfo(job.contactInfo || "");
+                  setNotes(job.notes || "");
+                  setAssignedTo(
+                    Array.isArray(job.assignedTo)
+                      ? job.assignedTo
+                      : [job.assignedTo]
+                  );
                   setLocalStart(new Date(job.start));
                   setLocalEnd(new Date(job.end));
                 }}
@@ -245,7 +321,11 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                 Cancel
               </button>
 
-              <button type="button" className={styles.primaryBtn} onClick={handleSaveClick}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={handleSaveClick}
+              >
                 Save changes
               </button>
             </>
