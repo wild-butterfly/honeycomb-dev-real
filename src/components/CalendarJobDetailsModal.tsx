@@ -53,11 +53,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 }) => {
   const navigate = useNavigate();
 
-  const { dateLabel, timeLabel, durationLabel } = formatDateLine(job.start, job.end);
+  const { dateLabel, timeLabel, durationLabel } = formatDateLine(
+    job.start,
+    job.end
+  );
 
   const [editMode, setEditMode] = useState(false);
 
-  const [jobColor, setJobColor] = useState(job.color || "#fff9e6");
+  const [jobColor, setJobColor] = useState(job.color || "#fff8e1");
 
   const [title, setTitle] = useState(job.title);
   const [customer, setCustomer] = useState(job.customer);
@@ -121,7 +124,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     );
     setLocalStart(new Date(job.start));
     setLocalEnd(new Date(job.end));
-    setJobColor(job.color || "#fff9e6");
+    setJobColor(job.color || "#fff8e1");
   }, [job]);
 
   /* SAVE CHANGES */
@@ -143,6 +146,23 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     onSave(updated);
     setEditMode(false);
   };
+
+  const pastelPalette = [
+    // Honey & cream
+    "#fff8e1", "#fff4d4", "#ffefc2", "#fceec0",
+
+    // Mint
+    "#eaf7e9", "#dff4e4", "#d2efdc", "#c8ecd6",
+
+    // Aqua
+    "#e9f9ff", "#ddf5ff", "#d3eff7", "#cfe9f5",
+
+    // Peach
+    "#ffedea", "#ffe7e3", "#ffe3d6", "#ffdccc",
+
+    // Lavender
+    "#f6edff", "#f2e6ff", "#ecdfff", "#e7d7fa",
+  ];
 
   return (
     <div className={styles.backdrop}>
@@ -345,29 +365,55 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* COLOR PICKER */}
-<div className={styles.section}>
-  <div className={styles.sectionLabel}>EVENT COLOR</div>
+        {/* COLOR PICKER + PALETTE */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>EVENT COLOR</div>
 
-  {editMode ? (
-    <div className={styles.colorPickerWrapper}>
-      <HexColorPicker color={jobColor} onChange={setJobColor} />
-      <div className={styles.colorValue}>{jobColor}</div>
-    </div>
-  ) : (
-    <div
-      className={styles.colorPreview}
-      style={{
-        backgroundColor: jobColor,
-        width: "40px",
-        height: "20px",
-        borderRadius: "4px",
-        border: "1px solid #ccc"
-      }}
-    />
-  )}
-</div>
+          {editMode ? (
+            <>
+              <div className={styles.colorPaletteRow}>
+                {pastelPalette.map((c) => (
+                  <div
+                    key={c}
+                    className={styles.colorDot}
+                    style={{
+                      backgroundColor: c,
+                      border:
+                        jobColor === c
+                          ? "2px solid #c6a300"
+                          : "1px solid #d4d4d4",
+                      boxShadow:
+                        jobColor === c
+                          ? "0 0 6px rgba(198,163,0,0.6)"
+                          : "none",
+                    }}
+                    onClick={() => setJobColor(c)}
+                  />
+                ))}
+              </div>
 
+              <div className={styles.colorPickerWrapper}>
+                <HexColorPicker color={jobColor} onChange={setJobColor} />
+                <input
+                  className={styles.colorHexInput}
+                  value={jobColor}
+                  onChange={(e) => setJobColor(e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <div
+              className={styles.colorPreview}
+              style={{
+                backgroundColor: jobColor,
+                width: "40px",
+                height: "20px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+              }}
+            />
+          )}
+        </div>
 
         {/* RELATED */}
         <div className={styles.section}>
@@ -413,7 +459,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   );
                   setLocalStart(new Date(job.start));
                   setLocalEnd(new Date(job.end));
-                  setJobColor(job.color || "#fff9e6");
+                  setJobColor(job.color || "#fff8e1");
                 }}
               >
                 Cancel

@@ -281,14 +281,41 @@
   color: #6f601a;
 }
 
+/* COLOR PICKER + PALETTE */
 .colorPickerWrapper {
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
-.colorValue {
-  margin-top: 8px;
+.colorHexInput {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px solid #d7c67b;
+  border-radius: 6px;
+  width: 120px;
+  font-family: monospace;
   font-size: 14px;
-  color: #666;
+  background: #fffef8;
+  color: #4a3f00;
+}
+
+.colorPaletteRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.colorDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.colorDot:hover {
+  transform: scale(1.14);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
 }
 
 .colorPreview {
