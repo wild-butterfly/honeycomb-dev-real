@@ -68,6 +68,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
 
   return (
     <div className={styles.layoutWrapper}>
+
       {/* LEFT STAFF SIDE */}
       <div className={styles.staffSidebar}>
         <div className={styles.staffTitle}>Staff</div>
@@ -88,7 +89,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
         ))}
       </div>
 
-      {/* MIDDLE CALENDAR */}
+      {/* ================= MIDDLE CALENDAR ================= */}
       <div className={styles.monthWrapper}>
         <div className={styles.weekHeader}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
@@ -116,18 +117,19 @@ const MonthCalendarLayout: React.FC<Props> = ({
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
+                {/* ===== DAILY JOB LIST ===== */}
                 <div className={styles.jobsList}>
                   {jobList.map((job) => (
                     <div
                       key={job.id}
                       className={styles.jobBox}
                       onClick={() => onJobClick(job.id)}
-                      style={{ borderLeftColor: job.color || "#c4e3a0" }}
+                      style={{
+                        backgroundColor: job.color || "#fff4c5",
+                      }}
                     >
                       <div className={styles.jobTitle}>{job.title}</div>
-                      <div className={styles.jobCustomer}>
-                        {job.customer}
-                      </div>
+                      <div className={styles.jobCustomer}>{job.customer}</div>
                     </div>
                   ))}
                 </div>
@@ -156,7 +158,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* RIGHT JOBS SIDEBAR */}
+      {/* ================= RIGHT JOBS SIDEBAR ================= */}
       <div className={styles.jobsSidebar}>
         <div className={styles.jobsHeader}>Jobs</div>
 
@@ -173,6 +175,9 @@ const MonthCalendarLayout: React.FC<Props> = ({
               key={job.id}
               className={styles.jobRightCard}
               onClick={() => onJobClick(job.id)}
+              style={{
+                backgroundColor: job.color || "#fff4c5",
+              }}
             >
               <div className={styles.jobRightTitle}>{job.title}</div>
               <div className={styles.jobRightCustomer}>{job.customer}</div>
@@ -180,6 +185,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
           ))}
         </div>
       </div>
+
     </div>
   );
 };
