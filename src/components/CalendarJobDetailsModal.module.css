@@ -280,3 +280,18 @@
   border: 1px solid #e4ce7a;
   color: #6f601a;
 }
+
+.colorPickerWrapper {
+  margin-top: 10px;
+}
+
+.colorValue {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.colorPreview {
+  display: inline-block;
+  margin-top: 6px;
+}

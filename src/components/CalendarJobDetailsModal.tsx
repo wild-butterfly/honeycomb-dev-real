@@ -4,6 +4,7 @@ import styles from "./CalendarJobDetailsModal.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import TimePicker from "../components/TimePicker";
 import { useNavigate } from "react-router-dom";
+import { HexColorPicker } from "react-colorful";
 
 interface Props {
   job: CalendarJob;
@@ -56,6 +57,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const [editMode, setEditMode] = useState(false);
 
+  const [jobColor, setJobColor] = useState(job.color || "#fff9e6");
+
   const [title, setTitle] = useState(job.title);
   const [customer, setCustomer] = useState(job.customer);
   const [location, setLocation] = useState(job.location || "");
@@ -104,6 +107,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     );
   }
 
+  // Reset fields when job changes
   useEffect(() => {
     setEditMode(false);
     setTitle(job.title);
@@ -117,8 +121,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     );
     setLocalStart(new Date(job.start));
     setLocalEnd(new Date(job.end));
+    setJobColor(job.color || "#fff9e6");
   }, [job]);
 
+  /* SAVE CHANGES */
   const handleSaveClick = () => {
     const updated: CalendarJob = {
       ...job,
@@ -131,6 +137,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       assignedTo,
       start: localStart.toISOString(),
       end: localEnd.toISOString(),
+      color: jobColor,
     };
 
     onSave(updated);
@@ -338,6 +345,30 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
+        {/* COLOR PICKER */}
+<div className={styles.section}>
+  <div className={styles.sectionLabel}>EVENT COLOR</div>
+
+  {editMode ? (
+    <div className={styles.colorPickerWrapper}>
+      <HexColorPicker color={jobColor} onChange={setJobColor} />
+      <div className={styles.colorValue}>{jobColor}</div>
+    </div>
+  ) : (
+    <div
+      className={styles.colorPreview}
+      style={{
+        backgroundColor: jobColor,
+        width: "40px",
+        height: "20px",
+        borderRadius: "4px",
+        border: "1px solid #ccc"
+      }}
+    />
+  )}
+</div>
+
+
         {/* RELATED */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>RELATED EVENTS</div>
@@ -382,6 +413,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   );
                   setLocalStart(new Date(job.start));
                   setLocalEnd(new Date(job.end));
+                  setJobColor(job.color || "#fff9e6");
                 }}
               >
                 Cancel

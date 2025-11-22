@@ -34,6 +34,11 @@ const SidebarJobs: React.FC<Props> = ({ jobs, onJobClick }) => {
               key={job.id}
               className={styles.sidebarJobItem}
               onClick={() => onJobClick(job.id)}
+              style={{
+                backgroundColor: job.color || "#fffdf0",
+                border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: "8px",
+              }}
             >
               <div className={styles.sidebarJobTitle}>{job.title}</div>
               <div className={styles.sidebarJobCustomer}>{job.customer}</div>
