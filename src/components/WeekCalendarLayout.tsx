@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   useDraggable,
@@ -20,6 +20,9 @@ interface Props {
     newStart: Date,
     newEnd: Date
   ) => void;
+
+  /** TEK DOĞRU İMZA: Day view ve Week view için */
+  onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
 const WeekCalendarLayout: React.FC<Props> = ({
@@ -28,12 +31,13 @@ const WeekCalendarLayout: React.FC<Props> = ({
   employees,
   onJobClick,
   onJobMove,
+  onAddJobAt,
 }) => {
-  /** ----------------------------------------------------------------------
-   * 1) HAFTANIN GÜNLERİNİ HESAPLA
-   * -------------------------------------------------------------------- */
+  const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+
+  /* ------------------ 1) HAFTA ------------------ */
   const startOfWeek = new Date(date);
-  startOfWeek.setDate(date.getDate() - date.getDay() + 1); // Monday
+  startOfWeek.setDate(date.getDate() - date.getDay() + 1);
 
   const daysOfWeek = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(startOfWeek);
@@ -41,9 +45,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
     return d;
   });
 
-  /** ----------------------------------------------------------------------
-   * 2) DRAG BİTTİĞİNDE JOB'UN YENİ KONUMUNU HESAPLA
-   * -------------------------------------------------------------------- */
+  /* ------------------ 2) DRAG END ------------------ */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -55,23 +57,18 @@ const WeekCalendarLayout: React.FC<Props> = ({
     const [dayIndex, employeeId] = String(over.id).split("-");
     const newDay = daysOfWeek[Number(dayIndex)];
 
-    // NEW START
     const oldStart = new Date(job.start);
+    const duration = new Date(job.end).getTime() - oldStart.getTime();
+
     const newStart = new Date(newDay);
     newStart.setHours(oldStart.getHours(), oldStart.getMinutes());
 
-    // NEW END
-    const oldEnd = new Date(job.end);
-    const duration = oldEnd.getTime() - oldStart.getTime();
     const newEnd = new Date(newStart.getTime() + duration);
 
-    // CALLBACK
     onJobMove(jobId, Number(employeeId), newStart, newEnd);
   };
 
-  /** ----------------------------------------------------------------------
-   * 3) JOB FİLTRELEME
-   * -------------------------------------------------------------------- */
+  /* ------------------ JOB FİLTRE ------------------ */
   const getJobsForDayAndEmployee = (day: Date, empId: number) =>
     jobs.filter(
       (job) =>
@@ -113,14 +110,17 @@ const WeekCalendarLayout: React.FC<Props> = ({
               <span className={styles.staffName}>{emp.name}</span>
             </div>
 
-            {/* DAYS FOR EMPLOYEE */}
             {daysOfWeek.map((day, i) => (
               <DroppableCell
                 key={`${emp.id}-${i}`}
                 id={`${i}-${emp.id}`}
                 day={day}
+                employee={emp}
                 jobs={getJobsForDayAndEmployee(day, emp.id)}
+                hoverSlot={hoverSlot}
+                setHoverSlot={setHoverSlot}
                 onJobClick={onJobClick}
+                onAddJobAt={onAddJobAt}
               />
             ))}
           </div>
@@ -132,39 +132,59 @@ const WeekCalendarLayout: React.FC<Props> = ({
 
 export default WeekCalendarLayout;
 
-/* -------------------------------------------------------------------------- */
-/*                               DROPPABLE CELL                               */
-/* -------------------------------------------------------------------------- */
+/* ---------------- DROPPABLE CELL ---------------- */
 
 function DroppableCell({
   id,
   day,
+  employee,
   jobs,
+  hoverSlot,
+  setHoverSlot,
   onJobClick,
+  onAddJobAt,
 }: {
   id: string;
   day: Date;
+  employee: Employee;
   jobs: CalendarJob[];
+  hoverSlot: string | null;
+  setHoverSlot: (x: string | null) => void;
   onJobClick: (id: number) => void;
+  onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }) {
   const { setNodeRef } = useDroppable({ id });
 
+  const handleAdd = () => {
+    const start = new Date(day);
+    start.setHours(9, 0);
+    const end = new Date(start);
+    end.setHours(10);
+
+    onAddJobAt(employee.id, start, end);
+  };
+
   return (
-    <div ref={setNodeRef} className={styles.dayCell}>
+    <div
+      ref={setNodeRef}
+      className={styles.dayCell}
+      onMouseEnter={() => setHoverSlot(id)}
+      onMouseLeave={() => setHoverSlot(null)}
+    >
       {jobs.map((job) => (
-        <DraggableJob
-          key={job.id}
-          job={job}
-          onClick={() => onJobClick(job.id)}
-        />
+        <DraggableJob key={job.id} job={job} onClick={() => onJobClick(job.id)} />
       ))}
+
+      {hoverSlot === id && (
+        <button className={styles.addBtn} onClick={handleAdd}>
+          +
+        </button>
+      )}
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                DRAGGABLE JOB                               */
-/* -------------------------------------------------------------------------- */
+/* ---------------- DRAGGABLE JOB ---------------- */
 
 function DraggableJob({
   job,
@@ -175,24 +195,6 @@ function DraggableJob({
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id: job.id });
-
-  // CLICK vs DRAG algılama
-  const downTimeRef = React.useRef<number | null>(null);
-
-  const handleMouseDown = () => {
-    downTimeRef.current = Date.now();
-  };
-
-  const handleMouseUp = () => {
-    if (!downTimeRef.current) return;
-
-    const delta = Date.now() - downTimeRef.current;
-
-    // Eğer kullanıcı basıp sürüklemediyse click say
-    if (delta < 200 && !isDragging) {
-      onClick();
-    }
-  };
 
   const style: React.CSSProperties = {
     transform: transform
@@ -208,8 +210,7 @@ function DraggableJob({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      onClick={onClick}
       className={styles.jobBox}
       style={style}
     >

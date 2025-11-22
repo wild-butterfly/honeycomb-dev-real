@@ -1,11 +1,13 @@
-.monthLayoutWrapper {
+/* MASTER LAYOUT */
+.layoutWrapper {
   display: grid;
-  grid-template-columns: 220px 1fr 250px;
-  gap: 12px;
+  grid-template-columns: 240px 1fr 260px;
+  gap: 14px;
   width: 100%;
-  min-height: 80vh;
+  margin-top: 10px;
 }
 
+/* LEFT STAFF */
 .staffSidebar {
   background: #fffbea;
   border-right: 2px solid #f5e39b;
@@ -14,8 +16,10 @@
 }
 
 .staffTitle {
-  font-weight: bold;
-  margin-bottom: 8px;
+  font-weight: 700;
+  color: #6b5200;
+  margin-bottom: 10px;
+  font-size: 1rem;
 }
 
 .staffCheckbox {
@@ -26,61 +30,194 @@
   font-size: 14px;
 }
 
-.monthGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+/* CENTER CALENDAR */
+.monthWrapper {
+  background: #fffdf5;
+  padding: 5px;
+  border-radius: 8px;
 }
 
+.weekHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.weekDayLabel {
+  background: #fff9e6;
+  text-align: center;
+  padding: 8px 0;
+  font-weight: 700;
+  color: #715c00;
+  font-size: 14px;
+  border-bottom: 1px solid #f3d98f;
+}
+
+/* MAIN GRID */
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.emptyCell {
+  min-height: 100px;
+}
+
+/* DAY CELL — Improved to match DAY View look */
 .dayCell {
-  min-height: 120px;
-  background: #fffdfa;
-  border: 1px solid #f2e5a4;
-  border-radius: 6px;
-  padding: 4px;
+  background: #ffffff;
+  border: 1px dashed #e8d38a;
+  border-radius: 12px;
+
+  min-height: 140px;
+  padding: 8px;
   position: relative;
+
+  transition: background 0.15s ease, box-shadow 0.2s ease;
+}
+
+.dayCell:hover {
+  background: #fffdf0;
+  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.15);
 }
 
 .dayNumber {
-  font-weight: bold;
-  color: #665200;
-  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #6b5200;
+  margin-bottom: 6px;
 }
 
-.jobsContainer {
+/* JOB LIST IN CELL */
+.jobsList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
+/* JOB BOX (DAY STYLE REPLICA) */
 .jobBox {
-  border-radius: 5px;
-  padding: 4px 6px;
-  font-size: 12px;
-  line-height: 1.2;
-  cursor: pointer;
-  color: #333;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.jobBox:hover {
-  transform: scale(1.03);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  background: #fff4c5;
+  border: 1px solid #e2c76b;
+  padding: 6px 10px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  cursor: grab;
+  box-shadow: 0px 2px 4px rgba(200, 170, 50, 0.25);
 }
 
 .jobTitle {
-  font-weight: bold;
+  font-weight: 700;
+  color: #4d3e00;
+  font-size: 13px;
 }
 
 .jobCustomer {
-  font-size: 11px;
-  opacity: 0.8;
+  font-size: 12px;
+  color: #7d6a0a;
 }
 
-.sidebarJobs {
+.jobTime {
+  font-weight: 700;
+  font-size: 11px;
+  margin-top: 4px;
+  color: #a88705;
+}
+
+/* GOLD + BUTTON — EXACT SAME AS DAY VIEW */
+.addBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+
+  background: #fffbe6;
+  border: 2px solid #d8b52a;
+
+  color: #a88300;
+  font-size: 20px;
+  font-weight: 900;
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  box-shadow: 0 3px 6px rgba(180, 150, 30, 0.3),
+    inset 0 0 6px rgba(255, 255, 255, 0.9);
+
+  transition: 0.15s ease;
+}
+
+.dayCell:hover .addBtn {
+  display: flex;
+}
+
+.addBtn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(180, 150, 30, 0.45),
+    inset 0 0 10px rgba(255, 255, 255, 1);
+}
+
+/* RIGHT JOB PANEL */
+.jobsSidebar {
   background: #fffbea;
   border-left: 2px solid #f5e39b;
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.jobsHeader {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #6b5200;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d7c67b;
+  margin-bottom: 10px;
+}
+
+.jobsScroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 260px);
+  padding-right: 4px;
+}
+
+.jobRightCard {
+  background: #fffdfa;
+  border: 1px solid #e7d48c;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(200, 170, 50, 0.12);
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: 0.15s ease;
+}
+
+.jobRightCard:hover {
+  background: #fffbe0;
+  box-shadow: 0 3px 8px rgba(200, 170, 50, 0.2);
+}
+
+.jobRightTitle {
+  font-weight: 700;
+  color: #4d3e00;
+  font-size: 14px;
+}
+
+.jobRightCustomer {
+  color: #7d6a0a;
+  font-weight: 600;
+  font-size: 12px;
 }

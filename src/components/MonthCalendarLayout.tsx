@@ -1,118 +1,24 @@
 // Created by Clevermode © 2025. All rights reserved.
-import React from "react";
-import {
-  DndContext,
-  DragEndEvent,
-  useDroppable,
-  useDraggable,
-} from "@dnd-kit/core";
-
+import React, { useState } from "react";
 import styles from "./MonthCalendarLayout.module.css";
 import { CalendarJob, Employee } from "../pages/CalendarPage";
-import SidebarJobs from "./SidebarJobs";
-
-/* -------------------------------------------------------------------------- */
-/*                             DRAGGABLE JOB CARD                              */
-/* -------------------------------------------------------------------------- */
-
-function DraggableJob({
-  job,
-  onClick,
-}: {
-  job: CalendarJob;
-  onClick: () => void;
-}) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: job.id });
-
-  // Prevent drag from blocking clicks
-  const downTimeRef = React.useRef<number | null>(null);
-
-  const handleMouseDown = () => {
-    downTimeRef.current = Date.now();
-  };
-
-  const handleMouseUp = () => {
-    if (!downTimeRef.current) return;
-    const delta = Date.now() - downTimeRef.current;
-
-    if (delta < 180 && !isDragging) {
-      onClick();
-    }
-  };
-
-  const style: React.CSSProperties = {
-    transform: transform
-      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      : undefined,
-    opacity: isDragging ? 0.6 : 1,
-    backgroundColor: job.color || "#f8f8f8",
-    cursor: "grab",
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      className={styles.jobBox}
-      style={style}
-    >
-      <div className={styles.jobTitle}>{job.title}</div>
-      <div className={styles.jobCustomer}>{job.customer}</div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               DROPPABLE DAY CELL                            */
-/* -------------------------------------------------------------------------- */
-
-function DroppableDayCell({
-  id,
-  date,
-  jobs,
-  onJobClick,
-}: {
-  id: string;
-  date: Date;
-  jobs: CalendarJob[];
-  onJobClick: (jobId: number) => void;
-
-}) {
-  const { setNodeRef } = useDroppable({ id });
-
-  return (
-    <div ref={setNodeRef} className={styles.dayCell}>
-      <div className={styles.dayNumber}>{date.getDate()}</div>
-
-      <div className={styles.jobsContainer}>
-        {jobs.map((job) => (
-          <DraggableJob
-            key={job.id}
-            job={job}
-            onClick={() => onJobClick(job.id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              MAIN MONTH VIEW                                */
-/* -------------------------------------------------------------------------- */
 
 interface Props {
   date: Date;
   jobs: CalendarJob[];
   employees: Employee[];
   selectedStaff: number[];
-  onStaffChange: (ids: number[]) => void;
-  onJobClick: (jobId: number) => void;
-  onJobMove: (id: number, employeeId: number, newStart: Date, newEnd: Date) => void;
+  onStaffChange: (list: number[]) => void;
+
+  onJobClick: (id: number) => void;
+  onJobMove: (
+    id: number,
+    employeeId: number,
+    newStart: Date,
+    newEnd: Date
+  ) => void;
+
+  onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
 const MonthCalendarLayout: React.FC<Props> = ({
@@ -123,105 +29,158 @@ const MonthCalendarLayout: React.FC<Props> = ({
   onStaffChange,
   onJobClick,
   onJobMove,
+  onAddJobAt,
 }) => {
+  const [hoverDay, setHoverDay] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+
   const year = date.getFullYear();
   const month = date.getMonth();
+
   const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
 
-  const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const offset = (firstDay.getDay() + 6) % 7;
+  const totalDays = lastDay.getDate();
 
-  const daysArray = Array.from({ length: 42 }, (_, i) => {
-    const dayNum = i - startDay + 1;
-    if (dayNum <= 0 || dayNum > daysInMonth) return null;
-    return new Date(year, month, dayNum);
-  });
+  const days: Date[] = [];
+  for (let i = 1; i <= totalDays; i++) {
+    days.push(new Date(year, month, i));
+  }
 
-  // Group jobs by day
-  const jobsByDay: { [key: number]: CalendarJob[] } = {};
-  jobs.forEach((job) => {
-    const d = new Date(job.start);
-    if (d.getMonth() === month && d.getFullYear() === year) {
-      const day = d.getDate();
-      if (!jobsByDay[day]) jobsByDay[day] = [];
-      jobsByDay[day].push(job);
-    }
-  });
+  const getJobsForDay = (day: Date) =>
+    jobs.filter((j) => {
+      const d = new Date(j.start);
+      return (
+        d.getFullYear() === day.getFullYear() &&
+        d.getMonth() === day.getMonth() &&
+        d.getDate() === day.getDate() &&
+        (selectedStaff.length === 0 ||
+          j.assignedTo.some((id) => selectedStaff.includes(id)))
+      );
+    });
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const jobId = Number(active.id);
-    const job = jobs.find((j) => j.id === jobId);
-    if (!job) return;
-
-    // over.id format → "day-YYYY-M-D"
-    const overId = String(over.id);
-    const [, y, m, d] = overId.split("-");
-    const newDay = new Date(Number(y), Number(m), Number(d));
-
-    // Preserve original time
-    const oldStart = new Date(job.start);
-    const newStart = new Date(newDay);
-    newStart.setHours(oldStart.getHours(), oldStart.getMinutes());
-
-    const duration = new Date(job.end).getTime() - oldStart.getTime();
-    const newEnd = new Date(newStart.getTime() + duration);
-
-    // Option A: Employee stays the same
-    onJobMove(job.id, job.assignedTo[0], newStart, newEnd);
-  };
-
-  const handleStaffToggle = (id: number) => {
-    if (selectedStaff.includes(id)) {
-      onStaffChange(selectedStaff.filter((s) => s !== id));
-    } else {
-      onStaffChange([...selectedStaff, id]);
-    }
-  };
+  const filteredJobsRight = jobs.filter(
+    (j) =>
+      j.title.toLowerCase().includes(search.toLowerCase()) ||
+      j.customer.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className={styles.monthLayoutWrapper}>
-        {/* LEFT: Staff List */}
-        <aside className={styles.staffSidebar}>
-          <div className={styles.staffTitle}>Staff</div>
-          {employees.map((emp) => (
-            <label key={emp.id} className={styles.staffCheckbox}>
-              <input
-                type="checkbox"
-                checked={selectedStaff.includes(emp.id)}
-                onChange={() => handleStaffToggle(emp.id)}
-              />
-              <span>{emp.name}</span>
-            </label>
-          ))}
-        </aside>
+    <div className={styles.layoutWrapper}>
+      {/* LEFT STAFF SIDE */}
+      <div className={styles.staffSidebar}>
+        <div className={styles.staffTitle}>Staff</div>
 
-        {/* CENTER: Month Grid */}
-        <div className={styles.monthGrid}>
-          {daysArray.map((day, i) =>
-            day ? (
-              <DroppableDayCell
-                key={i}
-                id={`day-${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`}
-                date={day}
-                jobs={jobsByDay[day.getDate()] ?? []}
-                onJobClick={onJobClick}
-              />
-            ) : (
-              <div key={i} className={styles.emptyCell}></div>
-            )
-          )}
+        {employees.map((emp) => (
+          <label key={emp.id} className={styles.staffCheckbox}>
+            <input
+              type="checkbox"
+              checked={selectedStaff.includes(emp.id)}
+              onChange={(e) => {
+                if (e.target.checked)
+                  onStaffChange([...selectedStaff, emp.id]);
+                else onStaffChange(selectedStaff.filter((x) => x !== emp.id));
+              }}
+            />
+            {emp.name}
+          </label>
+        ))}
+      </div>
+
+      {/* MIDDLE CALENDAR */}
+      <div className={styles.monthWrapper}>
+        <div className={styles.weekHeader}>
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            <div key={d} className={styles.weekDayLabel}>
+              {d}
+            </div>
+          ))}
         </div>
 
-        {/* RIGHT: Sidebar Job List */}
-        <aside className={styles.sidebarJobs}>
-          <SidebarJobs jobs={jobs} onJobClick={onJobClick} />
-        </aside>
+        <div className={styles.daysGrid}>
+          {Array.from({ length: offset }).map((_, i) => (
+            <div key={"e-" + i} className={styles.emptyCell} />
+          ))}
+
+          {days.map((day) => {
+            const dayNum = day.getDate();
+            const jobList = getJobsForDay(day);
+
+            return (
+              <div
+                key={day.toISOString()}
+                className={styles.dayCell}
+                onMouseEnter={() => setHoverDay(dayNum)}
+                onMouseLeave={() => setHoverDay(null)}
+              >
+                <div className={styles.dayNumber}>{dayNum}</div>
+
+                <div className={styles.jobsList}>
+                  {jobList.map((job) => (
+                    <div
+                      key={job.id}
+                      className={styles.jobBox}
+                      onClick={() => onJobClick(job.id)}
+                      style={{ borderLeftColor: job.color || "#c4e3a0" }}
+                    >
+                      <div className={styles.jobTitle}>{job.title}</div>
+                      <div className={styles.jobCustomer}>
+                        {job.customer}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {hoverDay === dayNum && (
+                  <button
+                    className={styles.addBtn}
+                    onClick={() => {
+                      const start = new Date(day);
+                      start.setHours(9, 0);
+                      const end = new Date(start);
+                      end.setHours(10);
+
+                      const empId =
+                        selectedStaff[0] || employees[0].id;
+
+                      onAddJobAt(empId, start, end);
+                    }}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </DndContext>
+
+      {/* RIGHT JOBS SIDEBAR */}
+      <div className={styles.jobsSidebar}>
+        <div className={styles.jobsHeader}>Jobs</div>
+
+        <input
+          className={styles.searchInput}
+          placeholder="Search jobs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        <div className={styles.jobsScroll}>
+          {filteredJobsRight.map((job) => (
+            <div
+              key={job.id}
+              className={styles.jobRightCard}
+              onClick={() => onJobClick(job.id)}
+            >
+              <div className={styles.jobRightTitle}>{job.title}</div>
+              <div className={styles.jobRightCustomer}>{job.customer}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

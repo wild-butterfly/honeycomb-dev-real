@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 interface Props {
   job: CalendarJob;
   employees: Employee[];
+  allJobs: CalendarJob[];
   onClose: () => void;
   onDelete: () => void;
   onSave: (job: CalendarJob) => void;
@@ -44,16 +45,14 @@ function formatDateLine(start: string, end: string) {
 const CalendarJobDetailsModal: React.FC<Props> = ({
   job,
   employees,
+  allJobs,
   onClose,
   onDelete,
   onSave,
 }) => {
   const navigate = useNavigate();
 
-  const { dateLabel, timeLabel, durationLabel } = formatDateLine(
-    job.start,
-    job.end
-  );
+  const { dateLabel, timeLabel, durationLabel } = formatDateLine(job.start, job.end);
 
   const [editMode, setEditMode] = useState(false);
 
@@ -70,6 +69,40 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const [localStart, setLocalStart] = useState(new Date(job.start));
   const [localEnd, setLocalEnd] = useState(new Date(job.end));
+
+  // SEARCH JOB
+  const [search, setSearch] = useState("");
+  const [jobResults, setJobResults] = useState<CalendarJob[]>([]);
+
+  useEffect(() => {
+    if (search.length < 2) {
+      setJobResults([]);
+      return;
+    }
+
+    const lower = search.toLowerCase();
+
+    const filtered = allJobs.filter(
+      (j) =>
+        j.title.toLowerCase().includes(lower) ||
+        j.customer.toLowerCase().includes(lower) ||
+        (j.location && j.location.toLowerCase().includes(lower))
+    );
+
+    setJobResults(filtered);
+  }, [search]);
+
+  function fillJobFields(j: CalendarJob) {
+    setTitle(j.title);
+    setCustomer(j.customer);
+    setLocation(j.location || "");
+    setSiteContact(j.siteContact || "");
+    setContactInfo(j.contactInfo || "");
+    setNotes(j.notes || "");
+    setAssignedTo(
+      Array.isArray(j.assignedTo) ? j.assignedTo : [j.assignedTo]
+    );
+  }
 
   useEffect(() => {
     setEditMode(false);
@@ -107,6 +140,39 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   return (
     <div className={styles.backdrop}>
       <div className={styles.panel}>
+
+        {/* SEARCH JOB */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>SEARCH JOB</div>
+
+          <input
+            className={styles.searchInput}
+            placeholder="Search existing jobs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          {jobResults.length > 0 && (
+            <div className={styles.searchDropdown}>
+              {jobResults.map((j) => (
+                <div
+                  key={j.id}
+                  className={styles.searchItem}
+                  onClick={() => {
+                    fillJobFields(j);
+                    setSearch("");
+                    setJobResults([]);
+                  }}
+                >
+                  <div className={styles.searchTitle}>{j.title}</div>
+                  <div className={styles.searchCustomer}>{j.customer}</div>
+                  <div className={styles.searchAddress}>{j.location}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* HEADER */}
         <header className={styles.header}>
           <div>
@@ -272,7 +338,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* RELATED EVENTS */}
+        {/* RELATED */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>RELATED EVENTS</div>
 

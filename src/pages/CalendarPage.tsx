@@ -141,24 +141,26 @@ const CalendarPage: React.FC = () => {
   };
 
   /* Add Job */
+
   const handleAddJobAt = (employeeId: number, start: Date, end: Date) => {
-    const newId = Math.floor(Math.random() * 999999);
-    const newJob: CalendarJob = {
-      id: newId,
-      title: "New Job",
-      customer: "",
-      location: "",
-      assignedTo: [employeeId],
-      start: start.toISOString(),
-      end: end.toISOString(),
-      siteContact: "",
-      contactInfo: "",
-      notes: "",
-      color: "#fffdf0",
-    };
-    setJobs((prev) => [...prev, newJob]);
-    setOpenJobId(newId);
+  const newId = Math.floor(Math.random() * 999999);
+  const newJob: CalendarJob = {
+    id: newId,
+    title: "New Job",
+    customer: "",
+    location: "",
+    assignedTo: [employeeId],
+    start: start.toISOString(),
+    end: end.toISOString(),
+    siteContact: "",
+    contactInfo: "",
+    notes: "",
+    color: "#fffdf0",
   };
+  setJobs((prev) => [...prev, newJob]);
+  setOpenJobId(newId);
+};
+
 
   /* Move Job */
   const handleMoveJob = (
@@ -228,6 +230,7 @@ const CalendarPage: React.FC = () => {
             onStaffChange={setMonthStaffFilter}
             onJobClick={handleJobClick}
             onJobMove={handleMoveJob}
+            onAddJobAt={handleAddJobAt}
           />
         ) : rangeMode === "week" ? (
           /* WEEK VIEW */
@@ -240,6 +243,7 @@ const CalendarPage: React.FC = () => {
                   employees={employees}
                   onJobClick={handleJobClick}
                   onJobMove={handleMoveJob}
+                  onAddJobAt={handleAddJobAt}
                 />
               </div>
               <aside className={styles.sidebarWrapper}>
@@ -281,6 +285,7 @@ const CalendarPage: React.FC = () => {
         <CalendarJobDetailsModal
           job={openJob}
           employees={employees}
+          allJobs={jobs} 
           onClose={() => setOpenJobId(null)}
           onSave={handleSaveJob}
           onDelete={() => handleDeleteJob(openJob.id)}
