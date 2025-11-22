@@ -70,24 +70,43 @@ const MonthCalendarLayout: React.FC<Props> = ({
     <div className={styles.layoutWrapper}>
 
       {/* LEFT STAFF SIDE */}
-      <div className={styles.staffSidebar}>
-        <div className={styles.staffTitle}>Staff</div>
+      <div className={styles.staffListWrapper}>
+  <div className={styles.staffListTitle}>Staff</div>
 
-        {employees.map((emp) => (
-          <label key={emp.id} className={styles.staffCheckbox}>
-            <input
-              type="checkbox"
-              checked={selectedStaff.includes(emp.id)}
-              onChange={(e) => {
-                if (e.target.checked)
-                  onStaffChange([...selectedStaff, emp.id]);
-                else onStaffChange(selectedStaff.filter((x) => x !== emp.id));
-              }}
-            />
-            {emp.name}
-          </label>
-        ))}
-      </div>
+  <div className={styles.staffList}>
+    {employees.map((emp) => {
+      const isChecked = selectedStaff.includes(emp.id);
+
+      return (
+        <label key={emp.id} className={styles.staffItem}>
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={() => {
+              if (isChecked) {
+                onStaffChange(selectedStaff.filter((x) => x !== emp.id));
+              } else {
+                onStaffChange([...selectedStaff, emp.id]);
+              }
+            }}
+            className={styles.staffCheckbox}
+          />
+
+          <div className={styles.staffAvatar}>
+            {emp.name
+              .split(" ")
+              .map((p) => p[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2)}
+          </div>
+
+          <div className={styles.staffName}>{emp.name}</div>
+        </label>
+      );
+    })}
+  </div>
+</div>
 
       {/* ================= MIDDLE CALENDAR ================= */}
       <div className={styles.monthWrapper}>

@@ -8,26 +8,68 @@
 }
 
 /* LEFT STAFF */
-.staffSidebar {
-  background: #fffbea;
-  border-right: 2px solid #f5e39b;
-  border-radius: 8px;
-  padding: 12px;
+.staffListWrapper {
+  margin-bottom: 20px;
+  background: #fffef6;
+  border: 1px solid #f4e2a0;
+  padding: 14px;
+  border-radius: 12px;
 }
 
-.staffTitle {
-  font-weight: 700;
-  color: #6b5200;
+.staffListTitle {
+  font-size: 0.9rem;
+  font-weight: 800;
   margin-bottom: 10px;
-  font-size: 1rem;
+  color: #866a00;
+}
+
+.staffList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.staffItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid #f3db8a;
+  background: #fffaf0;
+
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.staffItem:hover {
+  background: #fff3cf;
+  transform: translateY(-1px);
 }
 
 .staffCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.staffAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffd54f;
+  color: #5c4208;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-  font-size: 14px;
+  justify-content: center;
+}
+
+.staffName {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #4f3f00;
 }
 
 /* CENTER CALENDAR */
