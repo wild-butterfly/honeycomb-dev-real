@@ -416,26 +416,27 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         </div>
 
         {/* RELATED */}
-        <div className={styles.section}>
-          <div className={styles.sectionLabel}>RELATED EVENTS</div>
+<div className={styles.section}>
+  <div className={styles.sectionLabel}>RELATED EVENTS</div>
 
-          <div className={styles.relatedRow}>
-            <div className={styles.relatedTag}>
-              {job.futureEvents?.length ?? 0} FUTURE EVENTS
-            </div>
+  <div className={styles.relatedRow}>
+    <div className={styles.relatedTag}>
+      {job.futureEvents?.length ?? 0} FUTURE EVENTS
+    </div>
 
-            <div className={styles.relatedTag}>
-              {job.pastEvents?.length ?? 0} PAST EVENTS
-            </div>
+    <div className={styles.relatedTag}>
+      {job.pastEvents?.length ?? 0} PAST EVENTS
+    </div>
 
-            <button
-              className={styles.viewAllBtn}
-              onClick={() => navigate(`/jobs/${job.id}`)}
-            >
-              View full job →
-            </button>
-          </div>
-        </div>
+    <button
+      className={styles.viewJobBtn}
+      onClick={() => navigate(`/jobs/${job.id}`)}
+    >
+      View job →
+    </button>
+  </div>
+</div>
+
 
         {/* FOOTER */}
         <div className={styles.footer}>

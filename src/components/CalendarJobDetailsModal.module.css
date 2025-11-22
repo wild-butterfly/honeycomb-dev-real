@@ -236,11 +236,23 @@
   color: #5c4a00;
 }
 
-.viewAllBtn {
-  margin-left: auto;
-  border: 1px solid #e8d27a;
-  background: #fffdf3;
-  color: #5c4a00;
+/* ==== VIEW JOB BUTTON (PREMIUM STYLE) ==== */
+.viewJobBtn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: #ffefb3;
+  border: 1px solid #e5c145;
+  color: #6d5300;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.15s ease;
+  white-space: nowrap;
+}
+
+.viewJobBtn:hover {
+  background: #ffe799;
+  border-color: #d4ab29;
 }
 
 /* FOOTER */
