@@ -9,15 +9,8 @@ interface Props {
   employees: Employee[];
   selectedStaff: number[];
   onStaffChange: (list: number[]) => void;
-
   onJobClick: (id: number) => void;
-  onJobMove: (
-    id: number,
-    employeeId: number,
-    newStart: Date,
-    newEnd: Date
-  ) => void;
-
+  onJobMove: (id: number, employeeId: number, newStart: Date, newEnd: Date) => void;
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
@@ -66,49 +59,70 @@ const MonthCalendarLayout: React.FC<Props> = ({
       j.customer.toLowerCase().includes(search.toLowerCase())
   );
 
+  const renderStatusBadge = (job: CalendarJob, location: "cell" | "sidebar") => {
+    if (!job.status || job.status === "active") return null;
+
+const label =
+  job.status === "return"
+    ? "NEED TO RETURN"
+    : job.status === "quote"
+    ? "QUOTE"
+    : job.status === "completed"
+    ? "COMPLETED"
+    : "ACTIVE";
+
+
+    const base = `${styles.jobStatusBadge} ${styles["status_" + job.status]}`;
+
+    const extra =
+  location === "cell"
+    ? ` ${styles.badgeInCell}`
+    : ` ${styles.badgeInSidebar}`;
+
+
+    return <span className={base + extra}>{label}</span>;
+  };
+
   return (
     <div className={styles.layoutWrapper}>
-
-      {/* LEFT STAFF SIDE */}
+      {/* LEFT STAFF PANEL */}
       <div className={styles.staffListWrapper}>
-  <div className={styles.staffListTitle}>Staff</div>
+        <div className={styles.staffListTitle}>Staff</div>
+        <div className={styles.staffList}>
+          {employees.map((emp) => {
+            const isChecked = selectedStaff.includes(emp.id);
+            return (
+              <label key={emp.id} className={styles.staffItem}>
+                <input
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => {
+                    if (isChecked) {
+                      onStaffChange(selectedStaff.filter((x) => x !== emp.id));
+                    } else {
+                      onStaffChange([...selectedStaff, emp.id]);
+                    }
+                  }}
+                  className={styles.staffCheckbox}
+                />
 
-  <div className={styles.staffList}>
-    {employees.map((emp) => {
-      const isChecked = selectedStaff.includes(emp.id);
+                <div className={styles.staffAvatar}>
+                  {emp.name
+                    .split(" ")
+                    .map((p) => p[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                </div>
 
-      return (
-        <label key={emp.id} className={styles.staffItem}>
-          <input
-            type="checkbox"
-            checked={isChecked}
-            onChange={() => {
-              if (isChecked) {
-                onStaffChange(selectedStaff.filter((x) => x !== emp.id));
-              } else {
-                onStaffChange([...selectedStaff, emp.id]);
-              }
-            }}
-            className={styles.staffCheckbox}
-          />
+                <div className={styles.staffName}>{emp.name}</div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
 
-          <div className={styles.staffAvatar}>
-            {emp.name
-              .split(" ")
-              .map((p) => p[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
-          </div>
-
-          <div className={styles.staffName}>{emp.name}</div>
-        </label>
-      );
-    })}
-  </div>
-</div>
-
-      {/* ================= MIDDLE CALENDAR ================= */}
+      {/* CENTER MONTH GRID */}
       <div className={styles.monthWrapper}>
         <div className={styles.weekHeader}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
@@ -136,7 +150,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
-                {/* ===== DAILY JOB LIST ===== */}
                 <div className={styles.jobsList}>
                   {jobList.map((job) => (
                     <div
@@ -147,6 +160,8 @@ const MonthCalendarLayout: React.FC<Props> = ({
                         backgroundColor: job.color || "#fff4c5",
                       }}
                     >
+                      {renderStatusBadge(job, "cell")}
+
                       <div className={styles.jobTitle}>{job.title}</div>
                       <div className={styles.jobCustomer}>{job.customer}</div>
                     </div>
@@ -162,9 +177,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       const end = new Date(start);
                       end.setHours(10);
 
-                      const empId =
-                        selectedStaff[0] || employees[0].id;
-
+                      const empId = selectedStaff[0] || employees[0].id;
                       onAddJobAt(empId, start, end);
                     }}
                   >
@@ -177,7 +190,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* ================= RIGHT JOBS SIDEBAR ================= */}
+      {/* RIGHT SIDEBAR */}
       <div className={styles.jobsSidebar}>
         <div className={styles.jobsHeader}>Jobs</div>
 
@@ -200,11 +213,12 @@ const MonthCalendarLayout: React.FC<Props> = ({
             >
               <div className={styles.jobRightTitle}>{job.title}</div>
               <div className={styles.jobRightCustomer}>{job.customer}</div>
+
+              {renderStatusBadge(job, "sidebar")}
             </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 };

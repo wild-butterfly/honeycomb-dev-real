@@ -153,6 +153,22 @@
   max-width: 280px;
 }
 
+/* -------------------------
+   SIDEBAR BADGE (YENİ)
+-------------------------- */
+.sidebarBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  z-index: 10;
+}
+
 /* ───────── TIMELINE CORE ───────── */
 
 /* Ana gövde alanı (satırlar) */
@@ -631,4 +647,56 @@
     max-width: 100%;
     flex: 1 1 auto;
   }
+}
+
+/* SAĞDAKİ JOB KARTLARI (Month görünümü ile birebir aynı) */
+.sidebarJobItemCorrect {
+  background: #e7f7f2; /* Month görünüm job rengi */
+  border: 1px solid #d5ede5;
+  padding: 14px 12px 14px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: 0.15s ease;
+}
+
+.sidebarJobItemCorrect:hover {
+  background: #f1fbf7;
+}
+
+/* BADGE – Month görünüm ile aynı */
+.jobStatusBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+/* Month Badge Colors */
+.status_completed {
+  background: #e8f8e8;
+  color: #2e7d32;
+  border: 1px solid #a4d4a4;
+}
+
+.status_return {
+  background: #fff4e5;
+  color: #b26a00;
+  border: 1px solid #f0c38c;
+}
+
+.status_quote {
+  background: #e8f2ff;
+  color: #0b4fa8;
+  border: 1px solid #9ec3ff;
+}
+
+.status_active {
+  background: #fff3cd;
+  color: #7a5c00;
+  border: 1px solid #e2c76b;
 }

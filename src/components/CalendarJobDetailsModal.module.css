@@ -79,7 +79,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #b99a2a;
-  margin-bottom: 3px;
+  margin-bottom: 5px;
 }
 
 .sectionValue {
@@ -140,7 +140,7 @@
 }
 
 .removeX {
-  font-size: 18px;
+  font-size: 16px;
   margin-left: 6px;
   color: #b30000;
 }
@@ -149,7 +149,8 @@
 .titleInput,
 .fieldInput,
 .fieldTextarea,
-.searchInput {
+.searchInput,
+.statusSelect {
   width: 100%;
   border-radius: 8px;
   border: 1px solid #e4ce7a;
@@ -159,12 +160,22 @@
   color: #4a3f00;
 }
 
-.searchInput {
-  margin-top: 6px;
+.statusSelect {
+  cursor: pointer;
+}
+
+.statusSelect:focus {
+  outline: none;
+  border-color: #ffb300;
+  box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
 }
 
 .fieldTextarea {
   resize: vertical;
+}
+
+.searchInput {
+  margin-top: 6px;
 }
 
 .titleInput:focus,
@@ -236,8 +247,8 @@
   color: #5c4a00;
 }
 
-/* ==== VIEW JOB BUTTON (PREMIUM STYLE) ==== */
-.viewJobBtn {
+/* ==== VIEW JOB BUTTON ==== */
+.viewAllBtn {
   padding: 8px 14px;
   font-size: 0.85rem;
   font-weight: 700;
@@ -250,7 +261,7 @@
   white-space: nowrap;
 }
 
-.viewJobBtn:hover {
+.viewAllBtn:hover {
   background: #ffe799;
   border-color: #d4ab29;
 }
@@ -293,41 +304,16 @@
   color: #6f601a;
 }
 
-/* COLOR PICKER + PALETTE */
+/* COLOR PICKER */
 .colorPickerWrapper {
   margin-top: 12px;
 }
 
-.colorHexInput {
-  margin-top: 10px;
-  padding: 6px 10px;
-  border: 1px solid #d7c67b;
-  border-radius: 6px;
-  width: 120px;
+.colorValue {
+  margin-top: 6px;
   font-family: monospace;
-  font-size: 14px;
-  background: #fffef8;
-  color: #4a3f00;
-}
-
-.colorPaletteRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.colorDot {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.colorDot:hover {
-  transform: scale(1.14);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  color: #6d5500;
 }
 
 .colorPreview {

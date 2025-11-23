@@ -1,3 +1,4 @@
+// Created by Clevermode © 2025. All rights reserved.
 import React, { useState } from "react";
 import {
   DndContext,
@@ -21,7 +22,6 @@ interface Props {
     newEnd: Date
   ) => void;
 
-  /** TEK DOĞRU İMZA: Day view ve Week view için */
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
@@ -184,7 +184,7 @@ function DroppableCell({
   );
 }
 
-/* ---------------- DRAGGABLE JOB ---------------- */
+/* ---------------- DRAGGABLE JOB (WITH BADGES) ---------------- */
 
 function DraggableJob({
   job,
@@ -205,6 +205,17 @@ function DraggableJob({
     cursor: "grab",
   };
 
+  /* BADGE — same logic as Month + Sidebar */
+  let badge = null;
+
+if (job.status === "quote") {
+  badge = <div className={styles.badgeQuote}>QUOTE</div>;
+} else if (job.status === "completed") {
+  badge = <div className={styles.badgeCompleted}>COMPLETED</div>;
+} else if (job.status === "return") {
+  badge = <div className={styles.badgeReturn}>NEED TO RETURN</div>;
+}
+
   return (
     <div
       ref={setNodeRef}
@@ -214,6 +225,8 @@ function DraggableJob({
       className={styles.jobBox}
       style={style}
     >
+      {badge}
+
       <div className={styles.jobTitle}>{job.title}</div>
       <div className={styles.jobCustomer}>{job.customer}</div>
 

@@ -9,7 +9,6 @@ import SidebarJobs from "../components/SidebarJobs";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
 
-// HONEYCOMB PANEL
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
 export type Employee = {
@@ -29,15 +28,16 @@ export type CalendarJob = {
   end: string;
   color?: string;
 
-  // Honeycomb panel new fields
   siteContact?: string;
   contactInfo?: string;
   notes?: string;
+
   pastEvents?: CalendarJob[];
   futureEvents?: CalendarJob[];
+
+  status?: "active" | "completed" | "return" | "quote";
 };
 
-/* ───────── Seed Data ───────── */
 const employeesSeed: Employee[] = [
   { id: 1, name: "Aşkın Fear", avatar: "/avatar2.png" },
   { id: 2, name: "Daniel Fear", avatar: "/avatar1.png" },
@@ -63,6 +63,7 @@ const jobsSeed: CalendarJob[] = [
     contactInfo: "0400 123 456",
     notes: "Check fire extinguishers + kitchen appliances.",
     color: "#e4f4de",
+    status: "active",
   },
   {
     id: 102,
@@ -76,10 +77,14 @@ const jobsSeed: CalendarJob[] = [
     contactInfo: "0400 555 444",
     notes: "Warehouse + office testing.",
     color: "#dff5f5",
+    status: "return",
   },
 ];
 
-/* ───────── Helpers ───────── */
+/* ------------------------
+   DATE HELPERS
+------------------------- */
+
 function isSameDay(dateStr: string, day: Date) {
   const d = new Date(dateStr);
   return (
@@ -89,11 +94,31 @@ function isSameDay(dateStr: string, day: Date) {
   );
 }
 
+// *** NEW – Week Fix ***
+function isSameWeek(dateStr: string, weekDate: Date) {
+  const d = new Date(dateStr);
+  const wd = new Date(weekDate);
+
+  // Get Monday as first day of week
+  const first = new Date(wd);
+  const day = wd.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // convert Sunday → last day
+  first.setDate(wd.getDate() + diff);
+
+  const last = new Date(first);
+  last.setDate(first.getDate() + 6);
+
+  return d >= first && d <= last;
+}
+
 function jobMatchesStaff(job: CalendarJob, staff: number | "all") {
   return staff === "all" ? true : job.assignedTo.includes(staff);
 }
 
-/* ───────── Component ───────── */
+/* ------------------------
+   MAIN COMPONENT
+------------------------- */
+
 const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("day");
@@ -103,13 +128,13 @@ const CalendarPage: React.FC = () => {
   const [employees] = useState<Employee[]>(employeesSeed);
   const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
 
-  /* Quick Panel state */
   const [openJobId, setOpenJobId] = useState<number | null>(null);
   const openJob = useMemo(
     () => jobs.find((j) => j.id === openJobId) ?? null,
     [jobs, openJobId]
   );
 
+  /* ---- Day jobs ---- */
   const jobsByEmployee = useMemo(() => {
     const map: { [empId: number]: CalendarJob[] } = {};
     employees.forEach((emp) => {
@@ -123,7 +148,19 @@ const CalendarPage: React.FC = () => {
     return map;
   }, [employees, jobs, selectedDate, staffFilter]);
 
-  /* Navigation */
+  /* ---- Week jobs (FIXED) ---- */
+  const jobsThisWeek = useMemo(
+    () =>
+      jobs.filter(
+        (j) => isSameWeek(j.start, selectedDate) && jobMatchesStaff(j, staffFilter)
+      ),
+    [jobs, selectedDate, staffFilter]
+  );
+
+  /* ------------------------
+     NAVIGATION
+  ------------------------- */
+
   const goPrevDay = () => {
     const d = new Date(selectedDate);
     if (rangeMode === "month") d.setMonth(d.getMonth() - 1);
@@ -140,29 +177,30 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
-  /* Add Job */
+  /* ------------------------
+     JOB ACTIONS
+  ------------------------- */
 
   const handleAddJobAt = (employeeId: number, start: Date, end: Date) => {
-  const newId = Math.floor(Math.random() * 999999);
-  const newJob: CalendarJob = {
-    id: newId,
-    title: "New Job",
-    customer: "",
-    location: "",
-    assignedTo: [employeeId],
-    start: start.toISOString(),
-    end: end.toISOString(),
-    siteContact: "",
-    contactInfo: "",
-    notes: "",
-    color: "#fffdf0",
+    const newId = Math.floor(Math.random() * 999999);
+    const newJob: CalendarJob = {
+      id: newId,
+      title: "New Job",
+      customer: "",
+      location: "",
+      assignedTo: [employeeId],
+      start: start.toISOString(),
+      end: end.toISOString(),
+      siteContact: "",
+      contactInfo: "",
+      notes: "",
+      color: "#fffdf0",
+      status: "active",
+    };
+    setJobs((prev) => [...prev, newJob]);
+    setOpenJobId(newId);
   };
-  setJobs((prev) => [...prev, newJob]);
-  setOpenJobId(newId);
-};
 
-
-  /* Move Job */
   const handleMoveJob = (
     jobId: number,
     employeeId: number,
@@ -183,19 +221,34 @@ const CalendarPage: React.FC = () => {
     );
   };
 
-  /* Open Job */
   const handleJobClick = (id: number) => {
     setOpenJobId(id);
   };
 
-  /* Save Job */
   const handleSaveJob = (updated: CalendarJob) =>
-    setJobs((prev) => prev.map((j) => (j.id === updated.id ? updated : j)));
+    setJobs((prev) =>
+      prev.map((j) => (j.id === updated.id ? updated : j))
+    );
 
-  /* Delete Job */
   const handleDeleteJob = (jobId: number) =>
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
 
+  /* ------------------------
+     RENDER
+  ------------------------- */
+function isSameWeek(dateStr: string, weekDate: Date) {
+  const d = new Date(dateStr);
+
+  const weekStart = new Date(weekDate);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // monday
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  return d >= weekStart && d <= weekEnd;
+}
   return (
     <div className={styles.dashboardBg}>
       <DashboardNavbar
@@ -216,14 +269,15 @@ const CalendarPage: React.FC = () => {
           onStaffFilterChange={setStaffFilter}
         />
 
-        {/* MONTH VIEW */}
         {rangeMode === "month" ? (
           <MonthCalendarLayout
             date={selectedDate}
             jobs={jobs.filter(
               (j) =>
                 monthStaffFilter.length === 0 ||
-                j.assignedTo.some((id) => monthStaffFilter.includes(id))
+                j.assignedTo.some((id) =>
+                  monthStaffFilter.includes(id)
+                )
             )}
             employees={employees}
             selectedStaff={monthStaffFilter}
@@ -233,26 +287,32 @@ const CalendarPage: React.FC = () => {
             onAddJobAt={handleAddJobAt}
           />
         ) : rangeMode === "week" ? (
-          /* WEEK VIEW */
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
               <div className={styles.timelineCardWrapper}>
                 <WeekCalendarLayout
-                  date={selectedDate}
-                  jobs={jobs.filter((j) => jobMatchesStaff(j, staffFilter))}
-                  employees={employees}
-                  onJobClick={handleJobClick}
-                  onJobMove={handleMoveJob}
-                  onAddJobAt={handleAddJobAt}
-                />
+  date={selectedDate}
+  jobs={jobs.filter(
+    (j) =>
+      jobMatchesStaff(j, staffFilter) &&
+      isSameWeek(j.start, selectedDate)
+  )}
+  employees={employees}
+  onJobClick={handleJobClick}
+  onJobMove={handleMoveJob}
+  onAddJobAt={handleAddJobAt}
+/>
+
               </div>
               <aside className={styles.sidebarWrapper}>
-                <SidebarJobs jobs={jobs} onJobClick={handleJobClick} />
+                <SidebarJobs
+                  jobs={jobsThisWeek}   // Week sidebar also correct now
+                  onJobClick={handleJobClick}
+                />
               </aside>
             </div>
           </div>
         ) : (
-          /* DAY VIEW */
           <div className={styles.desktopWrapper}>
             <div className={styles.desktopMainAndSidebar}>
               <div className={styles.timelineCardWrapper}>
@@ -280,12 +340,11 @@ const CalendarPage: React.FC = () => {
         )}
       </div>
 
-      {/* ───────── HONEYCOMB SLIDE-IN PANEL ───────── */}
       {openJob && (
         <CalendarJobDetailsModal
           job={openJob}
           employees={employees}
-          allJobs={jobs} 
+          allJobs={jobs}
           onClose={() => setOpenJobId(null)}
           onSave={handleSaveJob}
           onDelete={() => handleDeleteJob(openJob.id)}
@@ -297,4 +356,3 @@ const CalendarPage: React.FC = () => {
 
 export default CalendarPage;
 export { jobsSeed };
-

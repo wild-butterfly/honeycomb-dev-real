@@ -1,3 +1,4 @@
+// Created by Honeycomb © 2025
 import React, { useMemo, useState } from "react";
 import styles from "../pages/CalendarPage.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
@@ -60,7 +61,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   const findJobById = (id: number) =>
     allJobs.find((j) => j.id === id) || null;
 
-  // === DRAG & DROP FONKSİYONU ===
+  // ---------------- DRAG DROP ----------------
   const handleDropOnSlot = (e: React.DragEvent, employeeId: number) => {
     if (!draggingJobId || !onMoveJob) return;
 
@@ -74,14 +75,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     if (!lane) return;
 
     const laneRect = lane.getBoundingClientRect();
-
-    // 🔥 Cursor + job offset düzeltildi
-    const relativeX = (e.clientX - laneRect.left) - dragOffsetX;
+    const relativeX = e.clientX - laneRect.left - dragOffsetX;
 
     const hourOffset = relativeX / HOUR_WIDTH_PX;
     const rawHour = DAY_START_HOUR + hourOffset;
 
-    // En yakın 15 dakikaya snap et
     const hours = Math.floor(rawHour);
     const minuteFloat = (rawHour % 1) * 60;
     const minuteRounded = Math.round(minuteFloat / 15) * 15;
@@ -94,7 +92,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
     const originalStart = new Date(job.start);
     const originalEnd = new Date(job.end);
-
     const duration = originalEnd.getTime() - originalStart.getTime();
     const newEnd = new Date(newStart.getTime() + duration);
 
@@ -102,9 +99,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     setDraggingJobId(null);
   };
 
+  // ---------------- RENDER ----------------
   return (
     <div>
-      {/* Header row */}
+      {/* HEADER */}
       <div className={styles.timelineRow}>
         <div className={styles.staffCell}></div>
         <div className={styles.jobsLane}>
@@ -127,13 +125,18 @@ const DesktopCalendarLayout: React.FC<Props> = ({
             <div key={emp.id} className={styles.timelineRow}>
               <div className={styles.staffCell}>
                 <div className={styles.staffAvatarCircle}>
-                  {emp.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                  {emp.name
+                    .split(" ")
+                    .map((p) => p[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase()}
                 </div>
                 <div className={styles.staffName}>{emp.name}</div>
               </div>
 
               <div className={styles.jobsLane}>
-                {/* Slots */}
+                {/* SLOTS */}
                 <div className={styles.jobsLaneSlots}>
                   {hours.map((h) => {
                     const slotStart = new Date(date);
@@ -184,6 +187,63 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     70
                   );
 
+                  // -------- BADGE (INLINE STYLES – WEEK/MONTH İLE AYNI) --------
+                  const baseBadge: React.CSSProperties = {
+                    position: "absolute",
+                    top: 4,
+                    left: 6,
+                    padding: "2px 7px",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    borderRadius: 6,
+                    textTransform: "uppercase",
+                    zIndex: 10,
+                  };
+
+                  let badge: React.ReactNode = null;
+
+
+                  if (job.status === "quote") {
+                    badge = (
+                      <div
+                        style={{
+                          ...baseBadge,
+                          background: "#e3d7ff",
+                          color: "#5a2ca0",
+                          border: "1px solid #d3c0ff",
+                        }}
+                      >
+                        QUOTE
+                      </div>
+                    );
+                  } else if (job.status === "completed") {
+                    badge = (
+                      <div
+                        style={{
+                          ...baseBadge,
+                          background: "#d6f5e3",
+                          color: "#1b5e20",
+                          border: "1px solid #b6e8cc",
+                        }}
+                      >
+                        COMPLETED
+                      </div>
+                    );
+                  } else if (job.status === "return") {
+                    badge = (
+                      <div
+                        style={{
+                          ...baseBadge,
+                          background: "#ffe4b5",
+                          color: "#8a5a00",
+                          border: "1px solid #ffd28a",
+                        }}
+                      >
+                        NEED TO RETURN
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
                       key={job.id}
@@ -191,7 +251,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       style={{
                         left: `${left}px`,
                         width: `${width}px`,
-                        backgroundColor: job.color || "#fffef9",
+                        backgroundColor: job.color || "##fffdf0",
                       }}
                       draggable
                       onDragStart={(e) => {
@@ -202,10 +262,13 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       onDragEnd={() => setDraggingJobId(null)}
                       onClick={() => onJobClick?.(job.id)}
                     >
+                      {badge}
+
                       <div className={styles.jobBlockTitle}>{job.title}</div>
                       <div className={styles.jobBlockCustomer}>
                         {job.customer}
                       </div>
+
                       {job.location && (
                         <div className={styles.jobBlockLocation}>
                           {job.location}

@@ -60,14 +60,18 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const [editMode, setEditMode] = useState(false);
 
-  const [jobColor, setJobColor] = useState(job.color || "#fff8e1");
+  const [jobColor, setJobColor] = useState(job.color || "#fff9e6");
 
   const [title, setTitle] = useState(job.title);
   const [customer, setCustomer] = useState(job.customer);
   const [location, setLocation] = useState(job.location || "");
   const [siteContact, setSiteContact] = useState(job.siteContact || "");
-  const [contactInfo, setContactInfo] = useState(job.contactInfo || "");
+  const [contactInfo, setContactInfo] =
+    useState(job.contactInfo || "");
   const [notes, setNotes] = useState(job.notes || "");
+  const [status, setStatus] = useState<
+    "active" | "completed" | "return" | "quote"
+  >(job.status || "active");
 
   const [assignedTo, setAssignedTo] = useState<number[]>(
     Array.isArray(job.assignedTo) ? job.assignedTo : [job.assignedTo]
@@ -76,7 +80,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   const [localStart, setLocalStart] = useState(new Date(job.start));
   const [localEnd, setLocalEnd] = useState(new Date(job.end));
 
-  // SEARCH JOB
+  // SEARCH
   const [search, setSearch] = useState("");
   const [jobResults, setJobResults] = useState<CalendarJob[]>([]);
 
@@ -108,9 +112,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setAssignedTo(
       Array.isArray(j.assignedTo) ? j.assignedTo : [j.assignedTo]
     );
+    setStatus(j.status || "active");
   }
 
-  // Reset fields when job changes
+  // RESET on job change
   useEffect(() => {
     setEditMode(false);
     setTitle(job.title);
@@ -124,10 +129,11 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     );
     setLocalStart(new Date(job.start));
     setLocalEnd(new Date(job.end));
-    setJobColor(job.color || "#fff8e1");
+    setJobColor(job.color || "#fff9e6");
+    setStatus(job.status || "active");
   }, [job]);
 
-  /* SAVE CHANGES */
+  /** SAVE CHANGES */
   const handleSaveClick = () => {
     const updated: CalendarJob = {
       ...job,
@@ -141,34 +147,17 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       start: localStart.toISOString(),
       end: localEnd.toISOString(),
       color: jobColor,
+      status,
     };
 
     onSave(updated);
     setEditMode(false);
   };
 
-  const pastelPalette = [
-    // Honey & cream
-    "#fff8e1", "#fff4d4", "#ffefc2", "#fceec0",
-
-    // Mint
-    "#eaf7e9", "#dff4e4", "#d2efdc", "#c8ecd6",
-
-    // Aqua
-    "#e9f9ff", "#ddf5ff", "#d3eff7", "#cfe9f5",
-
-    // Peach
-    "#ffedea", "#ffe7e3", "#ffe3d6", "#ffdccc",
-
-    // Lavender
-    "#f6edff", "#f2e6ff", "#ecdfff", "#e7d7fa",
-  ];
-
   return (
     <div className={styles.backdrop}>
       <div className={styles.panel}>
-
-        {/* SEARCH JOB */}
+        {/* SEARCH */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>SEARCH JOB</div>
 
@@ -215,7 +204,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             <div className={styles.subtitle}>{dateLabel}</div>
           </div>
 
-          <button type="button" className={styles.closeBtn} onClick={onClose}>
+          <button className={styles.closeBtn} onClick={onClose}>
             ×
           </button>
         </header>
@@ -226,8 +215,16 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
           {editMode ? (
             <div className={styles.timeEditContainer}>
-              <TimePicker value={localStart} onChange={setLocalStart} label="Start" />
-              <TimePicker value={localEnd} onChange={setLocalEnd} label="End" />
+              <TimePicker
+                value={localStart}
+                onChange={setLocalStart}
+                label="Start"
+              />
+              <TimePicker
+                value={localEnd}
+                onChange={setLocalEnd}
+                label="End"
+              />
             </div>
           ) : (
             <div className={styles.sectionValue}>
@@ -236,7 +233,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* ASSIGNED STAFF */}
+        {/* STAFF */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
 
@@ -332,7 +329,9 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               onChange={(e) => setSiteContact(e.target.value)}
             />
           ) : (
-            <div className={styles.sectionValue}>{siteContact || "—"}</div>
+            <div className={styles.sectionValue}>
+              {siteContact || "—"}
+            </div>
           )}
         </div>
 
@@ -346,7 +345,9 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               onChange={(e) => setContactInfo(e.target.value)}
             />
           ) : (
-            <div className={styles.sectionValue}>{contactInfo || "—"}</div>
+            <div className={styles.sectionValue}>
+              {contactInfo || "—"}
+            </div>
           )}
         </div>
 
@@ -365,42 +366,51 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* COLOR PICKER + PALETTE */}
+        {/* STATUS */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>STATUS</div>
+
+          {editMode ? (
+            <select
+              className={styles.statusSelect}
+              value={status}
+              onChange={(e) =>
+                setStatus(
+                  e.target.value as
+                    | "active"
+                    | "completed"
+                    | "return"
+                    | "quote"
+                )
+              }
+            >
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="return">Need to Return</option>
+              <option value="quote">Quote / Estimate</option>
+            </select>
+          ) : (
+            <div className={styles.sectionValue}>
+              {status === "active" && "Active"}
+              {status === "completed" && "Completed"}
+              {status === "return" && "Need to Return"}
+              {status === "quote" && "Quote Requested"}
+            </div>
+          )}
+        </div>
+
+        {/* COLOR PICKER */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>EVENT COLOR</div>
 
           {editMode ? (
-            <>
-              <div className={styles.colorPaletteRow}>
-                {pastelPalette.map((c) => (
-                  <div
-                    key={c}
-                    className={styles.colorDot}
-                    style={{
-                      backgroundColor: c,
-                      border:
-                        jobColor === c
-                          ? "2px solid #c6a300"
-                          : "1px solid #d4d4d4",
-                      boxShadow:
-                        jobColor === c
-                          ? "0 0 6px rgba(198,163,0,0.6)"
-                          : "none",
-                    }}
-                    onClick={() => setJobColor(c)}
-                  />
-                ))}
-              </div>
-
-              <div className={styles.colorPickerWrapper}>
-                <HexColorPicker color={jobColor} onChange={setJobColor} />
-                <input
-                  className={styles.colorHexInput}
-                  value={jobColor}
-                  onChange={(e) => setJobColor(e.target.value)}
-                />
-              </div>
-            </>
+            <div className={styles.colorPickerWrapper}>
+              <HexColorPicker
+                color={jobColor}
+                onChange={setJobColor}
+              />
+              <div className={styles.colorValue}>{jobColor}</div>
+            </div>
           ) : (
             <div
               className={styles.colorPreview}
@@ -416,34 +426,34 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         </div>
 
         {/* RELATED */}
-<div className={styles.section}>
-  <div className={styles.sectionLabel}>RELATED EVENTS</div>
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>
+            RELATED EVENTS
+          </div>
 
-  <div className={styles.relatedRow}>
-    <div className={styles.relatedTag}>
-      {job.futureEvents?.length ?? 0} FUTURE EVENTS
-    </div>
+          <div className={styles.relatedRow}>
+            <div className={styles.relatedTag}>
+              {job.futureEvents?.length ?? 0} FUTURE EVENTS
+            </div>
 
-    <div className={styles.relatedTag}>
-      {job.pastEvents?.length ?? 0} PAST EVENTS
-    </div>
+            <div className={styles.relatedTag}>
+              {job.pastEvents?.length ?? 0} PAST EVENTS
+            </div>
 
-    <button
-      className={styles.viewJobBtn}
-      onClick={() => navigate(`/jobs/${job.id}`)}
-    >
-      View job →
-    </button>
-  </div>
-</div>
-
+            <button
+              className={styles.viewAllBtn}
+              onClick={() => navigate(`/jobs/${job.id}`)}
+            >
+              View Job →
+            </button>
+          </div>
+        </div>
 
         {/* FOOTER */}
         <div className={styles.footer}>
           {editMode ? (
             <>
               <button
-                type="button"
                 className={styles.secondaryBtn}
                 onClick={() => {
                   setEditMode(false);
@@ -460,14 +470,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   );
                   setLocalStart(new Date(job.start));
                   setLocalEnd(new Date(job.end));
-                  setJobColor(job.color || "#fff8e1");
+                  setJobColor(job.color || "#fff9e6");
+                  setStatus(job.status || "active");
                 }}
               >
                 Cancel
               </button>
 
               <button
-                type="button"
                 className={styles.primaryBtn}
                 onClick={handleSaveClick}
               >
@@ -476,12 +486,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             </>
           ) : (
             <>
-              <button type="button" className={styles.deleteBtn} onClick={onDelete}>
+              <button
+                className={styles.deleteBtn}
+                onClick={onDelete}
+              >
                 Delete event
               </button>
 
               <button
-                type="button"
                 className={styles.primaryBtn}
                 onClick={() => setEditMode(true)}
               >
