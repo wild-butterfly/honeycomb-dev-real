@@ -167,41 +167,51 @@
   color: #7d6a0a;
 }
 
-/* ADD BUTTON */
-.addBtn {
+/* ================================
+   UNIVERSAL HEXAGON ADD BUTTON
+   ================================ */
+.slotAddButton {
+  width: 26px;
+  height: 26px;
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-
-  background: #fffbe6;
-  border: 2px solid #d8b52a;
-
-  color: #a88300;
-  font-size: 20px;
-  font-weight: 900;
-  display: none;
-  align-items: center;
+  display: flex;
   justify-content: center;
+  align-items: center;
 
+  background: #ffd600;
+  color: #4a3f00;
+  font-weight: 900; /* <-- PLUS SIGN IS EXTRA BOLD NOW */
+  font-size: 14px;
+
+  border: none;
   cursor: pointer;
-  box-shadow: 0 3px 6px rgba(180, 150, 30, 0.3),
-    inset 0 0 6px rgba(255, 255, 255, 0.9);
 
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+
+  opacity: 0;
+  pointer-events: none;
   transition: 0.15s ease;
 }
 
-.dayCell:hover .addBtn {
-  display: flex;
+/* Day/Week hover */
+.timeSlotCell:hover .slotAddButton {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-.addBtn:hover {
-  transform: scale(1.12);
-  box-shadow: 0 4px 12px rgba(180, 150, 30, 0.45),
-    inset 0 0 10px rgba(255, 255, 255, 1);
+/* Month hover */
+.dayCell:hover .slotAddButton {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hover efekt */
+.slotAddButton:hover {
+  filter: brightness(1.12);
 }
 
 /* RIGHT JOBS PANEL */

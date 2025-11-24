@@ -1,203 +1,232 @@
-/* ===============================
-   DAY VIEW – MAIN WRAPPER
-   =============================== */
-.calendarShell {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.outerFrame {
+.timelineBodyArea {
   position: relative;
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: #d4b84a #fffde4;
-}
-.outerFrame::-webkit-scrollbar {
-  height: 10px;
-}
-.outerFrame::-webkit-scrollbar-thumb {
-  background: #d4b84a;
-  border-radius: 5px;
+  padding-bottom: 16px;
+  font-size: 0.95rem;
+  color: #232323;
+  z-index: 1;
 }
 
-.timelineFrame {
-  background: #fff;
-  border: 1.5px solid #ffe066;
-  border-radius: 18px;
-  box-shadow: 0 2px 18px #b99a2a11;
+.timelineRow {
   position: relative;
-  min-height: 100%;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid rgba(212, 184, 74, 0.25);
+  background-color: #fff;
+  min-height: 80px;
 }
 
-/* ===============================
-   DAY – HEADER
-   =============================== */
-.headerRow {
-  display: flex;
-  min-height: 48px;
-  background: #fffde4;
-  border-bottom: 2px solid #ffe066;
-  border-radius: 18px 18px 0 0;
-  position: sticky;
-  top: 0;
-  z-index: 5;
+.timelineRow:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px dashed rgba(212, 184, 74, 0.2);
+  pointer-events: none;
 }
 
-/* STAFF HEADER LEFT */
-.staffHeaderCell {
-  width: 180px;
-  background: #fffef9;
-  border-right: 1px solid #ffe066;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-}
-
-.staffHeaderLabel {
-  color: #4a3f00;
-  font-size: 0.8rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-/* TIME HEADER */
-.timeHeaderWrapper {
-  flex: 1 1 auto;
-  min-width: 0;
-  background: #fffde4;
-  position: relative;
-}
-
-.timeHeaderInner {
-  display: flex;
-  flex-direction: row;
-}
-
-.timeHeaderCell {
-  flex: 0 0 120px;
-  padding: 6px 8px 10px 8px;
-  background: #fffde4;
-  border-right: 1px solid #fff2a0;
-  color: #9c9043;
-  font-weight: 600;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: flex-end;
-}
-
-/* ===============================
-   DAY – BODY
-   =============================== */
-.bodyWrapper {
-  background: #fff;
-}
-
-.bodyRow {
-  display: flex;
-  min-height: 120px;
-}
-
-/* LEFT STAFF CELL */
 .staffCell {
-  width: 180px;
+  flex: 0 0 180px;
+  max-width: 180px;
+  min-width: 180px;
   border-right: 1px solid #ffe066;
   background: #fffef9;
-  padding: 10px;
+  padding: 10px 12px;
   display: flex;
+  align-items: flex-start;
   gap: 10px;
+  z-index: 2;
+  position: relative;
 }
 
 .staffAvatarCircle {
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   background: #ffd600;
-  border: 2px solid #b99a2a;
   color: #232323;
+  border: 2px solid #b99a2a;
+  border-radius: 50%;
   font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 28px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(185, 154, 42, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.timelineLaneScroll {
-  flex: 1;
-  background: #fff;
+.staffName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4a3f00;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.jobsLane {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 80px;
+  background: transparent;
+  z-index: 1;
+}
+
+.jobsLaneSlots {
+  display: flex;
+  height: 100%;
+  min-height: 80px;
   position: relative;
 }
 
-.timelineLaneInner {
-  position: relative;
-  min-height: 120px;
+.jobsLane::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0px,
+    transparent 103px,
+    rgba(212, 184, 74, 0.25) 103px,
+    rgba(212, 184, 74, 0.25) 104px,
+    transparent 104px,
+    transparent 208px
+  );
+  background-size: 104px 100%;
+  background-repeat: repeat;
+  opacity: 0.55;
 }
 
-/* ===============================
-   DAY – JOB BLOCK
-   =============================== */
+.timeSlotCell {
+  position: relative;
+  flex: 0 0 104px;
+  min-height: 80px;
+}
+
+.timeSlotsHeader {
+  flex: 1 1 auto;
+  display: flex;
+  position: relative;
+  z-index: 2;
+}
+
+.timeSlotHeaderCell {
+  flex: 0 0 104px;
+  min-width: 104px;
+  border-right: 1px solid rgba(212, 184, 74, 0.25);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9c9043;
+  padding: 10px 6px;
+  text-align: left;
+  white-space: nowrap;
+  position: relative;
+}
+
+.timeSlotHeaderCell:last-child {
+  border-right: none;
+}
+
+.timeSlotHeaderCell::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -6px;
+  width: 0;
+  height: 6px;
+  border-right: 1px solid rgba(212, 184, 74, 0.25);
+  pointer-events: none;
+}
+
 .jobBlock {
   position: absolute;
-  top: 16px;
-  min-height: 64px;
+  top: 10px;
+  min-height: 60px;
   border: 1.5px solid #b99a2a;
   border-radius: 8px;
-
-  padding: 26px 10px 10px; /* BADGE ÜSTÜNE GELMESİN */
-
-  background: #fffef9;
   box-shadow: 0 2px 10px rgba(185, 154, 42, 0.15);
+  padding: 8px 10px;
+  overflow: hidden;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: #232323;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fffef9;
+  cursor: grab;
+}
+
+.jobBlockDragging {
+  cursor: grabbing;
+  opacity: 0.85;
+  box-shadow: 0 4px 14px rgba(185, 154, 42, 0.25);
 }
 
 .jobBlockTitle {
   font-weight: 700;
-  font-size: 0.8rem;
   color: #4a3f00;
+  font-size: 0.8rem;
 }
 
 .jobBlockCustomer {
   font-weight: 600;
-  font-size: 0.75rem;
   color: #6f601a;
+  font-size: 0.75rem;
 }
 
-/* =======================
-   DAY BADGES (UNIFIED STYLE)
-   ======================= */
+.jobBlockLocation {
+  font-weight: 500;
+  color: #9c9043;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
 
-.badgeQuote,
-.badgeCompleted,
-.badgeReturn {
+/* --- Honeycomb Add Button --- */
+
+/* Başlangıç görünmez */
+.slotAddButton {
+  width: 28px;
+  height: 28px;
+
   position: absolute;
-  top: 6px;
-  right: 8px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border-radius: 6px;
-  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #ffd600;
+  color: #4a3f00;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1;
+
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+
+  transition: 0.15s ease;
 }
 
-/* QUOTE */
-.badgeQuote {
-  background: #e8f2ff;
-  color: #0b4fa8;
-  border: 1px solid #9ec3ff;
+/* Hover sırasında görünür */
+.timeSlotCell:hover .slotAddButton {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-/* COMPLETED */
-.badgeCompleted {
-  background: #e8f8e8;
-  color: #2e7d32;
-  border: 1px solid #a4d4a4;
-}
-
-/* NEED TO RETURN */
-.badgeReturn {
-  background: #fff4e5;
-  color: #b26a00;
-  border: 1px solid #f0c38c;
+/* Hover rengi */
+.slotAddButton:hover {
+  background: #ffea3b;
 }

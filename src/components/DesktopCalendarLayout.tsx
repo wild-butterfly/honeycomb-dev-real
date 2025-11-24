@@ -1,7 +1,8 @@
 // Created by Honeycomb © 2025
 import React, { useMemo, useState } from "react";
-import styles from "../pages/CalendarPage.module.css";
+import styles from "../components/DesktopCalendarLayout.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
+
 
 type JobsByEmployee = { [empId: number]: CalendarJob[] };
 

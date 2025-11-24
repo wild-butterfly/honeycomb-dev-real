@@ -169,245 +169,6 @@
   z-index: 10;
 }
 
-/* ───────── TIMELINE CORE ───────── */
-
-/* Ana gövde alanı (satırlar) */
-.timelineBodyArea {
-  position: relative;
-  padding-bottom: 16px;
-  font-size: 0.95rem;
-  color: #232323;
-  z-index: 1;
-}
-
-/* KIRMIZI NOW LINE'I KALDIR: tamamen yok */
-.nowLine {
-  display: none !important;
-}
-
-/* Her bir person row */
-.timelineRow {
-  position: relative;
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  border-bottom: 1px solid rgba(212, 184, 74, 0.25);
-  background-color: #fff;
-  min-height: 80px;
-}
-
-/* Hafif kesikli alt çizgi, satırlar arasında */
-.timelineRow:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-bottom: 1px dashed rgba(212, 184, 74, 0.2);
-  pointer-events: none;
-}
-
-/* Sol kolon (personel bilgisi) */
-.staffCell {
-  flex: 0 0 180px;
-  max-width: 180px;
-  min-width: 180px;
-  border-right: 1px solid #ffe066;
-  background: #fffef9;
-  padding: 10px 12px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  z-index: 2;
-  position: relative;
-}
-
-.staffAvatarCircle {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  background: #ffd600;
-  color: #232323;
-  border: 2px solid #b99a2a;
-  border-radius: 50%;
-  font-weight: 700;
-  font-size: 0.8rem;
-  line-height: 28px;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(185, 154, 42, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.staffName {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #4a3f00;
-  line-height: 1.3;
-  word-break: break-word;
-}
-
-/* Sağ kolon (günün timeline'ı) */
-.jobsLane {
-  flex: 1 1 auto;
-  position: relative;
-  min-height: 80px;
-  background: transparent;
-  z-index: 1;
-}
-
-/* slotların bulunduğu flex container */
-.jobsLaneSlots {
-  display: flex;
-  height: 100%;
-  min-height: 80px;
-  position: relative; /* önemli: ::before için gerekli */
-}
-
-/* >>> SAAT AYIRIM ÇİZGİLERİ <<< */
-/* >>> SAAT AYIRIM ÇİZGİLERİ <<< */
-/* hem header'da hem satırlarda çalışsın diye jobsLane'e veriyoruz */
-.jobsLane::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 0;
-
-  background-image: repeating-linear-gradient(
-    to right,
-    transparent 0px,
-    transparent 103px,
-    rgba(212, 184, 74, 0.25) 103px,
-    /* çizgi */ rgba(212, 184, 74, 0.25) 104px,
-    transparent 104px,
-    transparent 208px /* tekrar */
-  );
-
-  background-size: 104px 100%;
-  background-repeat: repeat;
-  opacity: 0.55;
-}
-
-/* Tek tek hour slot */
-.timeSlotCell {
-  position: relative;
-  flex: 0 0 104px;
-  min-height: 80px;
-}
-
-/* Hover'da görünen + butonu */
-.slotAddButton {
-  position: absolute;
-  top: 50%;
-  left: 6px;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border-radius: 50%;
-  border: 1px solid #d4b84a;
-  background: #fffde4;
-  color: #b99a2a;
-  font-size: 12px;
-  font-weight: 700;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(185, 154, 42, 0.3);
-}
-
-.timeSlotCell:hover .slotAddButton {
-  display: flex;
-}
-
-/* Job kartları */
-.jobBlock {
-  position: absolute;
-  top: 10px;
-  min-height: 60px;
-  border: 1.5px solid #b99a2a;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(185, 154, 42, 0.15);
-  padding: 8px 10px;
-  overflow: hidden;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  color: #232323;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #fffef9;
-  cursor: grab;
-}
-
-.jobBlockDragging {
-  cursor: grabbing;
-  opacity: 0.85;
-  box-shadow: 0 4px 14px rgba(185, 154, 42, 0.25);
-}
-
-.jobBlockTitle {
-  font-weight: 700;
-  color: #4a3f00;
-  font-size: 0.8rem;
-}
-.jobBlockCustomer {
-  font-weight: 600;
-  color: #6f601a;
-  font-size: 0.75rem;
-}
-.jobBlockLocation {
-  font-weight: 500;
-  color: #9c9043;
-  font-size: 0.7rem;
-  line-height: 1.2;
-}
-
-/* ───────── HEADER (saatlerin olduğu üst sıra) ───────── */
-
-.timeSlotsHeader {
-  flex: 1 1 auto;
-  display: flex;
-  position: relative;
-  z-index: 2;
-}
-
-/* Tek tek saat hücresi */
-.timeSlotHeaderCell {
-  flex: 0 0 104px; /* ✅ HOUR_WIDTH_PX ile aynı */
-  min-width: 104px;
-  border-right: 1px solid rgba(212, 184, 74, 0.25);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #9c9043;
-  padding: 10px 6px;
-  text-align: left;
-  white-space: nowrap;
-  position: relative;
-}
-
-/* son saat kolonunda sağ çizgi istemiyorsan kaldırırız */
-.timeSlotHeaderCell:last-child {
-  border-right: none;
-}
-
-/* ⭐ Saat çizgisini biraz aşağı sarktıralım */
-.timeSlotHeaderCell::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -6px; /* ne kadar aşağı sarksın */
-  width: 0;
-  height: 6px; /* uzunluk */
-  border-right: 1px solid rgba(212, 184, 74, 0.25);
-  pointer-events: none;
-}
-
 /* ───────── Sidebar (Jobs list) ───────── */
 
 .sidebarCard {
@@ -699,4 +460,31 @@
   background: #fff3cd;
   color: #7a5c00;
   border: 1px solid #e2c76b;
+}
+
+.slotAddButton {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  position: relative;
+  background: #ffd600;
+  color: #4a3f00;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+
+  clip-path: polygon(
+    25% 6%,
+    /* üst sol */ 75% 6%,
+    /* üst sağ */ 100% 50%,
+    /* sağ */ 75% 94%,
+    /* alt sağ */ 25% 94%,
+    /* alt sol */ 0% 50% /* sol */
+  );
+
+  transition: 0.15s ease;
+}
+
+.slotAddButton:hover {
+  filter: brightness(1.1);
 }

@@ -170,7 +170,7 @@ const label =
 
                 {hoverDay === dayNum && (
                   <button
-                    className={styles.addBtn}
+                    className={styles.slotAddButton}
                     onClick={() => {
                       const start = new Date(day);
                       start.setHours(9, 0);

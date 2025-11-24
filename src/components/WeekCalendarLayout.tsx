@@ -176,7 +176,7 @@ function DroppableCell({
       ))}
 
       {hoverSlot === id && (
-        <button className={styles.addBtn} onClick={handleAdd}>
+        <button className={styles.slotAddButton} onClick={handleAdd}>
           +
         </button>
       )}
