@@ -267,18 +267,26 @@ function isSameWeek(dateStr: string, weekDate: Date) {
           employees={employees}
           staffFilter={staffFilter}
           onStaffFilterChange={setStaffFilter}
+          onDateChange={(d) => setSelectedDate(d)}
         />
 
         {rangeMode === "month" ? (
           <MonthCalendarLayout
             date={selectedDate}
-            jobs={jobs.filter(
-              (j) =>
-                monthStaffFilter.length === 0 ||
-                j.assignedTo.some((id) =>
-                  monthStaffFilter.includes(id)
-                )
-            )}
+            jobs={jobs.filter((j) => {
+  const d = new Date(j.start);
+
+  const sameMonth =
+    d.getMonth() === selectedDate.getMonth() &&
+    d.getFullYear() === selectedDate.getFullYear();
+
+  const matchesStaff =
+    monthStaffFilter.length === 0 ||
+    j.assignedTo.some((id) => monthStaffFilter.includes(id));
+
+  return sameMonth && matchesStaff;
+})}
+
             employees={employees}
             selectedStaff={monthStaffFilter}
             onStaffChange={setMonthStaffFilter}
