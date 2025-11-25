@@ -1,0 +1,136 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 247, 200, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 140px;
+  z-index: 9999;
+}
+
+/* Card */
+.popup {
+  background: #fffef4;
+  border: 2px solid #ffe08a;
+  border-radius: 14px;
+  padding: 20px;
+  width: 360px;
+  box-shadow: 0 4px 18px rgba(185, 154, 42, 0.22);
+  animation: fadeIn 0.15s ease;
+  font-family: "Roboto", sans-serif;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #8c7200;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+}
+
+.arrowBtn {
+  background: #fff6cf;
+  border: 1px solid #e4c55a;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #7d6500;
+  transition: 0.15s ease;
+}
+
+.arrowBtn:hover {
+  background: #ffe487;
+}
+
+.monthLabel {
+  font-size: 1.1rem;
+  color: #5a4d00;
+}
+
+/* WEEK HEADER */
+.weekHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 6px;
+}
+
+.weekHeaderCell {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #9f8f44;
+  padding: 4px 0;
+  font-weight: 600;
+}
+
+/* DAYS GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day {
+  border: none;
+  background: #fffef8;
+  border: 1px solid #f2d77a;
+  border-radius: 8px;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  color: #5a4d00;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.day:hover {
+  background: #fff2b8;
+}
+
+.selectedDay {
+  background: #ffd84a;
+  border: 1px solid #e2c03a;
+  color: #503e00;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 0;
+}
+
+.emptyCell {
+  height: 40px;
+}
+
+/* CLOSE BUTTON */
+.closeBtn {
+  margin-top: 14px;
+  width: 100%;
+  background: #fff4c7;
+  border: 1px solid #e4c55a;
+  border-radius: 8px;
+  padding: 8px 0;
+  font-weight: 700;
+  color: #5a4d00;
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  background: #ffe487;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
