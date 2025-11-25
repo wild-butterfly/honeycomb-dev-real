@@ -1,0 +1,54 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.empty {
+  text-align: center;
+  padding: 20px;
+  color: #8c6a00;
+  font-weight: 600;
+  background: #fff8d6;
+  border-radius: 10px;
+  border: 1px solid #f2d27a;
+}
+
+.jobCard {
+  background: #fffef2;
+  border: 1px solid #f5dd90;
+  border-left-width: 8px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.jobCard:hover {
+  background: #fff8cc;
+  cursor: pointer;
+}
+
+.time {
+  font-weight: 600;
+  color: #6d5400;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #5a4500;
+}
+
+.customer {
+  font-size: 0.9rem;
+  color: #8c6a00;
+  margin-bottom: 6px;
+}
+
+.staffName {
+  font-size: 0.85rem;
+  color: #444;
+  margin-top: 4px;
+}

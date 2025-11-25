@@ -9,6 +9,10 @@ import SidebarJobs from "../components/SidebarJobs";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
 
+import MobileDayList from "../components/MobileDayList";
+import MobileWeekList from "../components/MobileWeekList";
+import MobileMonthList from "../components/MobileMonthList";
+
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
 export type Employee = {
@@ -94,21 +98,18 @@ function isSameDay(dateStr: string, day: Date) {
   );
 }
 
-// *** NEW – Week Fix ***
 function isSameWeek(dateStr: string, weekDate: Date) {
   const d = new Date(dateStr);
-  const wd = new Date(weekDate);
 
-  // Get Monday as first day of week
-  const first = new Date(wd);
-  const day = wd.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // convert Sunday → last day
-  first.setDate(wd.getDate() + diff);
+  const weekStart = new Date(weekDate);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  weekStart.setHours(0, 0, 0, 0);
 
-  const last = new Date(first);
-  last.setDate(first.getDate() + 6);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
 
-  return d >= first && d <= last;
+  return d >= weekStart && d <= weekEnd;
 }
 
 function jobMatchesStaff(job: CalendarJob, staff: number | "all") {
@@ -134,7 +135,7 @@ const CalendarPage: React.FC = () => {
     [jobs, openJobId]
   );
 
-  /* ---- Day jobs ---- */
+  /* -------- DAY -------- */
   const jobsByEmployee = useMemo(() => {
     const map: { [empId: number]: CalendarJob[] } = {};
     employees.forEach((emp) => {
@@ -148,7 +149,7 @@ const CalendarPage: React.FC = () => {
     return map;
   }, [employees, jobs, selectedDate, staffFilter]);
 
-  /* ---- Week jobs (FIXED) ---- */
+  /* -------- WEEK -------- */
   const jobsThisWeek = useMemo(
     () =>
       jobs.filter(
@@ -156,6 +157,30 @@ const CalendarPage: React.FC = () => {
       ),
     [jobs, selectedDate, staffFilter]
   );
+
+  /* -------- MONTH (Mobile) -------- */
+  const jobsThisMonth = useMemo(
+    () =>
+      jobs.filter((j) => {
+        const d = new Date(j.start);
+        return (
+          d.getMonth() === selectedDate.getMonth() &&
+          d.getFullYear() === selectedDate.getFullYear()
+        );
+      }),
+    [jobs, selectedDate]
+  );
+
+  /* GROUP MONTH JOBS BY DAY */
+  const monthGroups = useMemo(() => {
+    const map: { [day: number]: CalendarJob[] } = {};
+    jobsThisMonth.forEach((j) => {
+      const d = new Date(j.start).getDate();
+      if (!map[d]) map[d] = [];
+      map[d].push(j);
+    });
+    return map;
+  }, [jobsThisMonth]);
 
   /* ------------------------
      NAVIGATION
@@ -191,8 +216,6 @@ const CalendarPage: React.FC = () => {
       assignedTo: [employeeId],
       start: start.toISOString(),
       end: end.toISOString(),
-      siteContact: "",
-      contactInfo: "",
       notes: "",
       color: "#fffdf0",
       status: "active",
@@ -221,9 +244,7 @@ const CalendarPage: React.FC = () => {
     );
   };
 
-  const handleJobClick = (id: number) => {
-    setOpenJobId(id);
-  };
+  const handleJobClick = (id: number) => setOpenJobId(id);
 
   const handleSaveJob = (updated: CalendarJob) =>
     setJobs((prev) =>
@@ -236,19 +257,9 @@ const CalendarPage: React.FC = () => {
   /* ------------------------
      RENDER
   ------------------------- */
-function isSameWeek(dateStr: string, weekDate: Date) {
-  const d = new Date(dateStr);
 
-  const weekStart = new Date(weekDate);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // monday
-  weekStart.setHours(0, 0, 0, 0);
+  const isMobile = window.innerWidth < 768;
 
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  return d >= weekStart && d <= weekEnd;
-}
   return (
     <div className={styles.dashboardBg}>
       <DashboardNavbar
@@ -270,81 +281,101 @@ function isSameWeek(dateStr: string, weekDate: Date) {
           onDateChange={(d) => setSelectedDate(d)}
         />
 
-        {rangeMode === "month" ? (
-          <MonthCalendarLayout
-            date={selectedDate}
-            jobs={jobs.filter((j) => {
-  const d = new Date(j.start);
-
-  const sameMonth =
-    d.getMonth() === selectedDate.getMonth() &&
-    d.getFullYear() === selectedDate.getFullYear();
-
-  const matchesStaff =
-    monthStaffFilter.length === 0 ||
-    j.assignedTo.some((id) => monthStaffFilter.includes(id));
-
-  return sameMonth && matchesStaff;
-})}
-
-            employees={employees}
-            selectedStaff={monthStaffFilter}
-            onStaffChange={setMonthStaffFilter}
-            onJobClick={handleJobClick}
-            onJobMove={handleMoveJob}
-            onAddJobAt={handleAddJobAt}
-          />
-        ) : rangeMode === "week" ? (
-          <div className={styles.desktopWrapper}>
-            <div className={styles.desktopMainAndSidebar}>
-              <div className={styles.timelineCardWrapper}>
-                <WeekCalendarLayout
-  date={selectedDate}
-  jobs={jobs.filter(
-    (j) =>
-      jobMatchesStaff(j, staffFilter) &&
-      isSameWeek(j.start, selectedDate)
-  )}
-  employees={employees}
-  onJobClick={handleJobClick}
-  onJobMove={handleMoveJob}
-  onAddJobAt={handleAddJobAt}
-/>
-
-              </div>
-              <aside className={styles.sidebarWrapper}>
-                <SidebarJobs
-                  jobs={jobsThisWeek}   // Week sidebar also correct now
-                  onJobClick={handleJobClick}
-                />
-              </aside>
-            </div>
-          </div>
+        {/* MOBILE RENDER LOGIC */}
+        {isMobile ? (
+          rangeMode === "day" ? (
+            <MobileDayList
+              jobs={jobs.filter(
+                (j) =>
+                  isSameDay(j.start, selectedDate) &&
+                  jobMatchesStaff(j, staffFilter)
+              )}
+              employees={employees}
+              onJobClick={handleJobClick}
+            />
+          ) : rangeMode === "week" ? (
+            <MobileWeekList
+              jobs={jobsThisWeek}
+              employees={employees}
+              selectedDate={selectedDate}
+              onJobClick={handleJobClick}
+            />
+          ) : (
+            <MobileMonthList
+              selectedDate={selectedDate}
+              monthGroups={monthGroups}
+              employees={employees}
+              onJobClick={handleJobClick}
+            />
+          )
         ) : (
-          <div className={styles.desktopWrapper}>
-            <div className={styles.desktopMainAndSidebar}>
-              <div className={styles.timelineCardWrapper}>
-                <DesktopCalendarLayout
-                  date={selectedDate}
-                  employees={employees}
-                  jobsByEmployee={jobsByEmployee}
-                  onAddJobAt={handleAddJobAt}
-                  onMoveJob={handleMoveJob}
-                  onJobClick={handleJobClick}
-                />
+          /* DESKTOP */
+          rangeMode === "month" ? (
+            <MonthCalendarLayout
+              date={selectedDate}
+              jobs={jobs.filter((j) => {
+                const d = new Date(j.start);
+                const sameMonth =
+                  d.getMonth() === selectedDate.getMonth() &&
+                  d.getFullYear() === selectedDate.getFullYear();
+
+                const matchesStaff =
+                  monthStaffFilter.length === 0 ||
+                  j.assignedTo.some((id) => monthStaffFilter.includes(id));
+
+                return sameMonth && matchesStaff;
+              })}
+              employees={employees}
+              selectedStaff={monthStaffFilter}
+              onStaffChange={setMonthStaffFilter}
+              onJobClick={handleJobClick}
+              onJobMove={handleMoveJob}
+              onAddJobAt={handleAddJobAt}
+            />
+          ) : rangeMode === "week" ? (
+            <div className={styles.desktopWrapper}>
+              <div className={styles.desktopMainAndSidebar}>
+                <div className={styles.timelineCardWrapper}>
+                  <WeekCalendarLayout
+                    date={selectedDate}
+                    jobs={jobsThisWeek}
+                    employees={employees}
+                    onJobClick={handleJobClick}
+                    onJobMove={handleMoveJob}
+                    onAddJobAt={handleAddJobAt}
+                  />
+                </div>
+                <aside className={styles.sidebarWrapper}>
+                  <SidebarJobs jobs={jobsThisWeek} onJobClick={handleJobClick} />
+                </aside>
               </div>
-              <aside className={styles.sidebarWrapper}>
-                <SidebarJobs
-                  jobs={jobs.filter(
-                    (j) =>
-                      isSameDay(j.start, selectedDate) &&
-                      jobMatchesStaff(j, staffFilter)
-                  )}
-                  onJobClick={handleJobClick}
-                />
-              </aside>
             </div>
-          </div>
+          ) : (
+            <div className={styles.desktopWrapper}>
+              <div className={styles.desktopMainAndSidebar}>
+                <div className={styles.timelineCardWrapper}>
+                  <DesktopCalendarLayout
+                    date={selectedDate}
+                    employees={employees}
+                    jobsByEmployee={jobsByEmployee}
+                    onAddJobAt={handleAddJobAt}
+                    onMoveJob={handleMoveJob}
+                    onJobClick={handleJobClick}
+                  />
+                </div>
+                <aside className={styles.sidebarWrapper}>
+                  <SidebarJobs
+                    jobs={jobs.filter(
+                      (j) =>
+                        isSameDay(j.start, selectedDate) &&
+                        jobMatchesStaff(j, staffFilter)
+                    )}
+                    onJobClick={handleJobClick}
+                  />
+                </aside>
+              </div>
+            </div>
+          )
         )}
       </div>
 
