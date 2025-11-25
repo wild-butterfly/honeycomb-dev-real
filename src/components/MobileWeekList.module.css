@@ -1,0 +1,56 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 10px;
+}
+
+.dayBlock {
+  background: #fffdf7;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.dayHeader {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #654600;
+}
+
+.noJobs {
+  font-size: 14px;
+  color: #999;
+  padding: 4px 0;
+}
+
+.jobCard {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border-left: 5px solid #ccc;
+}
+
+.time {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.customer {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #666;
+}
+
+.staffName {
+  font-size: 12px;
+  color: #444;
+  margin-top: 4px;
+}

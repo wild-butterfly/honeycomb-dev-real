@@ -1,0 +1,68 @@
+/* Created by Clevermode © 2025. All rights reserved. */
+
+.wrapper {
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dayBlock {
+  background: #fffdf7;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.dayTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #6b5500;
+}
+
+.noJobs {
+  font-size: 14px;
+  color: #999;
+  padding: 8px 0;
+}
+
+.jobCard {
+  background: white;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 10px;
+
+  border-left: 6px solid #ccc;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.jobCard:active {
+  transform: scale(0.97);
+}
+
+.time {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #3a3a00;
+}
+
+.customer {
+  font-size: 14px;
+  color: #5e5e5e;
+}
+
+.staffName {
+  margin-top: 3px;
+  font-size: 13px;
+  color: #777;
+}
