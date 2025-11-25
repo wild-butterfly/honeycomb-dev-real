@@ -15,6 +15,9 @@ import MobileMonthList from "../components/MobileMonthList";
 
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
+/* ------------------------
+    TYPES
+------------------------- */
 export type Employee = {
   id: number;
   name: string;
@@ -41,6 +44,10 @@ export type CalendarJob = {
 
   status?: "active" | "completed" | "return" | "quote";
 };
+
+/* ------------------------
+    SEED DATA
+------------------------- */
 
 const employeesSeed: Employee[] = [
   { id: 1, name: "Aşkın Fear", avatar: "/avatar2.png" },
@@ -86,7 +93,7 @@ const jobsSeed: CalendarJob[] = [
 ];
 
 /* ------------------------
-   DATE HELPERS
+    DATE HELPERS
 ------------------------- */
 
 function isSameDay(dateStr: string, day: Date) {
@@ -113,21 +120,23 @@ function isSameWeek(dateStr: string, weekDate: Date) {
 }
 
 function jobMatchesStaff(job: CalendarJob, staff: number | "all") {
-  return staff === "all" ? true : job.assignedTo.includes(staff);
+  return staff === "all" || job.assignedTo.includes(staff);
 }
 
 /* ------------------------
-   MAIN COMPONENT
+    MAIN COMPONENT
 ------------------------- */
 
 const CalendarPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("day");
-  const [staffFilter, setStaffFilter] = useState<number | "all">("all");
-  const [monthStaffFilter, setMonthStaffFilter] = useState<number[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [rangeMode, setRangeMode] =
+    useState<"day" | "week" | "month">("day");
+  const [staffFilter, setStaffFilter] =
+    useState<number | "all">("all");
 
-  const [employees] = useState<Employee[]>(employeesSeed);
-  const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
+  const [monthStaffFilter, setMonthStaffFilter] = useState<number[]>([]);
+  const [employees] = useState(employeesSeed);
+  const [jobs, setJobs] = useState(jobsSeed);
 
   const [openJobId, setOpenJobId] = useState<number | null>(null);
   const openJob = useMemo(
@@ -137,13 +146,13 @@ const CalendarPage: React.FC = () => {
 
   /* -------- DAY -------- */
   const jobsByEmployee = useMemo(() => {
-    const map: { [empId: number]: CalendarJob[] } = {};
+    const map: { [id: number]: CalendarJob[] } = {};
     employees.forEach((emp) => {
       map[emp.id] = jobs.filter(
         (j) =>
           isSameDay(j.start, selectedDate) &&
-          j.assignedTo.includes(emp.id) &&
-          jobMatchesStaff(j, staffFilter)
+          jobMatchesStaff(j, staffFilter) &&
+          j.assignedTo.includes(emp.id)
       );
     });
     return map;
@@ -153,12 +162,14 @@ const CalendarPage: React.FC = () => {
   const jobsThisWeek = useMemo(
     () =>
       jobs.filter(
-        (j) => isSameWeek(j.start, selectedDate) && jobMatchesStaff(j, staffFilter)
+        (j) =>
+          isSameWeek(j.start, selectedDate) &&
+          jobMatchesStaff(j, staffFilter)
       ),
     [jobs, selectedDate, staffFilter]
   );
 
-  /* -------- MONTH (Mobile) -------- */
+  /* -------- MONTH (MOBILE) -------- */
   const jobsThisMonth = useMemo(
     () =>
       jobs.filter((j) => {
@@ -171,7 +182,6 @@ const CalendarPage: React.FC = () => {
     [jobs, selectedDate]
   );
 
-  /* GROUP MONTH JOBS BY DAY */
   const monthGroups = useMemo(() => {
     const map: { [day: number]: CalendarJob[] } = {};
     jobsThisMonth.forEach((j) => {
@@ -183,7 +193,7 @@ const CalendarPage: React.FC = () => {
   }, [jobsThisMonth]);
 
   /* ------------------------
-     NAVIGATION
+      NAVIGATION
   ------------------------- */
 
   const goPrevDay = () => {
@@ -203,10 +213,14 @@ const CalendarPage: React.FC = () => {
   };
 
   /* ------------------------
-     JOB ACTIONS
+      JOB ACTIONS
   ------------------------- */
 
-  const handleAddJobAt = (employeeId: number, start: Date, end: Date) => {
+  const handleAddJobAt = (
+    employeeId: number,
+    start: Date,
+    end: Date
+  ) => {
     const newId = Math.floor(Math.random() * 999999);
     const newJob: CalendarJob = {
       id: newId,
@@ -216,8 +230,8 @@ const CalendarPage: React.FC = () => {
       assignedTo: [employeeId],
       start: start.toISOString(),
       end: end.toISOString(),
-      notes: "",
       color: "#fffdf0",
+      notes: "",
       status: "active",
     };
     setJobs((prev) => [...prev, newJob]);
@@ -255,7 +269,7 @@ const CalendarPage: React.FC = () => {
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
 
   /* ------------------------
-     RENDER
+      MOBILE VS DESKTOP
   ------------------------- */
 
   const isMobile = window.innerWidth < 768;
@@ -263,9 +277,9 @@ const CalendarPage: React.FC = () => {
   return (
     <div className={styles.dashboardBg}>
       <DashboardNavbar
-        searchValue={""}
+        searchValue=""
         onSearchChange={() => {}}
-        onNewJob={() => console.log("New Job")}
+        onNewJob={() => {}}
       />
 
       <div className={styles.calendarPageShell}>
@@ -281,7 +295,7 @@ const CalendarPage: React.FC = () => {
           onDateChange={(d) => setSelectedDate(d)}
         />
 
-        {/* MOBILE RENDER LOGIC */}
+        {/* MOBILE */}
         {isMobile ? (
           rangeMode === "day" ? (
             <MobileDayList
@@ -321,7 +335,9 @@ const CalendarPage: React.FC = () => {
 
                 const matchesStaff =
                   monthStaffFilter.length === 0 ||
-                  j.assignedTo.some((id) => monthStaffFilter.includes(id));
+                  j.assignedTo.some((id) =>
+                    monthStaffFilter.includes(id)
+                  );
 
                 return sameMonth && matchesStaff;
               })}
@@ -346,7 +362,10 @@ const CalendarPage: React.FC = () => {
                   />
                 </div>
                 <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs jobs={jobsThisWeek} onJobClick={handleJobClick} />
+                  <SidebarJobs
+                    jobs={jobsThisWeek}
+                    onJobClick={handleJobClick}
+                  />
                 </aside>
               </div>
             </div>
