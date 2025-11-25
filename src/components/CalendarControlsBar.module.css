@@ -87,19 +87,28 @@
 }
 
 .dateLabelButton {
-  background: none;
-  border: none;
-  color: #5a4d00;
-  font-weight: 700;
-  font-size: 1rem;
+  background: #ffeebc;
+  border: 1px solid #d7b56d;
+  padding: 6px 16px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
+  color: #6a4f0b;
+  text-decoration: none !important;
+
+  /* Hover transition */
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .dateLabelButton:hover {
-  background: #fff4c7;
-  border: 1px solid #f2d77a;
+  text-decoration: none !important;
+  transform: scale(1.05); /* hafif büyüme */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* tatlı gölge */
+}
+
+.dateLabelButton * {
+  text-decoration: none !important;
 }
 
 .monthCentered .dateLabelButton {
