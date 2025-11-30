@@ -9,6 +9,10 @@ import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
 import DesktopCalendarLayout from "../components/DesktopCalendarLayout";
 
+import MobileMonthList from "../components/MobileMonthList";
+import MobileWeekList from "../components/MobileWeekList";
+import MobileDayList from "../components/MobileDayList";
+
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
 /* TYPES */
@@ -37,7 +41,7 @@ export type CalendarJob = {
   pastEvents?: CalendarJob[];
 };
 
-/* EMPLOYEES */
+/* EMPLOYEES SEED */
 const employeesSeed: Employee[] = [
   { id: 1, name: "Aşkın Fear" },
   { id: 2, name: "Daniel Fear" },
@@ -204,7 +208,7 @@ const jobsSeed: CalendarJob[] = [
   },
 ];
 
-/* HELPERS */
+/* Helpers */
 function isSameDay(dateStr: string, day: Date) {
   const d = new Date(dateStr);
   return (
@@ -223,17 +227,19 @@ function isSameWeek(dateStr: string, week: Date) {
   return d >= ws && d <= we;
 }
 
+/* ------------------------------------------------------ */
 /* MAIN PAGE */
+/* ------------------------------------------------------ */
 const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("month");
+  const [rangeMode, setRangeMode] =
+    useState<"day" | "week" | "month">("month");
 
   const [selectedStaff, setSelectedStaff] = useState<number[]>([]);
-
   const [jobFilter, setJobFilter] =
-    useState<"all" | "unassigned" | "active" | "completed" | "return" | "quote">(
-      "all"
-    );
+    useState<
+      "all" | "unassigned" | "active" | "completed" | "return" | "quote"
+    >("all");
 
   const [employees] = useState(employeesSeed);
   const [jobs, setJobs] = useState(jobsSeed);
@@ -244,7 +250,7 @@ const CalendarPage: React.FC = () => {
     [jobs, openJobId]
   );
 
-  /* FILTERED BY JOB STATUS */
+  /* JOB FILTER */
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       if (jobFilter === "all") return true;
@@ -253,7 +259,7 @@ const CalendarPage: React.FC = () => {
     });
   }, [jobFilter, jobs]);
 
-  /* ⭐ STAFF FILTERED JOBS ⭐ */
+  /* STAFF FILTER */
   const staffFilteredJobs = useMemo(() => {
     if (selectedStaff.length === 0) return filteredJobs;
     return filteredJobs.filter((job) =>
@@ -261,7 +267,7 @@ const CalendarPage: React.FC = () => {
     );
   }, [filteredJobs, selectedStaff]);
 
-  /* JOBS THIS MONTH */
+  /* MONTH JOBS */
   const jobsThisMonth = staffFilteredJobs.filter((j) => {
     const d = new Date(j.start);
     return (
@@ -270,18 +276,13 @@ const CalendarPage: React.FC = () => {
     );
   });
 
-  /* JOB MAP FOR DAY VIEW */
+  /* DAY VIEW MAPPING */
   const jobsByEmployee = useMemo(() => {
     const map: Record<number, CalendarJob[]> = {};
     employees.forEach((e) => (map[e.id] = []));
-
     staffFilteredJobs.forEach((job) => {
-      job.assignedTo.forEach((empId) => {
-        if (!map[empId]) map[empId] = [];
-        map[empId].push(job);
-      });
+      job.assignedTo.forEach((empId) => map[empId].push(job));
     });
-
     return map;
   }, [staffFilteredJobs, employees]);
 
@@ -302,6 +303,14 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
+  /* GROUP MONTH JOBS FOR MOBILE MONTH VIEW */
+  const groupedMonthJobs = jobsThisMonth.reduce((acc, job) => {
+    const day = new Date(job.start).getDate();
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(job);
+    return acc;
+  }, {} as Record<number, CalendarJob[]>);
+
   return (
     <div className={styles.dashboardBg}>
       <DashboardNavbar />
@@ -319,85 +328,165 @@ const CalendarPage: React.FC = () => {
           onDateChange={setSelectedDate}
         />
 
-        {/* MONTH MODE */}
+        {/* ---------------- MONTH MODE ---------------- */}
         {rangeMode === "month" && (
-          <div className={styles.monthLayoutWide}>
-            <MonthCalendarLayout
-              date={selectedDate}
-              jobs={jobsThisMonth}
-              employees={employees}
-              selectedStaff={selectedStaff}
-              onStaffChange={setSelectedStaff}
-              onJobClick={(id) => setOpenJobId(id)}
-              onJobMove={() => {}}
-              onAddJobAt={() => {}}
-            />
-
-            <aside className={styles.sidebarWrapper}>
-              <SidebarJobs
-                jobs={jobsThisMonth}
-                onJobClick={(id) => setOpenJobId(id)}
-                jobFilter={jobFilter}
-                onJobFilterChange={setJobFilter}
+          <>
+            {/* MOBILE MONTH LIST */}
+            <div className={styles.onlyMobile}>
+              <MobileMonthList
+                selectedDate={selectedDate}
+                monthGroups={groupedMonthJobs}
+                employees={employees}
+                onJobClick={setOpenJobId}
               />
-            </aside>
-          </div>
+
+              <aside className={styles.sidebarWrapper}>
+                <SidebarJobs
+                  jobs={jobsThisMonth}
+                  onJobClick={setOpenJobId}
+                  jobFilter={jobFilter}
+                  onJobFilterChange={setJobFilter}
+                />
+              </aside>
+            </div>
+
+            {/* DESKTOP MONTH VIEW */}
+            <div className={styles.onlyDesktop}>
+              <div className={styles.monthLayoutWide}>
+                <MonthCalendarLayout
+                  date={selectedDate}
+                  jobs={jobsThisMonth}
+                  employees={employees}
+                  selectedStaff={selectedStaff}
+                  onStaffChange={setSelectedStaff}
+                  onJobClick={setOpenJobId}
+                  onJobMove={() => {}}
+                  onAddJobAt={() => {}}
+                />
+
+                <aside className={styles.sidebarWrapper}>
+                  <SidebarJobs
+                    jobs={jobsThisMonth}
+                    onJobClick={setOpenJobId}
+                    jobFilter={jobFilter}
+                    onJobFilterChange={setJobFilter}
+                  />
+                </aside>
+              </div>
+            </div>
+          </>
         )}
 
-        {/* WEEK MODE */}
+        {/* ---------------- WEEK MODE ---------------- */}
         {rangeMode === "week" && (
-          <div className={styles.desktopMainAndSidebar}>
-            <div className={styles.timelineCardWrapper}>
-              <WeekCalendarLayout
-                date={selectedDate}
+          <>
+            {/* MOBILE WEEK LIST */}
+            <div className={styles.onlyMobile}>
+              <MobileWeekList
                 jobs={staffFilteredJobs.filter((j) =>
                   isSameWeek(j.start, selectedDate)
                 )}
                 employees={employees}
-                onJobClick={(id) => setOpenJobId(id)}
-                onJobMove={() => {}}
-                onAddJobAt={() => {}}
+                selectedDate={selectedDate}
+                onJobClick={setOpenJobId}
               />
+
+              <aside className={styles.sidebarWrapper}>
+                <SidebarJobs
+                  jobs={staffFilteredJobs.filter((j) =>
+                    isSameWeek(j.start, selectedDate)
+                  )}
+                  onJobClick={setOpenJobId}
+                  jobFilter={jobFilter}
+                  onJobFilterChange={setJobFilter}
+                />
+              </aside>
             </div>
 
-            <aside className={styles.sidebarWrapper}>
-              <SidebarJobs
-                jobs={staffFilteredJobs.filter((j) =>
-                  isSameWeek(j.start, selectedDate)
-                )}
-                onJobClick={(id) => setOpenJobId(id)}
-                jobFilter={jobFilter}
-                onJobFilterChange={setJobFilter}
-              />
-            </aside>
-          </div>
+            {/* DESKTOP WEEK VIEW */}
+            <div className={styles.onlyDesktop}>
+              <div className={styles.desktopMainAndSidebar}>
+                <div className={styles.timelineCardWrapper}>
+                  <WeekCalendarLayout
+                    date={selectedDate}
+                    jobs={staffFilteredJobs.filter((j) =>
+                      isSameWeek(j.start, selectedDate)
+                    )}
+                    employees={employees}
+                    onJobClick={setOpenJobId}
+                    onJobMove={() => {}}
+                    onAddJobAt={() => {}}
+                  />
+                </div>
+
+                <aside className={styles.sidebarWrapper}>
+                  <SidebarJobs
+                    jobs={staffFilteredJobs.filter((j) =>
+                      isSameWeek(j.start, selectedDate)
+                    )}
+                    onJobClick={setOpenJobId}
+                    jobFilter={jobFilter}
+                    onJobFilterChange={setJobFilter}
+                  />
+                </aside>
+              </div>
+            </div>
+          </>
         )}
 
-        {/* DAY MODE */}
+        {/* ---------------- DAY MODE ---------------- */}
         {rangeMode === "day" && (
-          <div className={styles.desktopMainAndSidebar}>
-            <div className={styles.timelineCardWrapper}>
-              <DesktopCalendarLayout
-                date={selectedDate}
-                employees={employees}
-                jobsByEmployee={jobsByEmployee}
-                onJobClick={(id) => setOpenJobId(id)}
-                onAddJobAt={() => {}}
-                onMoveJob={() => {}}
-              />
-            </div>
-
-            <aside className={styles.sidebarWrapper}>
-              <SidebarJobs
+          <>
+            {/* MOBILE DAY LIST */}
+            <div className={styles.onlyMobile}>
+              <MobileDayList
                 jobs={staffFilteredJobs.filter((j) =>
                   isSameDay(j.start, selectedDate)
                 )}
-                onJobClick={(id) => setOpenJobId(id)}
-                jobFilter={jobFilter}
-                onJobFilterChange={setJobFilter}
+                employees={employees}
+                selectedDate={selectedDate}
+                onJobClick={setOpenJobId}
               />
-            </aside>
-          </div>
+
+              <aside className={styles.sidebarWrapper}>
+                <SidebarJobs
+                  jobs={staffFilteredJobs.filter((j) =>
+                    isSameDay(j.start, selectedDate)
+                  )}
+                  onJobClick={setOpenJobId}
+                  jobFilter={jobFilter}
+                  onJobFilterChange={setJobFilter}
+                />
+              </aside>
+            </div>
+
+            {/* DESKTOP DAY VIEW */}
+            <div className={styles.onlyDesktop}>
+              <div className={styles.desktopMainAndSidebar}>
+                <div className={styles.timelineCardWrapper}>
+                  <DesktopCalendarLayout
+                    date={selectedDate}
+                    employees={employees}
+                    jobsByEmployee={jobsByEmployee}
+                    onJobClick={setOpenJobId}
+                    onAddJobAt={() => {}}
+                    onMoveJob={() => {}}
+                  />
+                </div>
+
+                <aside className={styles.sidebarWrapper}>
+                  <SidebarJobs
+                    jobs={staffFilteredJobs.filter((j) =>
+                      isSameDay(j.start, selectedDate)
+                    )}
+                    onJobClick={setOpenJobId}
+                    jobFilter={jobFilter}
+                    onJobFilterChange={setJobFilter}
+                  />
+                </aside>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
