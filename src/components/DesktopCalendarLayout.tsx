@@ -1,8 +1,7 @@
-// Created by Honeycomb © 2025
+// Created by Clevermode © 2025. All rights reserved.
 import React, { useMemo, useState } from "react";
-import styles from "../components/DesktopCalendarLayout.module.css";
+import styles from "./DesktopCalendarLayout.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
-
 
 type JobsByEmployee = { [empId: number]: CalendarJob[] };
 
@@ -52,8 +51,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     []
   );
 
-  const hourWidth = HOUR_WIDTH_PX;
-
   const allJobs: CalendarJob[] = useMemo(
     () => Object.values(jobsByEmployee).flat(),
     [jobsByEmployee]
@@ -62,7 +59,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   const findJobById = (id: number) =>
     allJobs.find((j) => j.id === id) || null;
 
-  // ---------------- DRAG DROP ----------------
+  /* ---------------------- DRAG END ---------------------- */
   const handleDropOnSlot = (e: React.DragEvent, employeeId: number) => {
     if (!draggingJobId || !onMoveJob) return;
 
@@ -75,8 +72,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
     if (!lane) return;
 
-    const laneRect = lane.getBoundingClientRect();
-    const relativeX = e.clientX - laneRect.left - dragOffsetX;
+    const rect = lane.getBoundingClientRect();
+    const relativeX = e.clientX - rect.left - dragOffsetX;
 
     const hourOffset = relativeX / HOUR_WIDTH_PX;
     const rawHour = DAY_START_HOUR + hourOffset;
@@ -91,21 +88,22 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     const newStart = new Date(date);
     newStart.setHours(finalHour, finalMinute, 0, 0);
 
-    const originalStart = new Date(job.start);
-    const originalEnd = new Date(job.end);
-    const duration = originalEnd.getTime() - originalStart.getTime();
+    const oStart = new Date(job.start);
+    const oEnd = new Date(job.end);
+    const duration = oEnd.getTime() - oStart.getTime();
     const newEnd = new Date(newStart.getTime() + duration);
 
     onMoveJob(draggingJobId, employeeId, newStart, newEnd);
     setDraggingJobId(null);
   };
 
-  // ---------------- RENDER ----------------
+  /* ------------------------ RENDER ------------------------ */
   return (
     <div>
       {/* HEADER */}
       <div className={styles.timelineRow}>
         <div className={styles.staffCell}></div>
+
         <div className={styles.jobsLane}>
           <div className={styles.timeSlotsHeader}>
             {hours.map((h) => (
@@ -142,6 +140,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                   {hours.map((h) => {
                     const slotStart = new Date(date);
                     slotStart.setHours(h, 0, 0, 0);
+
                     const slotEnd = new Date(slotStart);
                     slotEnd.setHours(slotEnd.getHours() + 1);
 
@@ -149,7 +148,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       <div
                         key={h}
                         className={styles.timeSlotCell}
-                        onDragOver={(e) => draggingJobId && e.preventDefault()}
+                        onDragOver={(e) =>
+                          draggingJobId && e.preventDefault()
+                        }
                         onDrop={(e) => handleDropOnSlot(e, emp.id)}
                       >
                         {onAddJobAt && (
@@ -169,10 +170,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                   })}
                 </div>
 
-                {/* JOBS */}
+                {/* JOB BLOCKS */}
                 {jobs.map((job) => {
                   const start = new Date(job.start);
                   const end = new Date(job.end);
+
                   if (!sameDay(start, date)) return null;
 
                   const startMinutes =
@@ -182,90 +184,52 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                   const durationMinutes =
                     (end.getTime() - start.getTime()) / 60000;
 
-                  const left = (startMinutes / 60) * hourWidth;
+                  const left = (startMinutes / 60) * HOUR_WIDTH_PX;
                   const width = Math.max(
-                    (durationMinutes / 60) * hourWidth - 8,
+                    (durationMinutes / 60) * HOUR_WIDTH_PX - 6,
                     70
                   );
 
-                  // -------- BADGE (INLINE STYLES – WEEK/MONTH İLE AYNI) --------
-                  const baseBadge: React.CSSProperties = {
-                    position: "absolute",
-                    top: 4,
-                    left: 6,
-                    padding: "2px 7px",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    borderRadius: 6,
-                    textTransform: "uppercase",
-                    zIndex: 10,
-                  };
-
-                  let badge: React.ReactNode = null;
-
+                  /* BADGES */
+                  let badge = null;
 
                   if (job.status === "quote") {
-                    badge = (
-                      <div
-                        style={{
-                          ...baseBadge,
-                          background: "#e3d7ff",
-                          color: "#5a2ca0",
-                          border: "1px solid #d3c0ff",
-                        }}
-                      >
-                        QUOTE
-                      </div>
-                    );
+                    badge = <div className={styles.badgeQuote}>QUOTE</div>;
                   } else if (job.status === "completed") {
                     badge = (
-                      <div
-                        style={{
-                          ...baseBadge,
-                          background: "#d6f5e3",
-                          color: "#1b5e20",
-                          border: "1px solid #b6e8cc",
-                        }}
-                      >
-                        COMPLETED
-                      </div>
+                      <div className={styles.badgeCompleted}>COMPLETED</div>
                     );
                   } else if (job.status === "return") {
                     badge = (
-                      <div
-                        style={{
-                          ...baseBadge,
-                          background: "#ffe4b5",
-                          color: "#8a5a00",
-                          border: "1px solid #ffd28a",
-                        }}
-                      >
-                        NEED TO RETURN
-                      </div>
+                      <div className={styles.badgeReturn}>NEED TO RETURN</div>
                     );
                   }
 
                   return (
                     <div
                       key={job.id}
-                      className={styles.jobBlock}
-                      style={{
-                        left: `${left}px`,
-                        width: `${width}px`,
-                        backgroundColor: job.color || "##fffdf0",
-                      }}
                       draggable
                       onDragStart={(e) => {
                         setDraggingJobId(job.id);
-                        const rect = (e.target as HTMLElement).getBoundingClientRect();
+                        const rect = (
+                          e.target as HTMLElement
+                        ).getBoundingClientRect();
                         setDragOffsetX(e.clientX - rect.left);
                       }}
                       onDragEnd={() => setDraggingJobId(null)}
                       onClick={() => onJobClick?.(job.id)}
+                      className={styles.jobBlock}
+                      style={{
+                        left,
+                        width,
+                        backgroundColor: job.color || "#fffdf0",
+                      }}
                     >
                       {badge}
 
-                      <div className={styles.jobBlockTitle}>{job.title}</div>
+                      <div className={styles.jobBlockTitle}>
+                        {job.title}
+                      </div>
                       <div className={styles.jobBlockCustomer}>
                         {job.customer}
                       </div>

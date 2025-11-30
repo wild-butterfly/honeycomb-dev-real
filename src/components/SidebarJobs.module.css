@@ -1,0 +1,213 @@
+/* Sidebar Job Panel CSS — Created by Clevermode © 2025 */
+
+/* Container */
+.sidebarCard {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 18px #b99a2a11;
+  border: 1.5px solid #ffe066;
+  padding: 16px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+}
+
+/* Header */
+.sidebarHeaderRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sidebarTitle {
+  color: #b99a2a;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Filter Dropdown Row */
+.sidebarFilterRow {
+  margin-bottom: 10px;
+}
+
+.sidebarFilterDropdown {
+  width: 100%;
+  border: 1px solid #e5c86b;
+  background: #fffef2;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #5a4d00;
+  cursor: pointer;
+}
+
+.sidebarFilterDropdown:hover {
+  background: #fff6d4;
+}
+
+/* Search Row */
+.sidebarSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sidebarSearchInput {
+  flex: 1;
+  background: #fffde4;
+  border: 1px solid #d4b84a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #232323;
+}
+
+.sidebarSearchInput:focus {
+  outline: none;
+  border-color: #ffb300;
+  box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
+}
+
+/* JOB LIST */
+.sidebarJobsList {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.sidebarJobItem {
+  border: 1px solid #ffe066;
+  border-radius: 8px;
+  background: #fffef9;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12);
+  font-size: 0.8rem;
+  color: #232323;
+  cursor: pointer;
+  transition: 0.15s ease;
+  position: relative;
+}
+
+.sidebarJobItem:hover {
+  filter: brightness(1.03);
+}
+
+/* --- Filter Button + Dropdown --- */
+
+.filterWrapper {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.filterButton {
+  width: 100%;
+  background: #fffef2;
+  border: 1px solid #e5c86b;
+  border-radius: 6px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #5a4d00;
+  text-align: left;
+}
+
+.filterButton:hover {
+  background: #fff6d4;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #ecd488;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  z-index: 100;
+}
+
+.dropdownHeader {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7c691f;
+  opacity: 0.8;
+  padding: 4px 12px;
+  text-transform: uppercase;
+}
+
+.dropdownItem {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #5a4d00;
+}
+
+.dropdownItem:hover {
+  background: #fff8d9;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #f2e5af;
+  margin: 6px 0;
+}
+
+/* Job Text */
+.sidebarJobTitle {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #4a3f00;
+  margin-bottom: 2px;
+}
+
+.sidebarJobCustomer {
+  font-weight: 600;
+  color: #6f601a;
+  font-size: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.sidebarJobLocation {
+  font-weight: 500;
+  color: #9c9043;
+  font-size: 0.7rem;
+}
+
+/* Empty State */
+.sidebarEmptyState {
+  text-align: center;
+  color: #bdb176;
+  padding: 40px 0 0;
+}
+
+.sidebarEmptyEmoji {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.sidebarEmptyText {
+  font-size: 0.8rem;
+  color: #a9a174;
+  font-weight: 500;
+}
+
+/* Status Badge */
+.sidebarStatusBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+}

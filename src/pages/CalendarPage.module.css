@@ -1,8 +1,9 @@
 /* Overall page wrapper under navbar */
 .calendarPageShell {
-  max-width: 11360px;
+  width: 100%;
+  max-width: 100%;
   margin: 16px auto 40px auto;
-  padding: 20px 16px 40px;
+  padding: 20px 0 40px 0;
   font-family: "Roboto", Arial, sans-serif;
   color: #232323;
 }
@@ -17,25 +18,22 @@
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
   min-height: 100vh;
-  padding: 0 0 46px 0;
+  padding-bottom: 46px;
   font-family: "Roboto", Arial, sans-serif;
 }
 
-/* ───────── Controls bar ───────── */
-
+/* Controls bar */
 .controlsCard {
   background: #fffdf0;
   border: 1.5px solid #ffe066;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(212, 184, 74, 0.12);
   padding: 12px 16px;
   margin-bottom: 16px;
-
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 6px rgba(212, 184, 74, 0.12);
 }
 
 .controlsLeftGroup,
@@ -46,91 +44,9 @@
   gap: 12px;
 }
 
-/* staff filter inside controls */
-.staffFilterWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.staffFilterLabel {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #4a3f00;
-}
-
-.staffFilterSelect {
-  background: #fffde4;
-  border: 1px solid #d4b84a;
-  border-radius: 6px;
-  padding: 8px 10px;
-  min-width: 160px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #232323;
-  line-height: 1.2;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05),
-    0 0 0 2px rgba(255, 214, 0, 0.08);
-}
-.staffFilterSelect:focus {
-  outline: none;
-  border-color: #ffb300;
-  box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
-}
-
-/* date nav */
-.navArrowBtn {
-  background: #fffde4;
-  border: 1.5px solid #d4b84a;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 1rem;
-  line-height: 1;
-  font-weight: 700;
-  color: #b99a2a;
-  cursor: pointer;
-}
-.navArrowBtn:hover,
-.navArrowBtn:focus {
-  background: #ffd600;
-  color: #232323;
-  border-color: #ffd600;
-}
-
-.dateDisplay {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #b99a2a;
-  white-space: nowrap;
-}
-
-/* Day/Week buttons */
-.modeToggleGroup {
-  display: flex;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1.5px solid #d4b84a;
-  background: #fffde4;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 0 2px rgba(255, 214, 0, 0.08);
-}
-.modeBtn,
-.modeBtnActive {
-  background: transparent;
-  border: none;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #b99a2a;
-  padding: 6px 10px;
-  cursor: pointer;
-}
-.modeBtnActive {
-  background: #ffd600;
-  color: #232323;
-}
-
-/* ───────── Desktop layout wrapper ───────── */
-
+/* Desktop wrapper */
 .desktopWrapper {
+  width: 100%;
   display: block;
 }
 
@@ -138,85 +54,32 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* main timeline card */
 .timelineCardWrapper {
-  flex: 1 1 auto;
-  min-width: 0; /* flex overflow fix */
+  flex: 1;
+  min-width: 0;
 }
 
-/* sidebar card container */
+/* Sidebar */
 .sidebarWrapper {
-  flex: 0 0 280px;
+  width: 280px;
+  min-width: 280px;
   max-width: 280px;
 }
-
-/* -------------------------
-   SIDEBAR BADGE (YENİ)
--------------------------- */
-.sidebarBadge {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  z-index: 10;
-}
-
-/* ───────── Sidebar (Jobs list) ───────── */
 
 .sidebarCard {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 2px 18px #b99a2a11;
   border: 1.5px solid #ffe066;
+  box-shadow: 0 2px 18px #b99a2a11;
   padding: 16px;
-  min-width: 0;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   max-height: 480px;
-}
-
-.sidebarHeaderRow {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.sidebarTitle {
-  color: #b99a2a;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.sidebarSearchRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.sidebarSearchInput {
-  flex: 1;
-  background: #fffde4;
-  border: 1px solid #d4b84a;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #232323;
-  line-height: 1.2;
-}
-.sidebarSearchInput:focus {
-  outline: none;
-  border-color: #ffb300;
-  box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
 }
 
 .sidebarJobsList {
@@ -225,266 +88,29 @@
   padding-right: 4px;
 }
 
-.sidebarJobItem {
-  border: 1px solid #ffe066;
-  border-radius: 8px;
-  background: #fffef9;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12);
-  font-size: 0.8rem;
-  line-height: 1.3;
-  color: #232323;
+/* MONTH LAYOUT FIX */
+.monthLayoutWide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  width: 100%;
 }
 
-.sidebarJobTitle {
-  font-weight: 700;
-  font-size: 0.8rem;
-  color: #4a3f00;
-  margin-bottom: 2px;
-}
-.sidebarJobCustomer {
-  font-weight: 600;
-  color: #6f601a;
-  font-size: 0.75rem;
-  margin-bottom: 2px;
-}
-.sidebarJobLocation {
-  font-weight: 500;
-  color: #9c9043;
-  font-size: 0.7rem;
-  line-height: 1.2;
+.monthCalendarContainer {
+  width: 100%;
+  min-width: 0;
 }
 
-.sidebarEmptyState {
-  text-align: center;
-  color: #bdb176;
-  padding: 40px 0 0;
-}
-.sidebarEmptyEmoji {
-  font-size: 1.8rem;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-.sidebarEmptyText {
-  font-size: 0.8rem;
-  color: #a9a174;
-  font-weight: 500;
+.monthCalendarContainer > * {
+  width: 100%;
 }
 
-/* ───────── Mobile layout ───────── */
-
-.mobileWrapper {
-  display: none;
-}
-
-/* mobile card that replaces timeline on small screens */
-.mobileCard {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 18px #b99a2a11;
-  border: 1.5px solid #ffe066;
-  padding: 16px;
-  margin-top: 20px;
-}
-
-.mobileHeader {
-  margin-bottom: 12px;
-}
-.mobileDateLine {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #b99a2a;
-}
-.mobileSub {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #6f601a;
-}
-
-.mobileSectionTitle {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #4a3f00;
-  margin: 16px 0 8px;
-}
-
-.mobileEmpty {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #9c9043;
-  background: #fffde4;
-  border: 1px solid #ffe066;
-  border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-}
-
-/* job card (mobile) */
-.mobileJobCard {
-  border: 1px solid #ffe066;
-  border-radius: 8px;
-  background: #fffef9;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12);
-
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: #232323;
-}
-.mobileJobTime {
-  font-weight: 700;
-  color: #4a3f00;
-  font-size: 0.8rem;
-  margin-bottom: 2px;
-}
-.mobileJobTitle {
-  font-weight: 700;
-  color: #b99a2a;
-  font-size: 0.8rem;
-  margin-bottom: 2px;
-}
-.mobileJobAssignee {
-  color: #6f601a;
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-.mobileJobCustomer {
-  color: #6f601a;
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-.mobileJobLocation {
-  color: #9c9043;
-  font-weight: 500;
-  font-size: 0.7rem;
-}
-
-/* task card (mobile) */
-.mobileTaskCard {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-
-  border: 1px solid #ffe066;
-  border-radius: 8px;
-  background: #fffde4;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12);
-
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: #232323;
-}
-
-.mobileTaskBee {
-  font-size: 1.1rem;
-  line-height: 1.1;
-}
-.mobileTaskDesc {
-  font-weight: 600;
-  color: #6f601a;
-  font-size: 0.8rem;
-}
-
-/* ───────── Responsive breakpoints ───────── */
-
+/* Responsive */
 @media (max-width: 900px) {
   .desktopWrapper {
     display: none;
   }
-
   .mobileWrapper {
     display: block;
   }
-
-  .desktopMainAndSidebar {
-    flex-direction: column;
-  }
-
-  .sidebarWrapper {
-    max-width: 100%;
-    flex: 1 1 auto;
-  }
-}
-
-/* SAĞDAKİ JOB KARTLARI (Month görünümü ile birebir aynı) */
-.sidebarJobItemCorrect {
-  background: #e7f7f2; /* Month görünüm job rengi */
-  border: 1px solid #d5ede5;
-  padding: 14px 12px 14px 12px;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  position: relative;
-  transition: 0.15s ease;
-}
-
-.sidebarJobItemCorrect:hover {
-  background: #f1fbf7;
-}
-
-/* BADGE – Month görünüm ile aynı */
-.jobStatusBadge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 6px;
-}
-
-/* Month Badge Colors */
-.status_completed {
-  background: #e8f8e8;
-  color: #2e7d32;
-  border: 1px solid #a4d4a4;
-}
-
-.status_return {
-  background: #fff4e5;
-  color: #b26a00;
-  border: 1px solid #f0c38c;
-}
-
-.status_quote {
-  background: #e8f2ff;
-  color: #0b4fa8;
-  border: 1px solid #9ec3ff;
-}
-
-.status_active {
-  background: #fff3cd;
-  color: #7a5c00;
-  border: 1px solid #e2c76b;
-}
-
-.slotAddButton {
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  position: relative;
-  background: #ffd600;
-  color: #4a3f00;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-
-  clip-path: polygon(
-    25% 6%,
-    /* üst sol */ 75% 6%,
-    /* üst sağ */ 100% 50%,
-    /* sağ */ 75% 94%,
-    /* alt sağ */ 25% 94%,
-    /* alt sol */ 0% 50% /* sol */
-  );
-
-  transition: 0.15s ease;
-}
-
-.slotAddButton:hover {
-  filter: brightness(1.1);
 }

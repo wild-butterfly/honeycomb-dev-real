@@ -1,101 +1,216 @@
 // Created by Clevermode © 2025. All rights reserved.
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import styles from "./CalendarPage.module.css";
 
 import DashboardNavbar from "../components/DashboardNavbar";
 import CalendarControlsBar from "../components/CalendarControlsBar";
-import DesktopCalendarLayout from "../components/DesktopCalendarLayout";
 import SidebarJobs from "../components/SidebarJobs";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
-
-import MobileDayList from "../components/MobileDayList";
-import MobileWeekList from "../components/MobileWeekList";
-import MobileMonthList from "../components/MobileMonthList";
+import DesktopCalendarLayout from "../components/DesktopCalendarLayout";
 
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 
-/* ------------------------
-    TYPES
-------------------------- */
+/* TYPES */
 export type Employee = {
   id: number;
   name: string;
-  avatar?: string;
 };
 
 export type CalendarJob = {
   id: number;
   title: string;
   customer: string;
-  location?: string;
-
   assignedTo: number[];
   start: string;
   end: string;
+
+  status?: "active" | "completed" | "return" | "quote";
   color?: string;
 
+  location?: string;
   siteContact?: string;
   contactInfo?: string;
   notes?: string;
 
-  pastEvents?: CalendarJob[];
+  /* RELATED EVENTS (Modal için gerekli) */
   futureEvents?: CalendarJob[];
-
-  status?: "active" | "completed" | "return" | "quote";
+  pastEvents?: CalendarJob[];
 };
 
-/* ------------------------
-    SEED DATA
-------------------------- */
 
+/* SEED */
 const employeesSeed: Employee[] = [
-  { id: 1, name: "Aşkın Fear", avatar: "/avatar2.png" },
-  { id: 2, name: "Daniel Fear", avatar: "/avatar1.png" },
-  { id: 3, name: "Jackobi Forsyth", avatar: "/avatar3.png" },
-  { id: 4, name: "Jason Fear", avatar: "/avatar4.png" },
-  { id: 5, name: "Lachlan McConchie", avatar: "/avatar5.png" },
-  { id: 6, name: "Lance Meyer", avatar: "/avatar6.png" },
-  { id: 7, name: "Yasin Yaka", avatar: "/avatar7.png" },
-  { id: 8, name: "z Richard F", avatar: "/avatar8.png" },
-  { id: 9, name: "z Adelaide Daniel T", avatar: "/avatar9.png" },
+  { id: 1, name: "Aşkın Fear" },
+  { id: 2, name: "Daniel Fear" },
+  { id: 3, name: "Jackobi Forsyth" },
+  { id: 4, name: "Jason Fear" },
+  { id: 5, name: "Lachlan McConchie" },
+  { id: 6, name: "Lance Meyer" },
+  { id: 7, name: "Yasin Yaka" },
+  { id: 8, name: "z Richard F" },
+  { id: 9, name: "z Adelaide Daniel T" },
 ];
 
-const jobsSeed: CalendarJob[] = [
+
+ const jobsSeed: CalendarJob[] = [
   {
     id: 101,
     title: "Test & Tag",
     customer: "Bared Footwear",
-    location: "Melbourne CBD",
     assignedTo: [1],
     start: "2025-11-03T09:00",
     end: "2025-11-03T10:30",
-    siteContact: "Aşkın Fear",
-    contactInfo: "0400 123 456",
-    notes: "Check fire extinguishers + kitchen appliances.",
-    color: "#e4f4de",
     status: "active",
+    color: "#e4f4de",
   },
   {
     id: 102,
     title: "Test & Tag",
     customer: "Karbon Australia Pty",
-    location: "Richmond",
     assignedTo: [2],
     start: "2025-11-04T08:30",
     end: "2025-11-04T10:00",
-    siteContact: "Daniel Fear",
-    contactInfo: "0400 555 444",
-    notes: "Warehouse + office testing.",
-    color: "#dff5f5",
     status: "return",
+    color: "#dff5f5",
   },
+  {
+    id: 103,
+    title: "Safety Inspection",
+    customer: "Metro Rail",
+    assignedTo: [],
+    start: "2025-11-05T13:00",
+    end: "2025-11-05T14:00",
+    status: "active",
+    color: "#f7e6ff",
+  },
+
+  // --- NEW ADDED JOBS BELOW ---
+
+  {
+    id: 104,
+    title: "Emergency Repair",
+    customer: "City Library",
+    assignedTo: [3],
+    start: "2025-11-03T14:00",
+    end: "2025-11-03T15:00",
+    status: "completed",
+    color: "#d8f5d2",
+  },
+  {
+    id: 105,
+    title: "Tagging Session",
+    customer: "State Hospital",
+    assignedTo: [4],
+    start: "2025-11-06T09:00",
+    end: "2025-11-06T11:30",
+    status: "quote",
+    color: "#e8ddff",
+  },
+  {
+    id: 106,
+    title: "Electrical Compliance",
+    customer: "Town Hall",
+    assignedTo: [1],
+    start: "2025-11-07T10:00",
+    end: "2025-11-07T12:00",
+    status: "active",
+    color: "#e4f4de",
+  },
+  {
+    id: 107,
+    title: "RCD Testing",
+    customer: "Cafe Aroma",
+    assignedTo: [5],
+    start: "2025-11-07T13:00",
+    end: "2025-11-07T15:00",
+    status: "return",
+    color: "#fff3cd",
+  },
+  {
+    id: 108,
+    title: "PAT Testing",
+    customer: "Tech Hub Co",
+    assignedTo: [],
+    start: "2025-11-08T08:00",
+    end: "2025-11-08T09:00",
+    status: "active",
+    color: "#dff5f5",
+  },
+  {
+    id: 109,
+    title: "Site Inspection",
+    customer: "Logistics Warehouse",
+    assignedTo: [2],
+    start: "2025-11-09T11:00",
+    end: "2025-11-09T12:00",
+    status: "completed",
+    color: "#d8f5d2",
+  },
+  {
+    id: 110,
+    title: "Annual Check",
+    customer: "Laser Clinic",
+    assignedTo: [3],
+    start: "2025-11-10T09:30",
+    end: "2025-11-10T11:00",
+    status: "quote",
+    color: "#e8ddff",
+  },
+  {
+    id: 111,
+    title: "Warehouse Test",
+    customer: "Furniture King",
+    assignedTo: [7],
+    start: "2025-11-11T08:00",
+    end: "2025-11-11T10:00",
+    status: "active",
+    color: "#dff5f5",
+  },
+  {
+    id: 112,
+    title: "Portable Appliance Test",
+    customer: "School of Arts",
+    assignedTo: [],
+    start: "2025-11-12T12:00",
+    end: "2025-11-12T13:30",
+    status: "active",
+    color: "#e4f4de",
+  },
+  {
+    id: 113,
+    title: "Safety Testing",
+    customer: "Gym Central",
+    assignedTo: [6],
+    start: "2025-11-12T14:00",
+    end: "2025-11-12T15:00",
+    status: "completed",
+    color: "#d8f5d2",
+  },
+  {
+    id: 114,
+    title: "Test & Tag",
+    customer: "OfficePro",
+    assignedTo: [9],
+    start: "2025-11-14T09:00",
+    end: "2025-11-14T10:30",
+    status: "return",
+    color: "#fff3cd",
+  },
+  {
+    id: 115,
+    title: "Full Safety Audit",
+    customer: "BigMart Retail",
+    assignedTo: [4],
+    start: "2025-11-14T11:00",
+    end: "2025-11-14T14:00",
+    status: "active",
+    color: "#dff5f5",
+  }
 ];
 
-/* ------------------------
-    DATE HELPERS
-------------------------- */
 
+/* HELPERS */
 function isSameDay(dateStr: string, day: Date) {
   const d = new Date(dateStr);
   return (
@@ -105,98 +220,62 @@ function isSameDay(dateStr: string, day: Date) {
   );
 }
 
-function isSameWeek(dateStr: string, weekDate: Date) {
+function isSameWeek(dateStr: string, week: Date) {
   const d = new Date(dateStr);
-
-  const weekStart = new Date(weekDate);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-  weekStart.setHours(0, 0, 0, 0);
-
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  return d >= weekStart && d <= weekEnd;
+  const ws = new Date(week);
+  ws.setDate(ws.getDate() - ws.getDay() + 1);
+  const we = new Date(ws);
+  we.setDate(ws.getDate() + 6);
+  return d >= ws && d <= we;
 }
 
-function jobMatchesStaff(job: CalendarJob, staff: number | "all") {
-  return staff === "all" || job.assignedTo.includes(staff);
-}
-
-/* ------------------------
-    MAIN COMPONENT
-------------------------- */
-
+/* MAIN */
 const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [rangeMode, setRangeMode] =
-    useState<"day" | "week" | "month">("day");
-  const [staffFilter, setStaffFilter] =
-    useState<number | "all">("all");
+  const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("month");
 
-  const [monthStaffFilter, setMonthStaffFilter] = useState<number[]>([]);
+  const [jobFilter, setJobFilter] =
+    useState<"all" | "unassigned" | "active" | "completed" | "return" | "quote">(
+      "all"
+    );
+
   const [employees] = useState(employeesSeed);
   const [jobs, setJobs] = useState(jobsSeed);
 
   const [openJobId, setOpenJobId] = useState<number | null>(null);
-  const openJob = useMemo(
-    () => jobs.find((j) => j.id === openJobId) ?? null,
-    [jobs, openJobId]
-  );
+  const openJob = useMemo(() => jobs.find((j) => j.id === openJobId) || null, [jobs, openJobId]);
 
-  /* -------- DAY -------- */
+  /* APPLY JOB FILTER */
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      if (jobFilter === "all") return true;
+      if (jobFilter === "unassigned") return job.assignedTo.length === 0;
+      return job.status === jobFilter;
+    });
+  }, [jobFilter, jobs]);
+
+  /* JOB MAP FOR DAY VIEW (FIX) */
   const jobsByEmployee = useMemo(() => {
-    const map: { [id: number]: CalendarJob[] } = {};
-    employees.forEach((emp) => {
-      map[emp.id] = jobs.filter(
-        (j) =>
-          isSameDay(j.start, selectedDate) &&
-          jobMatchesStaff(j, staffFilter) &&
-          j.assignedTo.includes(emp.id)
-      );
+    const map: Record<number, CalendarJob[]> = {};
+    employees.forEach((e) => (map[e.id] = []));
+
+    filteredJobs.forEach((job) => {
+      job.assignedTo.forEach((empId) => {
+        if (!map[empId]) map[empId] = [];
+        map[empId].push(job);
+      });
     });
+
     return map;
-  }, [employees, jobs, selectedDate, staffFilter]);
+  }, [filteredJobs, employees]);
 
-  /* -------- WEEK -------- */
-  const jobsThisWeek = useMemo(
-    () =>
-      jobs.filter(
-        (j) =>
-          isSameWeek(j.start, selectedDate) &&
-          jobMatchesStaff(j, staffFilter)
-      ),
-    [jobs, selectedDate, staffFilter]
-  );
+  const jobsThisMonth = filteredJobs.filter((j) => {
+    const d = new Date(j.start);
+    return d.getMonth() === selectedDate.getMonth() && d.getFullYear() === selectedDate.getFullYear();
+  });
 
-  /* -------- MONTH (MOBILE) -------- */
-  const jobsThisMonth = useMemo(
-    () =>
-      jobs.filter((j) => {
-        const d = new Date(j.start);
-        return (
-          d.getMonth() === selectedDate.getMonth() &&
-          d.getFullYear() === selectedDate.getFullYear()
-        );
-      }),
-    [jobs, selectedDate]
-  );
-
-  const monthGroups = useMemo(() => {
-    const map: { [day: number]: CalendarJob[] } = {};
-    jobsThisMonth.forEach((j) => {
-      const d = new Date(j.start).getDate();
-      if (!map[d]) map[d] = [];
-      map[d].push(j);
-    });
-    return map;
-  }, [jobsThisMonth]);
-
-  /* ------------------------
-      NAVIGATION
-  ------------------------- */
-
-  const goPrevDay = () => {
+  /* NAVIGATION */
+  const goPrev = () => {
     const d = new Date(selectedDate);
     if (rangeMode === "month") d.setMonth(d.getMonth() - 1);
     else if (rangeMode === "week") d.setDate(d.getDate() - 7);
@@ -204,7 +283,7 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
-  const goNextDay = () => {
+  const goNext = () => {
     const d = new Date(selectedDate);
     if (rangeMode === "month") d.setMonth(d.getMonth() + 1);
     else if (rangeMode === "week") d.setDate(d.getDate() + 7);
@@ -212,189 +291,96 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
-  /* ------------------------
-      JOB ACTIONS
-  ------------------------- */
-
-  const handleAddJobAt = (
-    employeeId: number,
-    start: Date,
-    end: Date
-  ) => {
-    const newId = Math.floor(Math.random() * 999999);
-    const newJob: CalendarJob = {
-      id: newId,
-      title: "New Job",
-      customer: "",
-      location: "",
-      assignedTo: [employeeId],
-      start: start.toISOString(),
-      end: end.toISOString(),
-      color: "#fffdf0",
-      notes: "",
-      status: "active",
-    };
-    setJobs((prev) => [...prev, newJob]);
-    setOpenJobId(newId);
-  };
-
-  const handleMoveJob = (
-    jobId: number,
-    employeeId: number,
-    newStart: Date,
-    newEnd: Date
-  ) => {
-    setJobs((prev) =>
-      prev.map((j) =>
-        j.id === jobId
-          ? {
-              ...j,
-              assignedTo: [employeeId],
-              start: newStart.toISOString(),
-              end: newEnd.toISOString(),
-            }
-          : j
-      )
-    );
-  };
-
-  const handleJobClick = (id: number) => setOpenJobId(id);
-
-  const handleSaveJob = (updated: CalendarJob) =>
-    setJobs((prev) =>
-      prev.map((j) => (j.id === updated.id ? updated : j))
-    );
-
-  const handleDeleteJob = (jobId: number) =>
-    setJobs((prev) => prev.filter((j) => j.id !== jobId));
-
-  /* ------------------------
-      MOBILE VS DESKTOP
-  ------------------------- */
-
-  const isMobile = window.innerWidth < 768;
-
   return (
     <div className={styles.dashboardBg}>
-      <DashboardNavbar
-        searchValue=""
-        onSearchChange={() => {}}
-        onNewJob={() => {}}
-      />
+      <DashboardNavbar />
 
       <div className={styles.calendarPageShell}>
         <CalendarControlsBar
           date={selectedDate}
-          onPrev={goPrevDay}
-          onNext={goNextDay}
+          onPrev={goPrev}
+          onNext={goNext}
           rangeMode={rangeMode}
           onRangeModeChange={setRangeMode}
           employees={employees}
-          staffFilter={staffFilter}
-          onStaffFilterChange={setStaffFilter}
-          onDateChange={(d) => setSelectedDate(d)}
+          staffFilter={"all"}
+          onStaffFilterChange={() => {}}
+          onDateChange={setSelectedDate}
         />
 
-        {/* MOBILE */}
-        {isMobile ? (
-          rangeMode === "day" ? (
-            <MobileDayList
-              jobs={jobs.filter(
-                (j) =>
-                  isSameDay(j.start, selectedDate) &&
-                  jobMatchesStaff(j, staffFilter)
-              )}
-              employees={employees}
-              onJobClick={handleJobClick}
-            />
-          ) : rangeMode === "week" ? (
-            <MobileWeekList
-              jobs={jobsThisWeek}
-              employees={employees}
-              selectedDate={selectedDate}
-              onJobClick={handleJobClick}
-            />
-          ) : (
-            <MobileMonthList
-              selectedDate={selectedDate}
-              monthGroups={monthGroups}
-              employees={employees}
-              onJobClick={handleJobClick}
-            />
-          )
-        ) : (
-          /* DESKTOP */
-          rangeMode === "month" ? (
+        {/* ------------------ MONTH MODE ------------------ */}
+        {rangeMode === "month" && (
+          <div className={styles.monthLayoutWide}>
             <MonthCalendarLayout
               date={selectedDate}
-              jobs={jobs.filter((j) => {
-                const d = new Date(j.start);
-                const sameMonth =
-                  d.getMonth() === selectedDate.getMonth() &&
-                  d.getFullYear() === selectedDate.getFullYear();
-
-                const matchesStaff =
-                  monthStaffFilter.length === 0 ||
-                  j.assignedTo.some((id) =>
-                    monthStaffFilter.includes(id)
-                  );
-
-                return sameMonth && matchesStaff;
-              })}
+              jobs={jobsThisMonth}
               employees={employees}
-              selectedStaff={monthStaffFilter}
-              onStaffChange={setMonthStaffFilter}
-              onJobClick={handleJobClick}
-              onJobMove={handleMoveJob}
-              onAddJobAt={handleAddJobAt}
+              selectedStaff={[]}
+              onStaffChange={() => {}}
+              onJobClick={(id) => setOpenJobId(id)}
+              onJobMove={() => {}}
+              onAddJobAt={() => {}}
             />
-          ) : rangeMode === "week" ? (
-            <div className={styles.desktopWrapper}>
-              <div className={styles.desktopMainAndSidebar}>
-                <div className={styles.timelineCardWrapper}>
-                  <WeekCalendarLayout
-                    date={selectedDate}
-                    jobs={jobsThisWeek}
-                    employees={employees}
-                    onJobClick={handleJobClick}
-                    onJobMove={handleMoveJob}
-                    onAddJobAt={handleAddJobAt}
-                  />
-                </div>
-                <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs
-                    jobs={jobsThisWeek}
-                    onJobClick={handleJobClick}
-                  />
-                </aside>
-              </div>
+
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
+                jobs={jobsThisMonth}
+                onJobClick={(id) => setOpenJobId(id)}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
+              />
+            </aside>
+          </div>
+        )}
+
+        {/* ------------------ WEEK MODE ------------------ */}
+        {rangeMode === "week" && (
+          <div className={styles.desktopMainAndSidebar}>
+            <div className={styles.timelineCardWrapper}>
+              <WeekCalendarLayout
+                date={selectedDate}
+                jobs={filteredJobs.filter((j) => isSameWeek(j.start, selectedDate))}
+                employees={employees}
+                onJobClick={(id) => setOpenJobId(id)}
+                onJobMove={() => {}}
+                onAddJobAt={() => {}}
+              />
             </div>
-          ) : (
-            <div className={styles.desktopWrapper}>
-              <div className={styles.desktopMainAndSidebar}>
-                <div className={styles.timelineCardWrapper}>
-                  <DesktopCalendarLayout
-                    date={selectedDate}
-                    employees={employees}
-                    jobsByEmployee={jobsByEmployee}
-                    onAddJobAt={handleAddJobAt}
-                    onMoveJob={handleMoveJob}
-                    onJobClick={handleJobClick}
-                  />
-                </div>
-                <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs
-                    jobs={jobs.filter(
-                      (j) =>
-                        isSameDay(j.start, selectedDate) &&
-                        jobMatchesStaff(j, staffFilter)
-                    )}
-                    onJobClick={handleJobClick}
-                  />
-                </aside>
-              </div>
+
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
+                jobs={filteredJobs.filter((j) => isSameWeek(j.start, selectedDate))}
+                onJobClick={(id) => setOpenJobId(id)}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
+              />
+            </aside>
+          </div>
+        )}
+
+        {/* ------------------ DAY MODE (NOW FIXED!) ------------------ */}
+        {rangeMode === "day" && (
+          <div className={styles.desktopMainAndSidebar}>
+            <div className={styles.timelineCardWrapper}>
+              <DesktopCalendarLayout
+                date={selectedDate}
+                employees={employees}
+                jobsByEmployee={jobsByEmployee}
+                onJobClick={(id) => setOpenJobId(id)}
+                onAddJobAt={() => {}}
+                onMoveJob={() => {}}
+              />
             </div>
-          )
+
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
+                jobs={filteredJobs.filter((j) => isSameDay(j.start, selectedDate))}
+                onJobClick={(id) => setOpenJobId(id)}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
+              />
+            </aside>
+          </div>
         )}
       </div>
 
@@ -404,8 +390,10 @@ const CalendarPage: React.FC = () => {
           employees={employees}
           allJobs={jobs}
           onClose={() => setOpenJobId(null)}
-          onSave={handleSaveJob}
-          onDelete={() => handleDeleteJob(openJob.id)}
+          onSave={(updated) =>
+            setJobs((p) => p.map((j) => (j.id === updated.id ? updated : j)))
+          }
+          onDelete={() => setJobs((p) => p.filter((j) => j.id !== openJob.id))}
         />
       )}
     </div>
@@ -413,4 +401,3 @@ const CalendarPage: React.FC = () => {
 };
 
 export default CalendarPage;
-export { jobsSeed };
