@@ -25,21 +25,15 @@ const MonthCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverDay, setHoverDay] = useState<number | null>(null);
-  const [search, setSearch] = useState("");
 
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
 
-  const offset = (firstDay.getDay() + 6) % 7;
-  const totalDays = lastDay.getDate();
-
-  const days: Date[] = [];
-  for (let i = 1; i <= totalDays; i++) {
-    days.push(new Date(year, month, i));
-  }
+  const offset = (first.getDay() + 6) % 7;
+  const days = Array.from({ length: last.getDate() }, (_, i) => new Date(year, month, i + 1));
 
   const getJobsForDay = (day: Date) =>
     jobs.filter((j) => {
@@ -48,71 +42,54 @@ const MonthCalendarLayout: React.FC<Props> = ({
         d.getFullYear() === day.getFullYear() &&
         d.getMonth() === day.getMonth() &&
         d.getDate() === day.getDate() &&
-        (selectedStaff.length === 0 ||
-          j.assignedTo.some((id) => selectedStaff.includes(id)))
+        (selectedStaff.length === 0 || j.assignedTo.some((id) => selectedStaff.includes(id)))
       );
     });
 
-  const filteredJobsRight = jobs.filter(
-    (j) =>
-      j.title.toLowerCase().includes(search.toLowerCase()) ||
-      j.customer.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const renderStatusBadge = (job: CalendarJob, location: "cell" | "sidebar") => {
+  const renderBadge = (job: CalendarJob) => {
     if (!job.status || job.status === "active") return null;
 
-const label =
-  job.status === "return"
-    ? "NEED TO RETURN"
-    : job.status === "quote"
-    ? "QUOTE"
-    : job.status === "completed"
-    ? "COMPLETED"
-    : "ACTIVE";
+    if (job.status === "quote")
+      return <div className={styles.badgeQuote}>QUOTE</div>;
 
+    if (job.status === "completed")
+      return <div className={styles.badgeCompleted}>COMPLETED</div>;
 
-    const base = `${styles.jobStatusBadge} ${styles["status_" + job.status]}`;
+    if (job.status === "return")
+      return <div className={styles.badgeReturn}>NEED TO RETURN</div>;
 
-    const extra =
-  location === "cell"
-    ? ` ${styles.badgeInCell}`
-    : ` ${styles.badgeInSidebar}`;
-
-
-    return <span className={base + extra}>{label}</span>;
+    return null;
   };
 
   return (
-    <div className={styles.layoutWrapper}>
+    <div className={styles.monthLayoutWide}>
       {/* LEFT STAFF PANEL */}
       <div className={styles.staffListWrapper}>
         <div className={styles.staffListTitle}>Staff</div>
+
         <div className={styles.staffList}>
           {employees.map((emp) => {
-            const isChecked = selectedStaff.includes(emp.id);
+            const checked = selectedStaff.includes(emp.id);
+
             return (
               <label key={emp.id} className={styles.staffItem}>
                 <input
                   type="checkbox"
-                  checked={isChecked}
-                  onChange={() => {
-                    if (isChecked) {
-                      onStaffChange(selectedStaff.filter((x) => x !== emp.id));
-                    } else {
-                      onStaffChange([...selectedStaff, emp.id]);
-                    }
-                  }}
+                  checked={checked}
+                  onChange={() =>
+                    checked
+                      ? onStaffChange(selectedStaff.filter((x) => x !== emp.id))
+                      : onStaffChange([...selectedStaff, emp.id])
+                  }
                   className={styles.staffCheckbox}
                 />
 
                 <div className={styles.staffAvatar}>
                   {emp.name
                     .split(" ")
-                    .map((p) => p[0])
+                    .map((x) => x[0])
                     .join("")
-                    .toUpperCase()
-                    .slice(0, 2)}
+                    .toUpperCase()}
                 </div>
 
                 <div className={styles.staffName}>{emp.name}</div>
@@ -122,7 +99,7 @@ const label =
         </div>
       </div>
 
-      {/* CENTER MONTH GRID */}
+      {/* MONTH CALENDAR */}
       <div className={styles.monthWrapper}>
         <div className={styles.weekHeader}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
@@ -133,13 +110,13 @@ const label =
         </div>
 
         <div className={styles.daysGrid}>
-          {Array.from({ length: offset }).map((_, i) => (
-            <div key={"e-" + i} className={styles.emptyCell} />
+          {Array.from({ length: offset }).map((_, idx) => (
+            <div key={idx} className={styles.emptyCell} />
           ))}
 
           {days.map((day) => {
+            const jobsToday = getJobsForDay(day);
             const dayNum = day.getDate();
-            const jobList = getJobsForDay(day);
 
             return (
               <div
@@ -151,16 +128,14 @@ const label =
                 <div className={styles.dayNumber}>{dayNum}</div>
 
                 <div className={styles.jobsList}>
-                  {jobList.map((job) => (
+                  {jobsToday.map((job) => (
                     <div
                       key={job.id}
                       className={styles.jobBox}
                       onClick={() => onJobClick(job.id)}
-                      style={{
-                        backgroundColor: job.color || "#fff4c5",
-                      }}
+                      style={{ backgroundColor: job.color || "#faf7dc" }}
                     >
-                      {renderStatusBadge(job, "cell")}
+                      {renderBadge(job)}
 
                       <div className={styles.jobTitle}>{job.title}</div>
                       <div className={styles.jobCustomer}>{job.customer}</div>
@@ -190,35 +165,8 @@ const label =
         </div>
       </div>
 
-      {/* RIGHT SIDEBAR */}
-      <div className={styles.jobsSidebar}>
-        <div className={styles.jobsHeader}>Jobs</div>
-
-        <input
-          className={styles.searchInput}
-          placeholder="Search jobs..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <div className={styles.jobsScroll}>
-          {filteredJobsRight.map((job) => (
-            <div
-              key={job.id}
-              className={styles.jobRightCard}
-              onClick={() => onJobClick(job.id)}
-              style={{
-                backgroundColor: job.color || "#fff4c5",
-              }}
-            >
-              <div className={styles.jobRightTitle}>{job.title}</div>
-              <div className={styles.jobRightCustomer}>{job.customer}</div>
-
-              {renderStatusBadge(job, "sidebar")}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* SPACER */}
+      <div className={styles.sidebarSpacer} />
     </div>
   );
 };
