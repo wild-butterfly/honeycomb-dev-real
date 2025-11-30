@@ -18,8 +18,6 @@ const MobileMonthList: React.FC<Props> = ({
 }) => {
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth();
-
-  // Calculate total days in month
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
@@ -46,14 +44,27 @@ const MobileMonthList: React.FC<Props> = ({
                 const emp = employees.find((e) =>
                   job.assignedTo.includes(e.id)
                 );
+                const status = job.status?.toUpperCase() || "ACTIVE";
+
+                const bgColor = job.color || "#ffffff";
+                const glow = job.color ? `0 0 12px ${job.color}55` : "none";
 
                 return (
                   <div
                     key={job.id}
                     className={styles.jobCard}
-                    style={{ borderLeftColor: job.color || "#ccc" }}
+                    style={{
+                      background: bgColor,
+                      borderLeft: `8px solid ${job.color || "#ccc"}`,
+                      boxShadow: glow,
+                    }}
                     onClick={() => onJobClick(job.id)}
                   >
+                    {/* STATUS BADGE – now using global badge styles */}
+                    <div className={`${styles.statusBadge} ${styles[status]}`}>
+                      {status}
+                    </div>
+
                     <div className={styles.time}>
                       {new Date(job.start).toLocaleTimeString("en-AU", {
                         hour: "numeric",
@@ -64,9 +75,7 @@ const MobileMonthList: React.FC<Props> = ({
                     <div className={styles.title}>{job.title}</div>
                     <div className={styles.customer}>{job.customer}</div>
 
-                    {emp && (
-                      <div className={styles.staffName}>{emp.name}</div>
-                    )}
+                    {emp && <div className={styles.staffName}>{emp.name}</div>}
                   </div>
                 );
               })

@@ -16,7 +16,8 @@ const MobileWeekList: React.FC<Props> = ({
   selectedDate,
   onJobClick,
 }) => {
-  // ---- Haftayı hesapla ----
+
+  // Start of week (Monday)
   const weekStart = new Date(selectedDate);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
 
@@ -26,7 +27,7 @@ const MobileWeekList: React.FC<Props> = ({
     return d;
   });
 
-  const grouped: { [day: number]: CalendarJob[] } = {};
+  const grouped: { [key: number]: CalendarJob[] } = {};
   days.forEach((d) => {
     const day = d.getDate();
     grouped[day] = jobs.filter((j) => {
@@ -62,13 +63,27 @@ const MobileWeekList: React.FC<Props> = ({
                   job.assignedTo.includes(e.id)
                 );
 
+                const status = job.status?.toUpperCase() || "ACTIVE";
+
+                const bg = job.color || "#ffffff";
+                const glow = job.color ? `0 0 12px ${job.color}55` : "none";
+
                 return (
                   <div
                     key={job.id}
                     className={styles.jobCard}
-                    style={{ borderLeftColor: job.color || "#ccc" }}
+                    style={{
+                      background: bg,
+                      borderLeft: `8px solid ${job.color || "#ccc"}`,
+                      boxShadow: glow,
+                    }}
                     onClick={() => onJobClick(job.id)}
                   >
+                    {/* Unified badge system */}
+                    <div className={`${styles.statusBadge} ${styles[status]}`}>
+                      {status}
+                    </div>
+
                     <div className={styles.time}>
                       {new Date(job.start).toLocaleTimeString("en-AU", {
                         hour: "numeric",
@@ -80,7 +95,7 @@ const MobileWeekList: React.FC<Props> = ({
                     <div className={styles.customer}>{job.customer}</div>
 
                     {emp && (
-                      <div className={styles.staffName}>{emp.name}</div>
+                      <div className={styles.staffName}>👤 {emp.name}</div>
                     )}
                   </div>
                 );

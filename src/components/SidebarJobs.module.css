@@ -211,3 +211,63 @@
   border: 1px solid rgba(0, 0, 0, 0.15);
   text-transform: uppercase;
 }
+
+/* ------------------------------------------------------ */
+/* MOBILE LAYOUT (Job Cards) */
+/* ------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .sidebarCard {
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0 10px 20px;
+  }
+
+  .sidebarJobsList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 30px;
+  }
+
+  .sidebarJobItem {
+    padding: 14px 16px;
+    padding-top: 22px;
+    border-radius: 14px;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    border: 1px solid #f1e7b8;
+    position: relative;
+  }
+
+  .sidebarStatusBadge {
+    position: absolute;
+    top: 4px;
+    left: 12px;
+    padding: 4px 8px;
+    padding-top: 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    z-index: 5;
+  }
+
+  .sidebarJobTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 10px;
+  }
+
+  .sidebarJobCustomer {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a3f00;
+  }
+
+  .sidebarJobLocation {
+    font-size: 0.8rem;
+    margin-top: 4px;
+    color: #777;
+  }
+}

@@ -34,16 +34,12 @@ const SidebarJobs: React.FC<Props> = ({
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // ⬇ Dropdown dışı tıklama kontrolü için ref
+  // Dropdown dışı tıklama kontrolü
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  /* ---- Outside Click Listener ---- */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     };
@@ -57,7 +53,7 @@ const SidebarJobs: React.FC<Props> = ({
     };
   }, [dropdownOpen]);
 
-  /* ---- Job Filtering ---- */
+  // Filtreleme
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       const matchSearch =
@@ -73,7 +69,6 @@ const SidebarJobs: React.FC<Props> = ({
     });
   }, [jobs, search, jobFilter]);
 
-  /* ---- Filter + Close Dropdown ---- */
   const handleSelectFilter = (filter: any) => {
     onJobFilterChange(filter);
     setDropdownOpen(false);
@@ -85,7 +80,7 @@ const SidebarJobs: React.FC<Props> = ({
         <div className={styles.sidebarTitle}>Jobs</div>
       </div>
 
-      {/* FILTER DROPDOWN */}
+      {/* Filter Menu */}
       <div className={styles.filterWrapper} ref={dropdownRef}>
         <button
           className={styles.filterButton}
@@ -126,7 +121,7 @@ const SidebarJobs: React.FC<Props> = ({
         )}
       </div>
 
-      {/* SEARCH INPUT */}
+      {/* Search */}
       <div className={styles.sidebarSearchRow}>
         <input
           className={styles.sidebarSearchInput}
@@ -136,7 +131,7 @@ const SidebarJobs: React.FC<Props> = ({
         />
       </div>
 
-      {/* JOB LIST */}
+      {/* Job List */}
       <div className={styles.sidebarJobsList}>
         {filteredJobs.length === 0 ? (
           <div className={styles.sidebarEmptyState}>
