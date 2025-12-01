@@ -58,10 +58,11 @@
 
 .desktopMainAndSidebar {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 20px;
   width: 100%;
   max-width: 100%;
+  height: calc(100vh - 220px);
 }
 
 .timelineCardWrapper {

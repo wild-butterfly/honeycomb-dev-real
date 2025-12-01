@@ -10,7 +10,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  max-height: 480px;
+  height: calc(100vh - 220px);
 }
 
 /* Header */
@@ -214,8 +214,8 @@
 
 .sidebarEstimatedTags {
   font-size: 12px;
-  font-weight: 500;
-  color: #444;
+  font-weight: 600; /* bold’a yakın */
+  color: #6a6a00; /* timeline ile aynı soft gri */
   margin-top: 4px;
 }
 
