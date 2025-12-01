@@ -1,3 +1,8 @@
+/* ==========================================
+   DESKTOP DAY VIEW – FINAL VERSION (2025)
+========================================== */
+
+/* ====== MAIN BODY ====== */
 .timelineBodyArea {
   position: relative;
   padding-bottom: 16px;
@@ -5,14 +10,38 @@
   background: #fffdf5;
 }
 
-.timelineRow {
+/* ==========================================
+   HEADER ROW (TIME LABELS)
+   ========================================== */
+
+.desktopWrapper > .timelineRow:first-child {
+  min-height: 60px !important;
+  height: 60px !important;
+  background: #fff9e3 !important;
+  border-bottom: 1px solid rgba(212, 184, 74, 0.3);
+}
+
+.desktopWrapper > .timelineRow:first-child .timeSlotCell {
+  min-height: 60px !important;
+}
+
+/* ==========================================
+   STAFF ROWS (Aşkın Fear + Others)
+   ========================================== */
+
+.timelineBodyArea .timelineRow {
   position: relative;
   display: grid;
   grid-template-columns: 180px 1fr;
   border-bottom: 1px dashed rgba(212, 184, 74, 0.3);
-  min-height: 80px;
+  min-height: 140px !important;
+  height: 140px !important;
   background: #ffffff;
 }
+
+/* ==========================================
+   STAFF CELL
+   ========================================== */
 
 .staffCell {
   padding: 10px;
@@ -41,6 +70,10 @@
   color: #4a3f00;
 }
 
+/* ==========================================
+   JOB LANE
+   ========================================== */
+
 .jobsLane {
   position: relative;
 }
@@ -53,10 +86,15 @@
   flex: 0 0 104px;
   border-right: 1px solid rgba(212, 184, 74, 0.15);
   position: relative;
-  min-height: 80px;
+  min-height: 140px !important;
 }
 
+/* ==========================================
+   TIME HEADER CELLS
+   ========================================== */
+
 .timeSlotsHeader {
+  margin-left: 180px;
   display: flex;
   background: #fff9e3;
 }
@@ -69,23 +107,35 @@
   border-right: 1px solid rgba(212, 184, 74, 0.3);
 }
 
+/* ==========================================
+   JOB BLOCK
+   ========================================== */
+
 .jobBlock {
   position: absolute;
   top: 10px;
-  min-height: 60px;
+
+  min-height: 110px;
+  height: auto;
+
+  padding: 26px 12px 12px 12px;
   border: 1.5px solid #b99a2a;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(185, 154, 42, 0.15);
-  padding: 22px 10px 8px 10px; /* NEW: Badge için üst boşluk */
-  overflow: hidden;
-  font-size: 0.75rem;
-  line-height: 1.3;
-  color: #232323;
+  border-radius: 10px;
+  background: #fffef9;
+
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: #fffef9;
+  gap: 6px;
+
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: #232323;
+
+  box-shadow: 0 2px 10px rgba(185, 154, 42, 0.15);
+
   cursor: grab;
+
+  overflow: visible;
 }
 
 .jobBlockTitle {
@@ -104,7 +154,16 @@
   font-size: 0.75rem;
 }
 
-/* BADGES */
+.jobBlockEstimated {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6a5a1e;
+}
+
+/* ==========================================
+   BADGES
+   ========================================== */
+
 .badgeQuote,
 .badgeCompleted,
 .badgeReturn {
@@ -136,7 +195,10 @@
   border-color: #f5d28d;
 }
 
-/* ADD BUTTON */
+/* ==========================================
+   ADD BUTTON
+   ========================================== */
+
 .slotAddButton {
   width: 28px;
   height: 28px;

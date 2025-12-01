@@ -44,8 +44,8 @@ const MobileMonthList: React.FC<Props> = ({
                 const emp = employees.find((e) =>
                   job.assignedTo.includes(e.id)
                 );
-                const status = job.status?.toUpperCase() || "ACTIVE";
 
+                const status = job.status?.toUpperCase() || "ACTIVE";
                 const bgColor = job.color || "#ffffff";
                 const glow = job.color ? `0 0 12px ${job.color}55` : "none";
 
@@ -60,11 +60,12 @@ const MobileMonthList: React.FC<Props> = ({
                     }}
                     onClick={() => onJobClick(job.id)}
                   >
-                    {/* STATUS BADGE – now using global badge styles */}
+                    {/* STATUS BADGE */}
                     <div className={`${styles.statusBadge} ${styles[status]}`}>
                       {status}
                     </div>
 
+                    {/* Start Time */}
                     <div className={styles.time}>
                       {new Date(job.start).toLocaleTimeString("en-AU", {
                         hour: "numeric",
@@ -72,10 +73,19 @@ const MobileMonthList: React.FC<Props> = ({
                       })}
                     </div>
 
+                    {/* Title + Customer */}
                     <div className={styles.title}>{job.title}</div>
                     <div className={styles.customer}>{job.customer}</div>
 
+                    {/* Staff */}
                     {emp && <div className={styles.staffName}>{emp.name}</div>}
+
+                    {/* ⭐ ESTIMATED TAGS (YENİ) */}
+                    {job.estimatedTags !== undefined && (
+                      <div className={styles.estimated}>
+                        Estimated: {job.estimatedTags} tags
+                      </div>
+                    )}
                   </div>
                 );
               })

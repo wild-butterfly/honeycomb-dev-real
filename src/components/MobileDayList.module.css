@@ -100,3 +100,10 @@
   margin-top: 4px;
   color: #333;
 }
+
+.estimated {
+  font-size: 12px;
+  color: #444;
+  margin-top: 4px;
+  font-weight: 500;
+}

@@ -33,10 +33,9 @@ const SidebarJobs: React.FC<Props> = ({
 }) => {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // Dropdown dışı tıklama kontrolü
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  /* ----------- CLOSE DROPDOWN ON OUTSIDE CLICK ----------- */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -44,16 +43,11 @@ const SidebarJobs: React.FC<Props> = ({
       }
     };
 
-    if (dropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    if (dropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
-  // Filtreleme
+  /* ---------------------- FILTER ---------------------- */
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       const matchSearch =
@@ -69,6 +63,7 @@ const SidebarJobs: React.FC<Props> = ({
     });
   }, [jobs, search, jobFilter]);
 
+  /* ---------------------- FILTER SELECT ---------------------- */
   const handleSelectFilter = (filter: any) => {
     onJobFilterChange(filter);
     setDropdownOpen(false);
@@ -80,7 +75,7 @@ const SidebarJobs: React.FC<Props> = ({
         <div className={styles.sidebarTitle}>Jobs</div>
       </div>
 
-      {/* Filter Menu */}
+      {/* FILTER MENU */}
       <div className={styles.filterWrapper} ref={dropdownRef}>
         <button
           className={styles.filterButton}
@@ -121,7 +116,7 @@ const SidebarJobs: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Search */}
+      {/* SEARCH BAR */}
       <div className={styles.sidebarSearchRow}>
         <input
           className={styles.sidebarSearchInput}
@@ -131,7 +126,7 @@ const SidebarJobs: React.FC<Props> = ({
         />
       </div>
 
-      {/* Job List */}
+      {/* JOB LIST */}
       <div className={styles.sidebarJobsList}>
         {filteredJobs.length === 0 ? (
           <div className={styles.sidebarEmptyState}>
@@ -146,6 +141,7 @@ const SidebarJobs: React.FC<Props> = ({
               onClick={() => onJobClick(job.id)}
               style={{ backgroundColor: job.color || "#fffdf0" }}
             >
+              {/* STATUS BADGE */}
               {job.status && (
                 <span
                   className={styles.sidebarStatusBadge}
@@ -158,8 +154,16 @@ const SidebarJobs: React.FC<Props> = ({
               <div className={styles.sidebarJobTitle}>{job.title}</div>
               <div className={styles.sidebarJobCustomer}>{job.customer}</div>
 
+              {/* LOCATION */}
               {job.location && (
                 <div className={styles.sidebarJobLocation}>{job.location}</div>
+              )}
+
+              {/* ⭐ ESTIMATED TAGS — YENİ EKLENDİ */}
+              {job.estimatedTags !== undefined && (
+                <div className={styles.sidebarEstimatedTags}>
+                  Estimated: {job.estimatedTags} tags
+                </div>
               )}
             </div>
           ))

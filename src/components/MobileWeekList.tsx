@@ -16,8 +16,6 @@ const MobileWeekList: React.FC<Props> = ({
   selectedDate,
   onJobClick,
 }) => {
-
-  // Start of week (Monday)
   const weekStart = new Date(selectedDate);
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
 
@@ -79,11 +77,12 @@ const MobileWeekList: React.FC<Props> = ({
                     }}
                     onClick={() => onJobClick(job.id)}
                   >
-                    {/* Unified badge system */}
+                    {/* STATUS */}
                     <div className={`${styles.statusBadge} ${styles[status]}`}>
                       {status}
                     </div>
 
+                    {/* TIME */}
                     <div className={styles.time}>
                       {new Date(job.start).toLocaleTimeString("en-AU", {
                         hour: "numeric",
@@ -91,11 +90,22 @@ const MobileWeekList: React.FC<Props> = ({
                       })}
                     </div>
 
+                    {/* TITLE + CUSTOMER */}
                     <div className={styles.title}>{job.title}</div>
                     <div className={styles.customer}>{job.customer}</div>
 
+                    {/* STAFF */}
                     {emp && (
-                      <div className={styles.staffName}>👤 {emp.name}</div>
+                      <div className={styles.staffName}>
+                        👤 {emp.name}
+                      </div>
+                    )}
+
+                    {/* ⭐ ESTIMATED TAGS — YENİ */}
+                    {job.estimatedTags !== undefined && (
+                      <div className={styles.estimated}>
+                        Estimated: {job.estimatedTags} tags
+                      </div>
                     )}
                   </div>
                 );

@@ -212,6 +212,13 @@
   text-transform: uppercase;
 }
 
+.sidebarEstimatedTags {
+  font-size: 12px;
+  font-weight: 500;
+  color: #444;
+  margin-top: 4px;
+}
+
 /* ------------------------------------------------------ */
 /* MOBILE LAYOUT (Job Cards) */
 /* ------------------------------------------------------ */

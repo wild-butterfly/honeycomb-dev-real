@@ -1,7 +1,7 @@
 // Created by Clevermode © 2025. All rights reserved.
 import React, { useState } from "react";
 import styles from "./MonthCalendarLayout.module.css";
-import { CalendarJob, Employee } from "../pages/CalendarPage";
+import type { CalendarJob, Employee } from "../pages/CalendarPage";
 
 interface Props {
   date: Date;
@@ -32,7 +32,9 @@ const MonthCalendarLayout: React.FC<Props> = ({
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
 
+  // Monday-start offset (Mon=0 → Sun=6)
   const offset = (first.getDay() + 6) % 7;
+
   const days = Array.from({ length: last.getDate() }, (_, i) => new Date(year, month, i + 1));
 
   const getJobsForDay = (day: Date) =>
@@ -63,7 +65,8 @@ const MonthCalendarLayout: React.FC<Props> = ({
 
   return (
     <div className={styles.monthLayoutWide}>
-      {/* LEFT STAFF PANEL */}
+      
+      {/* LEFT STAFF FILTER PANEL */}
       <div className={styles.staffListWrapper}>
         <div className={styles.staffListTitle}>Staff</div>
 
@@ -101,6 +104,8 @@ const MonthCalendarLayout: React.FC<Props> = ({
 
       {/* MONTH CALENDAR */}
       <div className={styles.monthWrapper}>
+        
+        {/* WEEK HEADER */}
         <div className={styles.weekHeader}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
             <div key={d} className={styles.weekDayLabel}>
@@ -109,11 +114,15 @@ const MonthCalendarLayout: React.FC<Props> = ({
           ))}
         </div>
 
+        {/* DAYS GRID */}
         <div className={styles.daysGrid}>
+          
+          {/* EMPTY CELLS BEFORE DAY 1 */}
           {Array.from({ length: offset }).map((_, idx) => (
             <div key={idx} className={styles.emptyCell} />
           ))}
 
+          {/* DAY CELLS */}
           {days.map((day) => {
             const jobsToday = getJobsForDay(day);
             const dayNum = day.getDate();
@@ -127,6 +136,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
+                {/* JOBS INSIDE THE DAY CELL */}
                 <div className={styles.jobsList}>
                   {jobsToday.map((job) => (
                     <div
@@ -136,13 +146,13 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       style={{ backgroundColor: job.color || "#faf7dc" }}
                     >
                       {renderBadge(job)}
-
                       <div className={styles.jobTitle}>{job.title}</div>
                       <div className={styles.jobCustomer}>{job.customer}</div>
                     </div>
                   ))}
                 </div>
 
+                {/* ADD JOB BUTTON ON HOVER */}
                 {hoverDay === dayNum && (
                   <button
                     className={styles.slotAddButton}
@@ -165,7 +175,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* SPACER */}
       <div className={styles.sidebarSpacer} />
     </div>
   );

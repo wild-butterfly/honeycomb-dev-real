@@ -49,11 +49,12 @@ const MobileDayList: React.FC<Props> = ({
             }}
             onClick={() => onJobClick(job.id)}
           >
-            {/* Unified Badge System */}
+            {/* STATUS BADGE */}
             <div className={`${styles.statusBadge} ${styles[status]}`}>
               {status}
             </div>
 
+            {/* TIME */}
             <div className={styles.time}>
               {new Date(job.start).toLocaleTimeString("en-AU", {
                 hour: "numeric",
@@ -61,11 +62,20 @@ const MobileDayList: React.FC<Props> = ({
               })}
             </div>
 
+            {/* TITLE + CUSTOMER */}
             <div className={styles.title}>{job.title}</div>
             <div className={styles.customer}>{job.customer}</div>
 
+            {/* STAFF */}
             {emp && (
               <div className={styles.staffName}>👤 {emp.name}</div>
+            )}
+
+            {/* ⭐ ESTIMATED TAGS — NEW */}
+            {job.estimatedTags !== undefined && (
+              <div className={styles.estimated}>
+                Estimated: {job.estimatedTags} tags
+              </div>
             )}
           </div>
         );

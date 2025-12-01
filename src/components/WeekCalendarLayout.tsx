@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 
 import styles from "./WeekCalendarLayout.module.css";
-import { CalendarJob, Employee } from "../pages/CalendarPage";
+import type { CalendarJob, Employee } from "../pages/CalendarPage";
 
 interface Props {
   date: Date;
@@ -21,7 +21,6 @@ interface Props {
     newStart: Date,
     newEnd: Date
   ) => void;
-
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
@@ -35,7 +34,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
 }) => {
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
 
-  /* ------------------ 1) HAFTA ------------------ */
+  /* ------------------ WEEK RANGE ------------------ */
   const startOfWeek = new Date(date);
   startOfWeek.setDate(date.getDate() - date.getDay() + 1);
 
@@ -45,7 +44,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
     return d;
   });
 
-  /* ------------------ 2) DRAG END ------------------ */
+  /* ------------------ DRAG HANDLER ------------------ */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
@@ -68,7 +67,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
     onJobMove(jobId, Number(employeeId), newStart, newEnd);
   };
 
-  /* ------------------ JOB FİLTRE ------------------ */
+  /* ------------------ FILTER ------------------ */
   const getJobsForDayAndEmployee = (day: Date, empId: number) =>
     jobs.filter(
       (job) =>
@@ -132,7 +131,9 @@ const WeekCalendarLayout: React.FC<Props> = ({
 
 export default WeekCalendarLayout;
 
-/* ---------------- DROPPABLE CELL ---------------- */
+/* ----------------------------------------------------------- */
+/* -------------------- DROPPABLE CELL ------------------------ */
+/* ----------------------------------------------------------- */
 
 function DroppableCell({
   id,
@@ -184,7 +185,9 @@ function DroppableCell({
   );
 }
 
-/* ---------------- DRAGGABLE JOB (WITH BADGES) ---------------- */
+/* ----------------------------------------------------------- */
+/* -------------------- DRAGGABLE JOB ------------------------ */
+/* ----------------------------------------------------------- */
 
 function DraggableJob({
   job,
@@ -205,16 +208,16 @@ function DraggableJob({
     cursor: "grab",
   };
 
-  /* BADGE — same logic as Month + Sidebar */
+  /* BADGE */
   let badge = null;
 
-if (job.status === "quote") {
-  badge = <div className={styles.badgeQuote}>QUOTE</div>;
-} else if (job.status === "completed") {
-  badge = <div className={styles.badgeCompleted}>COMPLETED</div>;
-} else if (job.status === "return") {
-  badge = <div className={styles.badgeReturn}>NEED TO RETURN</div>;
-}
+  if (job.status === "quote") {
+    badge = <div className={styles.badgeQuote}>QUOTE</div>;
+  } else if (job.status === "completed") {
+    badge = <div className={styles.badgeCompleted}>COMPLETED</div>;
+  } else if (job.status === "return") {
+    badge = <div className={styles.badgeReturn}>NEED TO RETURN</div>;
+  }
 
   return (
     <div

@@ -20,7 +20,7 @@ interface Props {
 }
 
 const DAY_START_HOUR = 6;
-const DAY_END_HOUR = 18;
+const DAY_END_HOUR = 20;
 const HOUR_WIDTH_PX = 104;
 
 function sameDay(a: Date, b: Date) {
@@ -42,6 +42,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   const [draggingJobId, setDraggingJobId] = useState<number | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
 
+  /* Hours column (6 → 20) */
   const hours = useMemo(
     () =>
       Array.from(
@@ -78,11 +79,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     const hourOffset = relativeX / HOUR_WIDTH_PX;
     const rawHour = DAY_START_HOUR + hourOffset;
 
-    const hours = Math.floor(rawHour);
+    const hour = Math.floor(rawHour);
     const minuteFloat = (rawHour % 1) * 60;
     const minuteRounded = Math.round(minuteFloat / 15) * 15;
 
-    const finalHour = hours + (minuteRounded === 60 ? 1 : 0);
+    const finalHour = hour + (minuteRounded === 60 ? 1 : 0);
     const finalMinute = minuteRounded === 60 ? 0 : minuteRounded;
 
     const newStart = new Date(date);
@@ -91,6 +92,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     const oStart = new Date(job.start);
     const oEnd = new Date(job.end);
     const duration = oEnd.getTime() - oStart.getTime();
+
     const newEnd = new Date(newStart.getTime() + duration);
 
     onMoveJob(draggingJobId, employeeId, newStart, newEnd);
@@ -99,7 +101,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
   /* ------------------------ RENDER ------------------------ */
   return (
-    <div>
+    <div className={styles.desktopWrapper}>
+      
       {/* HEADER */}
       <div className={styles.timelineRow}>
         <div className={styles.staffCell}></div>
@@ -122,6 +125,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
           return (
             <div key={emp.id} className={styles.timelineRow}>
+              
+              {/* STAFF CELL */}
               <div className={styles.staffCell}>
                 <div className={styles.staffAvatarCircle}>
                   {emp.name
@@ -134,8 +139,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                 <div className={styles.staffName}>{emp.name}</div>
               </div>
 
+              {/* JOB LANES */}
               <div className={styles.jobsLane}>
-                {/* SLOTS */}
+                
+                {/* BACKGROUND SLOTS */}
                 <div className={styles.jobsLaneSlots}>
                   {hours.map((h) => {
                     const slotStart = new Date(date);
@@ -190,9 +197,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     70
                   );
 
-                  /* BADGES */
                   let badge = null;
-
                   if (job.status === "quote") {
                     badge = <div className={styles.badgeQuote}>QUOTE</div>;
                   } else if (job.status === "completed") {
@@ -201,7 +206,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     );
                   } else if (job.status === "return") {
                     badge = (
-                      <div className={styles.badgeReturn}>NEED TO RETURN</div>
+                      <div className={styles.badgeReturn}>
+                        NEED TO RETURN
+                      </div>
                     );
                   }
 
@@ -211,9 +218,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       draggable
                       onDragStart={(e) => {
                         setDraggingJobId(job.id);
-                        const rect = (
-                          e.target as HTMLElement
-                        ).getBoundingClientRect();
+                        const rect =
+                          (e.target as HTMLElement).getBoundingClientRect();
                         setDragOffsetX(e.clientX - rect.left);
                       }}
                       onDragEnd={() => setDraggingJobId(null)}
@@ -227,17 +233,19 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     >
                       {badge}
 
-                      <div className={styles.jobBlockTitle}>
-                        {job.title}
-                      </div>
-                      <div className={styles.jobBlockCustomer}>
-                        {job.customer}
-                      </div>
+                      <div className={styles.jobBlockTitle}>{job.title}</div>
+                      <div className={styles.jobBlockCustomer}>{job.customer}</div>
 
                       {job.location && (
                         <div className={styles.jobBlockLocation}>
                           {job.location}
                         </div>
+                      )}
+
+                      {job.estimatedTags !== undefined && (
+                      <div className={styles.jobBlockEstimated}>
+                        Estimated: {job.estimatedTags} tags
+                      </div>
                       )}
                     </div>
                   );

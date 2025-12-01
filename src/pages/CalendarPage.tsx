@@ -28,15 +28,13 @@ export type CalendarJob = {
   assignedTo: number[];
   start: string;
   end: string;
-
   status?: "active" | "completed" | "return" | "quote";
   color?: string;
-
   location?: string;
   siteContact?: string;
   contactInfo?: string;
+  estimatedTags?: number;
   notes?: string;
-
   futureEvents?: CalendarJob[];
   pastEvents?: CalendarJob[];
 };
@@ -57,154 +55,186 @@ const employeesSeed: Employee[] = [
 /* JOB SEED */
 const jobsSeed: CalendarJob[] = [
   {
-    id: 101,
-    title: "Test & Tag",
-    customer: "Bared Footwear",
-    assignedTo: [1],
-    start: "2025-11-03T09:00",
-    end: "2025-11-03T10:30",
+    id: 201,
+    title: "A1TT-29010 Test & Tag",
+    customer: "Rights Information & Advocacy Centre",
+    assignedTo: [2],
+    start: "2025-12-01T09:00",
+    end: "2025-12-01T12:00",
     status: "active",
     color: "#e4f4de",
+    location: "48 McKillop Street, Geelong VIC 3220",
+    notes: "Annual test due for 2025 retest cycle",
+    estimatedTags: 100,
   },
   {
-    id: 102,
-    title: "Test & Tag",
-    customer: "Karbon Australia Pty",
-    assignedTo: [2],
-    start: "2025-11-04T08:30",
-    end: "2025-11-04T10:00",
-    status: "return",
+    id: 202,
+    title: "A1TT-28146 Test & Tag",
+    customer: "Rent A Space Self Storage",
+    assignedTo: [3],
+    start: "2025-12-01T11:30",
+    end: "2025-12-01T14:00",
+    status: "active",
     color: "#dff5f5",
+    location: "57 Davies Rd, Padstow NSW 2211",
+    notes: "Est 54 items due, changed from 14/11 appointment",
+    estimatedTags: 54,
   },
   {
-    id: 103,
-    title: "Safety Inspection",
-    customer: "Metro Rail",
-    assignedTo: [],
-    start: "2025-11-05T13:00",
-    end: "2025-11-05T14:00",
+    id: 203,
+    title: "A1TT-28276a Test & Tag",
+    customer: "Brighton Family & Women’s Clinic",
+    assignedTo: [1],
+    start: "2025-12-01T10:00",
+    end: "2025-12-01T14:30",
+    status: "active",
+    color: "#ffe8d9",
+    location: "767 Nepean Hwy, Brighton East VIC 3187",
+    notes: "Accreditation testing required this week",
+    estimatedTags: 160,
+  },
+  {
+    id: 204,
+    title: "A1TT-28100a Test & Tag",
+    customer: "Grifols Australia",
+    assignedTo: [4],
+    start: "2025-12-01T08:00",
+    end: "2025-12-01T16:00",
+    status: "active",
+    color: "#e8ddff",
+    location: "8/50 Fairbank Road, Clayton South VIC 3169",
+    notes: "1120 items (12 & 36 month cycles). Retest booked by Gary Saville.",
+    estimatedTags: 1120,
+  },
+  {
+    id: 205,
+    title: "A1TT-28147a Test & Tag",
+    customer: "Rent A Space",
+    assignedTo: [3],
+    start: "2025-12-01T14:00",
+    end: "2025-12-01T17:00",
     status: "active",
     color: "#f7e6ff",
+    location: "653 Hume Highway, Casula NSW 2170",
+    notes: "Est 32 items. Changed from previous date.",
+    estimatedTags: 32,
   },
   {
-    id: 104,
-    title: "Emergency Repair",
-    customer: "City Library",
-    assignedTo: [3],
-    start: "2025-11-03T14:00",
-    end: "2025-11-03T15:00",
-    status: "completed",
-    color: "#d8f5d2",
-  },
-  {
-    id: 105,
-    title: "Tagging Session",
-    customer: "State Hospital",
-    assignedTo: [4],
-    start: "2025-11-06T09:00",
-    end: "2025-11-06T11:30",
-    status: "quote",
-    color: "#e8ddff",
-  },
-  {
-    id: 106,
-    title: "Electrical Compliance",
-    customer: "Town Hall",
-    assignedTo: [1],
-    start: "2025-11-07T10:00",
-    end: "2025-11-07T12:00",
-    status: "active",
-    color: "#e4f4de",
-  },
-  {
-    id: 107,
-    title: "RCD Testing",
-    customer: "Cafe Aroma",
+    id: 206,
+    title: "A1TT-28290a Test & Tag",
+    customer: "Bonfiglioli Transmissions",
     assignedTo: [5],
-    start: "2025-11-07T13:00",
-    end: "2025-11-07T15:00",
-    status: "return",
-    color: "#fff3cd",
-  },
-  {
-    id: 108,
-    title: "PAT Testing",
-    customer: "Tech Hub Co",
-    assignedTo: [],
-    start: "2025-11-08T08:00",
-    end: "2025-11-08T09:00",
+    start: "2025-12-02T08:00",
+    end: "2025-12-02T12:00",
     status: "active",
-    color: "#dff5f5",
-  },
-  {
-    id: 109,
-    title: "Site Inspection",
-    customer: "Logistics Warehouse",
-    assignedTo: [2],
-    start: "2025-11-09T11:00",
-    end: "2025-11-09T12:00",
-    status: "completed",
     color: "#d8f5d2",
+    location: "Bonfiglioli Australia, Glendenning NSW",
+    notes: "Quarterly maintenance testing",
+    estimatedTags: 220,
   },
   {
-    id: 110,
-    title: "Annual Check",
-    customer: "Laser Clinic",
-    assignedTo: [3],
-    start: "2025-11-10T09:30",
-    end: "2025-11-10T11:00",
-    status: "quote",
-    color: "#e8ddff",
-  },
-  {
-    id: 111,
-    title: "Warehouse Test",
-    customer: "Furniture King",
-    assignedTo: [7],
-    start: "2025-11-11T08:00",
-    end: "2025-11-11T10:00",
-    status: "active",
-    color: "#dff5f5",
-  },
-  {
-    id: 112,
-    title: "Portable Appliance Test",
-    customer: "School of Arts",
-    assignedTo: [],
-    start: "2025-11-12T12:00",
-    end: "2025-11-12T13:30",
+    id: 207,
+    title: "A1TT-28289a Test & Tag",
+    customer: "RCI Building Services",
+    assignedTo: [2],
+    start: "2025-12-05T09:00",
+    end: "2025-12-05T13:00",
     status: "active",
     color: "#e4f4de",
+    location: "131–149 Somerset Dr, Campbellfield VIC",
+    notes: "Est 130 items (mix of tools + office gear)",
+    estimatedTags: 130,
   },
   {
-    id: 113,
-    title: "Safety Testing",
-    customer: "Gym Central",
+    id: 208,
+    title: "A1TT-28111 Test & Tag",
+    customer: "Cafe Aroma",
     assignedTo: [6],
-    start: "2025-11-12T14:00",
-    end: "2025-11-12T15:00",
-    status: "completed",
-    color: "#d8f5d2",
-  },
-  {
-    id: 114,
-    title: "Test & Tag",
-    customer: "OfficePro",
-    assignedTo: [9],
-    start: "2025-11-14T09:00",
-    end: "2025-11-14T10:30",
+    start: "2025-12-03T12:00",
+    end: "2025-12-03T14:00",
     status: "return",
     color: "#fff3cd",
+    location: "125 Main Street, Eltham VIC",
+    notes: "Follow-up retest for failed kettle & toaster",
+    estimatedTags: 18,
   },
   {
-    id: 115,
-    title: "Full Safety Audit",
+    id: 209,
+    title: "A1TT-28424 Test & Tag",
+    customer: "Chapel Gate Medical",
+    assignedTo: [1],
+    start: "2025-12-15T10:00",
+    end: "2025-12-15T16:00",
+    status: "active",
+    color: "#dff5f5",
+    location: "171 Chapel St, Prahran VIC",
+    notes: "Full clinic retest. Need access to all consult rooms.",
+    estimatedTags: 210,
+  },
+  {
+    id: 210,
+    title: "A1TT-28150a Microwave & RCD Test",
+    customer: "AG Coombs Pty Ltd",
+    assignedTo: [7],
+    start: "2025-12-18T09:30",
+    end: "2025-12-18T12:30",
+    status: "active",
+    color: "#e8ddff",
+    location: "Mitch Cochrane Rd, Tullamarine VIC",
+    notes: "RCD sequencing + appliance test combined session",
+    estimatedTags: 65,
+  },
+  {
+    id: 211,
+    title: "A1TT-28388 Full Safety Audit",
     customer: "BigMart Retail",
     assignedTo: [4],
-    start: "2025-11-14T11:00",
-    end: "2025-11-14T14:00",
+    start: "2025-12-20T08:00",
+    end: "2025-12-20T16:00",
     status: "active",
     color: "#dff5f5",
+    location: "22 Hume Hwy, Somerton VIC",
+    notes: "Annual whole-site audit + new staff equipment",
+    estimatedTags: 340,
+  },
+  {
+    id: 212,
+    title: "A1TT-28355 Tagging Session",
+    customer: "Tech Hub Co",
+    assignedTo: [],
+    start: "2025-12-22T13:00",
+    end: "2025-12-22T16:00",
+    status: "quote",
+    color: "#ffe6e6",
+    location: "12 Startup Lane, Docklands VIC",
+    notes: "Quoted job awaiting approval",
+    estimatedTags: 45,
+  },
+  {
+    id: 213,
+    title: "A1TT-28771 PAT & RCD Test",
+    customer: "Metro Rail Holdings",
+    assignedTo: [8],
+    start: "2025-12-23T07:30",
+    end: "2025-12-23T15:00",
+    status: "active",
+    color: "#e4f4de",
+    location: "Rail Depot, Footscray VIC",
+    notes: "Track maintenance tools (approx 3 sheds)",
+    estimatedTags: 280,
+  },
+  {
+    id: 214,
+    title: "A1TT-28890 Annual Test",
+    customer: "Laser Clinic Australia",
+    assignedTo: [9],
+    start: "2025-12-10T09:00",
+    end: "2025-12-10T12:00",
+    status: "active",
+    color: "#d8f5d2",
+    location: "Level 2, 318 Collins St, Melbourne",
+    notes: "Medical-grade equipment requires calibration stickers",
+    estimatedTags: 95,
   },
 ];
 
@@ -237,9 +267,9 @@ const CalendarPage: React.FC = () => {
 
   const [selectedStaff, setSelectedStaff] = useState<number[]>([]);
   const [jobFilter, setJobFilter] =
-    useState<
-      "all" | "unassigned" | "active" | "completed" | "return" | "quote"
-    >("all");
+    useState<"all" | "unassigned" | "active" | "completed" | "return" | "quote">(
+      "all"
+    );
 
   const [employees] = useState(employeesSeed);
   const [jobs, setJobs] = useState(jobsSeed);
@@ -249,6 +279,54 @@ const CalendarPage: React.FC = () => {
     () => jobs.find((j) => j.id === openJobId) || null,
     [jobs, openJobId]
   );
+
+  /* ------------------------------------------------------ */
+  /* JOB MOVE (FULL DRAG & DROP LOGIC)                      */
+  /* ------------------------------------------------------ */
+  const handleJobMove = (
+    jobId: number,
+    employeeId: number,
+    newStart: Date,
+    newEnd: Date
+  ) => {
+    setJobs((prev) =>
+      prev.map((job) => {
+        if (job.id !== jobId) return job;
+        return {
+          ...job,
+          assignedTo: job.assignedTo.includes(employeeId)
+            ? job.assignedTo
+            : [employeeId],
+          start: newStart.toISOString(),
+          end: newEnd.toISOString(),
+        };
+      })
+    );
+  };
+
+  /* ------------------------------------------------------ */
+  /* ADD JOB (slot add button)                              */
+  /* ------------------------------------------------------ */
+  const handleAddJobAt = (
+    employeeId: number,
+    start: Date,
+    end: Date
+  ) => {
+    const newJob: CalendarJob = {
+      id: Date.now(),
+      title: "New Job",
+      customer: "New Customer",
+      assignedTo: [employeeId],
+      start: start.toISOString(),
+      end: end.toISOString(),
+      status: "active",
+      color: "#faf7dc",
+      notes: "",
+      location: "",
+      estimatedTags: 0,
+    };
+    setJobs((prev) => [...prev, newJob]);
+  };
 
   /* JOB FILTER */
   const filteredJobs = useMemo(() => {
@@ -303,7 +381,7 @@ const CalendarPage: React.FC = () => {
     setSelectedDate(d);
   };
 
-  /* GROUP MONTH JOBS FOR MOBILE MONTH VIEW */
+  /* GROUP MONTH JOBS FOR MOBILE */
   const groupedMonthJobs = jobsThisMonth.reduce((acc, job) => {
     const day = new Date(job.start).getDate();
     if (!acc[day]) acc[day] = [];
@@ -360,8 +438,8 @@ const CalendarPage: React.FC = () => {
                   selectedStaff={selectedStaff}
                   onStaffChange={setSelectedStaff}
                   onJobClick={setOpenJobId}
-                  onJobMove={() => {}}
-                  onAddJobAt={() => {}}
+                  onJobMove={handleJobMove}
+                  onAddJobAt={handleAddJobAt}
                 />
 
                 <aside className={styles.sidebarWrapper}>
@@ -414,8 +492,8 @@ const CalendarPage: React.FC = () => {
                     )}
                     employees={employees}
                     onJobClick={setOpenJobId}
-                    onJobMove={() => {}}
-                    onAddJobAt={() => {}}
+                    onJobMove={handleJobMove}
+                    onAddJobAt={handleAddJobAt}
                   />
                 </div>
 
@@ -469,8 +547,8 @@ const CalendarPage: React.FC = () => {
                     employees={employees}
                     jobsByEmployee={jobsByEmployee}
                     onJobClick={setOpenJobId}
-                    onAddJobAt={() => {}}
-                    onMoveJob={() => {}}
+                    onAddJobAt={handleAddJobAt}
+                    onMoveJob={handleJobMove}
                   />
                 </div>
 
