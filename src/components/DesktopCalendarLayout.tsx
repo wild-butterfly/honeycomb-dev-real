@@ -3,18 +3,16 @@ import React, { useMemo, useState } from "react";
 import styles from "./DesktopCalendarLayout.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
 
-type JobsByEmployee = { [empId: number]: CalendarJob[] };
-
 interface Props {
   date: Date;
   employees: Employee[];
-  jobsByEmployee: JobsByEmployee;
+  jobs: CalendarJob[]; // ✔️ düz liste
   onAddJobAt?: (employeeId: number, start: Date, end: Date) => void;
   onMoveJob?: (
     jobId: number,
     employeeId: number,
-    start: Date,
-    end: Date
+    newStart: Date,
+    newEnd: Date
   ) => void;
   onJobClick?: (jobId: number) => void;
 }
@@ -31,10 +29,28 @@ function sameDay(a: Date, b: Date) {
   );
 }
 
+/* ---------------------------------------------------
+   BADGE RENDER -- ✔️ Day view için EKLENDİ
+--------------------------------------------------- */
+const renderBadge = (job: CalendarJob) => {
+  if (!job.status) return null;
+
+  if (job.status === "quote")
+    return <div className={styles.badgeQuote}>QUOTE</div>;
+
+  if (job.status === "completed")
+    return <div className={styles.badgeCompleted}>COMPLETED</div>;
+
+  if (job.status === "return")
+    return <div className={styles.badgeReturn}>NEED TO RETURN</div>;
+
+  return null;
+};
+
 const DesktopCalendarLayout: React.FC<Props> = ({
   date,
   employees,
-  jobsByEmployee,
+  jobs,
   onAddJobAt,
   onMoveJob,
   onJobClick,
@@ -42,7 +58,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   const [draggingJobId, setDraggingJobId] = useState<number | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
 
-  /* Hours column (6 → 20) */
   const hours = useMemo(
     () =>
       Array.from(
@@ -52,15 +67,26 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     []
   );
 
-  const allJobs: CalendarJob[] = useMemo(
-    () => Object.values(jobsByEmployee).flat(),
-    [jobsByEmployee]
-  );
+  /* ---------------------------------------------------
+     JOBS BY EMPLOYEE -- ✔️ component içinde hesaplanıyor
+  --------------------------------------------------- */
+  const jobsByEmployee: Record<number, CalendarJob[]> = useMemo(() => {
+    const map: Record<number, CalendarJob[]> = {};
+    employees.forEach((e) => (map[e.id] = []));
+    jobs.forEach((job) => {
+      job.assignedTo.forEach((empId) => {
+        if (map[empId]) map[empId].push(job);
+      });
+    });
+    return map;
+  }, [jobs, employees]);
 
   const findJobById = (id: number) =>
-    allJobs.find((j) => j.id === id) || null;
+    jobs.find((j) => j.id === id) || null;
 
-  /* ---------------------- DRAG END ---------------------- */
+  /* ---------------------------------------------------
+     DRAG / DROP
+  --------------------------------------------------- */
   const handleDropOnSlot = (e: React.DragEvent, employeeId: number) => {
     if (!draggingJobId || !onMoveJob) return;
 
@@ -70,7 +96,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     const lane = (e.currentTarget as HTMLElement).closest(
       `.${styles.jobsLane}`
     ) as HTMLElement;
-
     if (!lane) return;
 
     const rect = lane.getBoundingClientRect();
@@ -99,10 +124,12 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     setDraggingJobId(null);
   };
 
-  /* ------------------------ RENDER ------------------------ */
+  /* ---------------------------------------------------
+     RENDER
+  --------------------------------------------------- */
   return (
     <div className={styles.desktopWrapper}>
-      
+
       {/* HEADER */}
       <div className={styles.timelineRow}>
         <div className={styles.staffCell}></div>
@@ -121,11 +148,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       {/* BODY */}
       <div className={styles.timelineBodyArea}>
         {employees.map((emp) => {
-          const jobs = jobsByEmployee[emp.id] || [];
+          const empJobs = jobsByEmployee[emp.id] || [];
 
           return (
             <div key={emp.id} className={styles.timelineRow}>
-              
+
               {/* STAFF CELL */}
               <div className={styles.staffCell}>
                 <div className={styles.staffAvatarCircle}>
@@ -139,9 +166,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                 <div className={styles.staffName}>{emp.name}</div>
               </div>
 
-              {/* JOB LANES */}
+              {/* JOB LANE */}
               <div className={styles.jobsLane}>
-                
                 {/* BACKGROUND SLOTS */}
                 <div className={styles.jobsLaneSlots}>
                   {hours.map((h) => {
@@ -178,7 +204,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                 </div>
 
                 {/* JOB BLOCKS */}
-                {jobs.map((job) => {
+                {empJobs.map((job) => {
                   const start = new Date(job.start);
                   const end = new Date(job.end);
 
@@ -196,21 +222,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     (durationMinutes / 60) * HOUR_WIDTH_PX - 6,
                     70
                   );
-
-                  let badge = null;
-                  if (job.status === "quote") {
-                    badge = <div className={styles.badgeQuote}>QUOTE</div>;
-                  } else if (job.status === "completed") {
-                    badge = (
-                      <div className={styles.badgeCompleted}>COMPLETED</div>
-                    );
-                  } else if (job.status === "return") {
-                    badge = (
-                      <div className={styles.badgeReturn}>
-                        NEED TO RETURN
-                      </div>
-                    );
-                  }
 
                   return (
                     <div
@@ -231,10 +242,13 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                         backgroundColor: job.color || "#fffdf0",
                       }}
                     >
-                      {badge}
+                      {/* ✔️ BADGE BURADA */}
+                      {renderBadge(job)}
 
                       <div className={styles.jobBlockTitle}>{job.title}</div>
-                      <div className={styles.jobBlockCustomer}>{job.customer}</div>
+                      <div className={styles.jobBlockCustomer}>
+                        {job.customer}
+                      </div>
 
                       {job.location && (
                         <div className={styles.jobBlockLocation}>
@@ -243,9 +257,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       )}
 
                       {job.estimatedTags !== undefined && (
-                      <div className={styles.jobBlockEstimated}>
-                        Estimated: {job.estimatedTags} tags
-                      </div>
+                        <div className={styles.jobBlockEstimated}>
+                          Estimated: {job.estimatedTags} tags
+                        </div>
                       )}
                     </div>
                   );

@@ -10,11 +10,16 @@ type Props = {
   onPrev: () => void;
   onNext: () => void;
   rangeMode: "day" | "week" | "month";
-  onRangeModeChange: React.Dispatch<React.SetStateAction<"day" | "week" | "month">>;
+  onRangeModeChange: React.Dispatch<
+    React.SetStateAction<"day" | "week" | "month">
+  >;
 
   employees: Employee[];
-  staffFilter: number | "all";
-  onStaffFilterChange: React.Dispatch<React.SetStateAction<number | "all">>;
+
+  // FIXED TYPES
+  staffFilter: number[]; // array
+  onStaffFilterChange: (ids: number[]) => void;
+
   onDateChange: (d: Date) => void;
 };
 
@@ -61,6 +66,19 @@ const CalendarControlsBar: React.FC<Props> = ({
 
   const showStaff = rangeMode !== "month";
 
+  const currentValue =
+    staffFilter.length === 0 ? "all" : String(staffFilter[0]);
+
+  const handleStaffChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+
+    if (val === "all") {
+      onStaffFilterChange([]); // empty = all
+    } else {
+      onStaffFilterChange([Number(val)]);
+    }
+  };
+
   return (
     <div className={styles.controlsContainer}>
       {showStaff && (
@@ -68,10 +86,8 @@ const CalendarControlsBar: React.FC<Props> = ({
           <label className={styles.staffLabel}>Staff</label>
           <select
             className={styles.staffDropdown}
-            value={staffFilter}
-            onChange={(e) =>
-              onStaffFilterChange(e.target.value === "all" ? "all" : Number(e.target.value))
-            }
+            value={currentValue}
+            onChange={handleStaffChange}
           >
             <option value="all">All Staff</option>
             {employees.map((emp) => (
@@ -84,32 +100,45 @@ const CalendarControlsBar: React.FC<Props> = ({
       )}
 
       <div className={styles.centerDateWrapper}>
-        <button className={styles.navButton} onClick={onPrev}>{"<"}</button>
+        <button className={styles.navButton} onClick={onPrev}>
+          {"<"}
+        </button>
 
-        <button className={styles.dateLabelButton} onClick={() => setShowCalendar(true)}>
+        <button
+          className={styles.dateLabelButton}
+          onClick={() => setShowCalendar(true)}
+        >
           {formatLabel(date)}
         </button>
 
-        <button className={styles.navButton} onClick={onNext}>{">"}</button>
+        <button className={styles.navButton} onClick={onNext}>
+          {">"}
+        </button>
       </div>
 
       <div className={styles.viewButtons}>
         <button
-          className={`${styles.viewButton} ${rangeMode === "day" ? styles.active : ""}`}
+          className={`${styles.viewButton} ${
+            rangeMode === "day" ? styles.active : ""
+          }`}
           onClick={() => onRangeModeChange("day")}
         >
           Day
         </button>
 
         <button
-          className={`${styles.viewButton} ${rangeMode === "week" ? styles.active : ""}`}
+          className={`${styles.viewButton} ${
+            rangeMode === "week" ? styles.active : ""
+          }`}
           onClick={() => onRangeModeChange("week")}
         >
           Week
         </button>
 
         <button
-          className={`${styles.viewButton} ${rangeMode === "month" ? styles.active : ""}`}
+          className={`${styles.viewButton} ${
+            rangeMode === "month" ? styles.active : ""
+          }`}
           onClick={() => onRangeModeChange("month")}
         >
           Month

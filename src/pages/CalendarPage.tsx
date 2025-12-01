@@ -395,16 +395,17 @@ const CalendarPage: React.FC = () => {
 
       <div className={styles.calendarPageShell}>
         <CalendarControlsBar
-          date={selectedDate}
-          onPrev={goPrev}
-          onNext={goNext}
-          rangeMode={rangeMode}
-          onRangeModeChange={setRangeMode}
-          employees={employees}
-          staffFilter={"all"}
-          onStaffFilterChange={() => {}}
-          onDateChange={setSelectedDate}
-        />
+  date={selectedDate}
+  onPrev={goPrev}
+  onNext={goNext}
+  rangeMode={rangeMode}
+  onRangeModeChange={setRangeMode}
+  employees={employees}
+  staffFilter={selectedStaff}
+  onStaffFilterChange={setSelectedStaff}
+
+  onDateChange={setSelectedDate}
+/>
 
         {/* ---------------- MONTH MODE ---------------- */}
         {rangeMode === "month" && (
@@ -545,7 +546,7 @@ const CalendarPage: React.FC = () => {
                   <DesktopCalendarLayout
                     date={selectedDate}
                     employees={employees}
-                    jobsByEmployee={jobsByEmployee}
+                    jobs={staffFilteredJobs.filter(j => isSameDay(j.start, selectedDate))}
                     onJobClick={setOpenJobId}
                     onAddJobAt={handleAddJobAt}
                     onMoveJob={handleJobMove}

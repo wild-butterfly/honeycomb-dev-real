@@ -25,6 +25,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverDay, setHoverDay] = useState<number | null>(null);
+  const [draggingJobId, setDraggingJobId] = useState<number | null>(null);
 
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -32,10 +33,12 @@ const MonthCalendarLayout: React.FC<Props> = ({
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
 
-  // Monday-start offset (Mon=0 → Sun=6)
   const offset = (first.getDay() + 6) % 7;
 
-  const days = Array.from({ length: last.getDate() }, (_, i) => new Date(year, month, i + 1));
+  const days = Array.from(
+    { length: last.getDate() },
+    (_, i) => new Date(year, month, i + 1)
+  );
 
   const getJobsForDay = (day: Date) =>
     jobs.filter((j) => {
@@ -44,36 +47,58 @@ const MonthCalendarLayout: React.FC<Props> = ({
         d.getFullYear() === day.getFullYear() &&
         d.getMonth() === day.getMonth() &&
         d.getDate() === day.getDate() &&
-        (selectedStaff.length === 0 || j.assignedTo.some((id) => selectedStaff.includes(id)))
+        (selectedStaff.length === 0 ||
+          j.assignedTo.some((id) => selectedStaff.includes(id)))
       );
     });
 
+  const findJobById = (id: number) => jobs.find((j) => j.id === id) || null;
+
   const renderBadge = (job: CalendarJob) => {
-    if (!job.status || job.status === "active") return null;
+    switch (job.status) {
+      case "quote":
+        return <div className={styles.badgeQuote}>QUOTE</div>;
+      case "completed":
+        return <div className={styles.badgeCompleted}>COMPLETED</div>;
+      case "return":
+        return <div className={styles.badgeReturn}>NEED TO RETURN</div>;
+      default:
+        return null;
+    }
+  };
 
-    if (job.status === "quote")
-      return <div className={styles.badgeQuote}>QUOTE</div>;
+  /* ---------------- DRAG & DROP MONTH LOGIC ---------------- */
+  const handleDropOnDay = (day: Date) => {
+    if (!draggingJobId) return;
 
-    if (job.status === "completed")
-      return <div className={styles.badgeCompleted}>COMPLETED</div>;
+    const job = findJobById(draggingJobId);
+    if (!job) return;
 
-    if (job.status === "return")
-      return <div className={styles.badgeReturn}>NEED TO RETURN</div>;
+    const oldStart = new Date(job.start);
+    const oldEnd = new Date(job.end);
 
-    return null;
+    // same start/end time but new date
+    const newStart = new Date(day);
+    newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
+
+    const newEnd = new Date(day);
+    newEnd.setHours(oldEnd.getHours(), oldEnd.getMinutes(), 0, 0);
+
+    const emp = job.assignedTo[0] || employees[0].id;
+    onJobMove(job.id, emp, newStart, newEnd);
+
+    setDraggingJobId(null);
   };
 
   return (
     <div className={styles.monthLayoutWide}>
-      
-      {/* LEFT STAFF FILTER PANEL */}
+      {/* STAFF PANEL */}
       <div className={styles.staffListWrapper}>
         <div className={styles.staffListTitle}>Staff</div>
 
         <div className={styles.staffList}>
           {employees.map((emp) => {
             const checked = selectedStaff.includes(emp.id);
-
             return (
               <label key={emp.id} className={styles.staffItem}>
                 <input
@@ -84,7 +109,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       ? onStaffChange(selectedStaff.filter((x) => x !== emp.id))
                       : onStaffChange([...selectedStaff, emp.id])
                   }
-                  className={styles.staffCheckbox}
                 />
 
                 <div className={styles.staffAvatar}>
@@ -102,27 +126,21 @@ const MonthCalendarLayout: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* MONTH CALENDAR */}
+      {/* MONTH GRID */}
       <div className={styles.monthWrapper}>
-        
-        {/* WEEK HEADER */}
         <div className={styles.weekHeader}>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-            <div key={d} className={styles.weekDayLabel}>
-              {d}
-            </div>
+            <div key={d} className={styles.weekDayLabel}>{d}</div>
           ))}
         </div>
 
-        {/* DAYS GRID */}
         <div className={styles.daysGrid}>
-          
-          {/* EMPTY CELLS BEFORE DAY 1 */}
-          {Array.from({ length: offset }).map((_, idx) => (
-            <div key={idx} className={styles.emptyCell} />
+          {/* EMPTY CELLS */}
+          {Array.from({ length: offset }).map((_, i) => (
+            <div key={i} className={styles.emptyCell} />
           ))}
 
-          {/* DAY CELLS */}
+          {/* DAYS */}
           {days.map((day) => {
             const jobsToday = getJobsForDay(day);
             const dayNum = day.getDate();
@@ -133,16 +151,22 @@ const MonthCalendarLayout: React.FC<Props> = ({
                 className={styles.dayCell}
                 onMouseEnter={() => setHoverDay(dayNum)}
                 onMouseLeave={() => setHoverDay(null)}
+                onDragOver={(e) => {
+                  if (draggingJobId) e.preventDefault();
+                }}
+                onDrop={() => handleDropOnDay(day)}
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
-                {/* JOBS INSIDE THE DAY CELL */}
                 <div className={styles.jobsList}>
                   {jobsToday.map((job) => (
                     <div
                       key={job.id}
-                      className={styles.jobBox}
+                      draggable
+                      onDragStart={() => setDraggingJobId(job.id)}
+                      onDragEnd={() => setDraggingJobId(null)}
                       onClick={() => onJobClick(job.id)}
+                      className={styles.jobBox}
                       style={{ backgroundColor: job.color || "#faf7dc" }}
                     >
                       {renderBadge(job)}
@@ -152,18 +176,18 @@ const MonthCalendarLayout: React.FC<Props> = ({
                   ))}
                 </div>
 
-                {/* ADD JOB BUTTON ON HOVER */}
                 {hoverDay === dayNum && (
                   <button
                     className={styles.slotAddButton}
                     onClick={() => {
                       const start = new Date(day);
-                      start.setHours(9, 0);
-                      const end = new Date(start);
-                      end.setHours(10);
+                      start.setHours(9, 0, 0, 0);
 
-                      const empId = selectedStaff[0] || employees[0].id;
-                      onAddJobAt(empId, start, end);
+                      const end = new Date(start);
+                      end.setHours(start.getHours() + 1);
+
+                      const emp = selectedStaff[0] || employees[0].id;
+                      onAddJobAt(emp, start, end);
                     }}
                   >
                     +

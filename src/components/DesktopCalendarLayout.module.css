@@ -164,35 +164,38 @@
    BADGES
    ========================================== */
 
+/* BADGES */
+/* BADGES (Week ile aynı) */
+
 .badgeQuote,
 .badgeCompleted,
 .badgeReturn {
   position: absolute;
-  top: 4px;
-  right: 6px;
+  top: 6px;
+  right: 8px;
   padding: 2px 8px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   border-radius: 6px;
   border: 1px solid transparent;
 }
 
 .badgeQuote {
-  background: #e2e6ff;
-  color: #283593;
-  border-color: #b5c0ff;
+  background: #e8f2ff;
+  color: #0b4fa8;
+  border-color: #9ec3ff;
 }
 
 .badgeCompleted {
-  background: #dcfbe0;
-  color: #1b5e20;
-  border-color: #9fe0a7;
+  background: #e8f8e8;
+  color: #2e7d32;
+  border-color: #a4d4a4;
 }
 
 .badgeReturn {
-  background: #fff3cf;
-  color: #9a6700;
-  border-color: #f5d28d;
+  background: #fff4e5;
+  color: #b26a00;
+  border-color: #f0c38c;
 }
 
 /* ==========================================
