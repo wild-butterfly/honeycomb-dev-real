@@ -263,7 +263,7 @@ function isSameWeek(dateStr: string, week: Date) {
 const CalendarPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [rangeMode, setRangeMode] =
-    useState<"day" | "week" | "month">("month");
+    useState<"day" | "week" | "month">("day");
 
   const [selectedStaff, setSelectedStaff] = useState<number[]>([]);
   const [jobFilter, setJobFilter] =
