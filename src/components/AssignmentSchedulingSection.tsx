@@ -113,7 +113,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     })();
   }, []);
 
-  // hızlı lookup (UI’da name garanti)
   const employeeNameById = useMemo(() => {
     const m = new Map<string, string>();
     employees.forEach((e) => {
@@ -130,14 +129,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       async (snap) => {
-        /**
-         * ✅ Burada en kritik şey:
-         * - doc.id her zaman employeeId olmayabilir (uuid olabilir)
-         * - employeeId varsa onu kullan
-         * - tek doc'ta start/end olabilir (legacy)
-         * - tek doc'ta schedules[] olabilir (new)
-         * - birden fazla doc aynı employee için olabilir (uuid docId senaryosu)
-         */
         const grouped = new Map<string, AssignedEmployee>();
 
         for (const d of snap.docs) {
@@ -159,7 +150,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           const target = grouped.get(empId);
           if (!target) continue;
 
-          // name güncelle
           target.name =
             employeeNameById.get(empId) || target.name || `Employee ${empId}`;
 
@@ -204,14 +194,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           }
         }
 
-        // schedules sıralama (UI düzgün dursun)
         grouped.forEach((val) => {
           val.schedules.sort(
             (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
           );
         });
 
-        // eksik isimleri Firestore’dan çek (sadece gerekirse)
         const missing = Array.from(grouped.values())
           .filter((x) => !x.name || x.name === "Loading...")
           .map((x) => x.employeeId);
@@ -234,7 +222,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             }
           });
 
-          // hala bulunamayan varsa listeye alma (yanlış charge olmasın)
           Array.from(grouped.entries()).forEach(([id, val]) => {
             if (!val.name || val.name === "Loading...") {
               grouped.delete(id);
@@ -253,7 +240,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
-    // ✅ burada "start/end: null" yerine schedules: [] yazmak daha temiz
     await setDoc(
       doc(db, "jobs", safeJobId, "assignments", String(selectedEmployee)),
       {
@@ -358,7 +344,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             jobId={safeJobId}
             employees={assignedEmployees.map((emp) => ({
               id: emp.employeeId,
-              name: emp.name ?? "Unnamed employee", // ✅ string garanti
+              name: emp.name ?? "Unnamed employee",
               role: "Technician",
               rate: 95,
             }))}

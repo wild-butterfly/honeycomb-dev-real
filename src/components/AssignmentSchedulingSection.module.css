@@ -81,7 +81,7 @@
   background: #fff2c2; /* completed butonuna yakın */
 }
 
-.scheduleBtn {
+.primaryBtn {
   background: #e6c15a; /* honey gold */
   color: #ffff; /* softer text */
 
@@ -97,7 +97,7 @@
   transition: all 0.15s ease;
 }
 
-.scheduleBtn:hover {
+.primaryBtn:hover {
   background: #d6b24f;
   color: #ffffff;
 }
