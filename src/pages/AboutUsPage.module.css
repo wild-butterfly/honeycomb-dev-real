@@ -1,0 +1,189 @@
+.aboutBg {
+  background: linear-gradient(110deg, #fffde4 80%, #ffe066 120%);
+  min-height: calc(100vh - var(--footer-h, 72px) - var(--header-h, 0px));
+  padding-bottom: calc(
+    var(--footer-h, 72px) + env(safe-area-inset-bottom, 0px)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+.aboutBg > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.hero {
+  text-align: center;
+  margin-top: 44px;
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 2.3rem;
+  color: #232323;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 1.21rem;
+  color: #484848;
+  font-weight: 500;
+}
+
+.storySection,
+.valuesSection,
+.teamSection,
+.contactSection {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 28px #ffd60016, 0 1px 18px #ffe0660c inset;
+  border: 1.5px solid #ffe066;
+  margin: 32px auto 0 auto;
+  max-width: 650px;
+  width: 95%;
+  padding: 32px 24px 22px 24px;
+  text-align: center;
+}
+
+.contactSection {
+  margin-bottom: clamp(16px, 3vh, 36px);
+}
+
+.heading {
+  color: #b99a2a;
+  font-size: 1.33rem;
+  font-weight: 700;
+  margin-bottom: 13px;
+  letter-spacing: 0.03em;
+}
+
+.text {
+  color: #232323;
+  font-size: 1.07rem;
+  margin-bottom: 9px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.highlight {
+  color: #b99a2a;
+  font-weight: 700;
+}
+
+.valuesList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  font-size: 1.08rem;
+  color: #232323;
+}
+
+.icon {
+  font-size: 1.2em;
+  margin-right: 5px;
+}
+
+.teamGrid {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.memberCard {
+  background: #fffde4;
+  border: 1px solid #ffe066;
+  border-radius: 12px;
+  box-shadow: 0 2px 14px #ffe06612;
+  padding: 20px 18px 16px 18px;
+  max-width: 170px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.memberName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #b99a2a;
+  margin: 3px 0;
+}
+
+.memberRole {
+  font-size: 0.99rem;
+  color: #232323;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+
+.contactBtn {
+  display: inline-block;
+  margin-top: 13px;
+  padding: 9px 30px;
+  border-radius: 8px;
+  border: 2px solid #b99a2a;
+  background: #fffde4;
+  color: #b99a2a;
+  font-weight: 700;
+  font-size: 1.04rem;
+  transition: background 0.16s, color 0.16s, border-color 0.15s, transform 0.14s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.contactBtn:hover,
+.contactBtn:focus {
+  background: #ffe066;
+  color: #232323;
+  border-color: #050505;
+  transform: translateY(-2px) scale(1.045);
+}
+
+/* =========================
+   MOBILE
+   ========================= */
+@media (max-width: 600px) {
+  .aboutBg {
+    min-height: calc(100dvh - var(--header-h, 0px) - var(--footer-h, 96px));
+    padding-bottom: calc(
+      var(--footer-h, 96px) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .storySection,
+  .valuesSection,
+  .teamSection,
+  .contactSection {
+    padding: 15px 3vw 12px 3vw;
+    font-size: 0.98rem;
+    margin: 16px 0 0 0;
+  }
+
+  .teamGrid {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .aboutBg > :last-child {
+    margin-bottom: 0 !important;
+  }
+}

@@ -1,0 +1,206 @@
+.wrapper {
+  margin-top: 24px;
+}
+
+/* ---------------- TABS ---------------- */
+
+.tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid #e6d9a8;
+  margin-bottom: 18px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 10px 0;
+  font-size: 14px;
+  cursor: pointer;
+  color: #6b5a20;
+}
+
+.active {
+  font-weight: 600;
+  border-bottom: 3px solid #e6c15a;
+  color: #3b2f00;
+}
+
+/* ---------------- CARD ---------------- */
+
+.card {
+  background: #fffaf0;
+  border: 1px solid #e6d9a8;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: #3b2f00;
+}
+
+/* ---------------- ASSIGN ROW ---------------- */
+
+.assignRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.select {
+  flex: 1;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid #e6c15a;
+  background: #fffdf6;
+  font-size: 14px;
+}
+
+/* ---------------- BUTTONS ---------------- */
+
+.assignBtn {
+  background: #fffdf6; /* kartla uyumlu */
+  color: #3b2f00;
+
+  border: 2px solid #e6c15a;
+  border-radius: 12px;
+
+  padding: 9px 18px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.assignBtn:hover {
+  background: #fff2c2; /* completed butonuna yakın */
+}
+
+.scheduleBtn {
+  background: #e6c15a; /* honey gold */
+  color: #ffff; /* softer text */
+
+  border: 2px solid #c9a845;
+  border-radius: 12px;
+
+  padding: 9px 20px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scheduleBtn:hover {
+  background: #d6b24f;
+  color: #ffffff;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.active {
+  border-bottom: 2px solid #d6a400; /* senin honeycomb sarınla uyumlu */
+  font-weight: 700;
+}
+
+.empty {
+  color: #999;
+  font-style: italic;
+  padding: 6px 0;
+}
+
+/* LABOUR */
+
+.labourWrapper {
+  margin-top: 16px;
+}
+
+.labourCard {
+  background: #fffaf0;
+  border: 1px solid #f1d58a;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.labourHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.employeeInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f1c232;
+  color: #000;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employeeName {
+  font-weight: 600;
+}
+
+.labourBadge {
+  background: #f5a623;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 14px;
+}
+
+/* ENTRIES */
+
+.labourEntry {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.6fr;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.entryDate {
+  color: #555;
+}
+
+.entryTime {
+  color: #333;
+}
+
+.entryHours {
+  text-align: right;
+  font-weight: 500;
+}
+
+/* TOTAL */
+
+.labourTotal {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  font-weight: 600;
+}

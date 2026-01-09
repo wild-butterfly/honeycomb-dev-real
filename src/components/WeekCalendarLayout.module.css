@@ -1,0 +1,164 @@
+.weekWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fffdf5;
+}
+
+/* HEADER */
+.headerRow {
+  display: grid;
+  grid-template-columns: 180px repeat(7, 1fr);
+  border-bottom: 2px solid #f2e2a3;
+  background: #fff7d1;
+}
+
+.staffHeaderCell {
+  padding: 10px;
+  border-right: 2px solid #f2e2a3;
+}
+
+.dayHeader {
+  padding: 10px;
+  text-align: center;
+  border-right: 1px dashed #f2e2a3;
+}
+
+.dayLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #715c00;
+}
+
+/* EMPLOYEE ROW */
+.row {
+  display: grid;
+  grid-template-columns: 180px repeat(7, 1fr);
+  border-bottom: 1px dashed #f2e2a3;
+}
+
+.staffCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-right: 2px solid #f2e2a3;
+}
+
+.avatarCircle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffe28a;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* DAY CELL */
+.dayCell {
+  position: relative;
+  min-height: 90px;
+  padding: 4px;
+  border-right: 1px dashed #f2e2a3;
+}
+
+.dayCell:hover {
+  background: #fff9de;
+}
+
+/* Hide + button when job exists */
+.hasJob .slotAddButton {
+  display: none !important;
+}
+
+/* ===== JOB BOX ===== */
+.jobBox {
+  background: #fff4c5;
+  border: 1px solid #e2c76b;
+  padding: 26px 10px 10px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 4px rgba(200, 170, 50, 0.25);
+  cursor: grab;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.jobTitle {
+  font-weight: 700;
+  color: #4d3e00;
+  font-size: 13px;
+}
+
+.jobCustomer {
+  font-size: 12px;
+  color: #7d6a0a;
+}
+
+.jobTime {
+  font-weight: 700;
+  font-size: 11px;
+  margin-top: 4px;
+  color: #a88705;
+}
+
+/* BADGES */
+.badgeQuote,
+.badgeCompleted,
+.badgeReturn {
+  position: absolute;
+  top: -4px;
+  right: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  pointer-events: none !important;
+}
+
+.badgeQuote {
+  background: #e8f2ff;
+  color: #0b4fa8;
+  border-color: #9ec3ff;
+}
+
+.badgeCompleted {
+  background: #e8f8e8;
+  color: #2e7d32;
+  border-color: #a4d4a4;
+}
+
+.badgeReturn {
+  background: #fff4e5;
+  color: #b26a00;
+  border-color: #f0c38c;
+}
+
+/* ADD BUTTON */
+.slotAddButton {
+  width: 26px;
+  height: 26px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffd600;
+  color: #4a3f00;
+  font-weight: 900;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+  opacity: 0;
+  transition: 0.15s ease;
+}
+
+.dayCell:hover .slotAddButton {
+  opacity: 1;
+}

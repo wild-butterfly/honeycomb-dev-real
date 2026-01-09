@@ -1,0 +1,102 @@
+.wrapper {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dayTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #6b5500;
+}
+
+.empty {
+  text-align: center;
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff8d6;
+  border: 1px solid #f3d48d;
+  color: #9b7a00;
+  font-weight: 600;
+}
+
+/* JOB CARD */
+.jobCard {
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: white;
+  border-left: 8px solid #ccc;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.15);
+  transition: transform 0.12s ease;
+}
+
+.jobCard:active {
+  transform: scale(0.97);
+}
+
+/* STATUS BADGE — SAME AS WEEK/MONTH */
+.statusBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  width: fit-content;
+  color: black;
+  border: 1px solid #00000022;
+  position: absolute;
+  top: -10px;
+  left: 12px;
+}
+
+/* STATUS COLORS */
+.ACTIVE {
+  background-color: #ffcc00;
+}
+
+.COMPLETED {
+  background-color: #4caf50;
+  color: white;
+}
+
+.RETURN {
+  background-color: #ff9800;
+}
+
+.QUOTE {
+  background-color: #9c27b0;
+  color: white;
+}
+
+/* TIME */
+.time {
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+/* TITLE */
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #403600;
+  margin-bottom: 4px;
+}
+
+/* CUSTOMER */
+.customer {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+/* STAFF */
+.staffName {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #333;
+}

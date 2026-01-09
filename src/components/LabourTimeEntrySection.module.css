@@ -1,0 +1,189 @@
+/* =========================
+   BASE / WRAPPER
+   ========================= */
+
+.wrapper {
+  margin-top: 20px;
+  background: #fff9e6;
+  border: 2px solid #f0d77a;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+/* dekoratif layer’lar click yutmasın */
+.wrapper::before,
+.wrapper::after,
+.form::before,
+.form::after {
+  pointer-events: none;
+}
+
+/* =========================
+   FORM
+   ========================= */
+
+.form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.form select,
+.form input,
+.form textarea {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 2px solid #f0d77a;
+  background: #fff6dc;
+  font-size: 14px;
+}
+
+.form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* =========================
+   ADD BUTTON
+   ========================= */
+
+.form button {
+  margin-top: 8px;
+  background: linear-gradient(135deg, #f5c542, #e6b933);
+  color: #1f2937;
+  padding: 12px;
+  border-radius: 16px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(245, 197, 66, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form button:hover {
+  background: linear-gradient(135deg, #f7d35a, #ecc84a);
+  box-shadow: 0 8px 18px rgba(245, 197, 66, 0.45);
+}
+
+.form button:active {
+  background: linear-gradient(135deg, #eac233, #d9b228);
+  box-shadow: 0 4px 10px rgba(245, 197, 66, 0.35);
+}
+
+/* =========================
+   EMPLOYEE BLOCK
+   ========================= */
+
+.employeeBlock {
+  margin-top: 14px;
+  padding: 12px;
+  background: #fffdf6;
+  border: 2px solid #f0d77a;
+  border-radius: 14px;
+}
+
+.employeeBlock h4 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* =========================
+   GRID TABLE (FERGUS STYLE)
+   ========================= */
+
+.headerRow,
+.entryRow,
+.totalRow {
+  display: grid;
+  grid-template-columns:
+    120px /* Date */
+    160px /* Time */
+    80px /* Rate */
+    110px /* Chargeable */
+    110px /* Uncharged */
+    120px /* Charged Out */
+    60px; /* Actions */
+
+  align-items: center;
+  gap: 8px;
+}
+
+/* =========================
+   HEADER
+   ========================= */
+
+.headerRow {
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a5b00;
+  border-bottom: 1px solid #f0d77a;
+}
+
+/* =========================
+   ENTRY ROWS
+   ========================= */
+
+.entryRow {
+  padding: 8px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(240, 215, 122, 0.4);
+}
+
+.entryRow:last-child {
+  border-bottom: none;
+}
+
+/* =========================
+   ACTION BUTTONS
+   ========================= */
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.actions button {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #f0d77a;
+  background: #fff7dc;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.actions button:hover {
+  background: #ffefb8;
+}
+
+/* =========================
+   TOTAL ROW
+   ========================= */
+
+.totalRow {
+  margin-top: 6px;
+  padding: 8px;
+  font-weight: 700;
+  background: #fff3c4;
+  border-top: 2px solid #f5c542;
+}
+
+/* =========================
+   RESPONSIVE (OPTIONAL)
+   ========================= */
+
+@media (max-width: 900px) {
+  .headerRow {
+    display: none;
+  }
+
+  .entryRow,
+  .totalRow {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 6px;
+  }
+}

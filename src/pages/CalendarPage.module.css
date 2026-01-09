@@ -1,0 +1,166 @@
+/* ------------------------------------------------------ */
+/* Background + Page Shell */
+/* ------------------------------------------------------ */
+
+.dashboardBg {
+  background: repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+  min-height: 100vh;
+  padding-bottom: 46px;
+  font-family: "Roboto", Arial, sans-serif;
+}
+
+.calendarPageShell {
+  width: 100%;
+  max-width: 100%;
+  margin: 16px auto 40px auto;
+  padding: 20px 0 40px 0;
+  font-family: "Roboto", Arial, sans-serif;
+  color: #232323;
+}
+
+/* ------------------------------------------------------ */
+/* Controls Bar */
+/* ------------------------------------------------------ */
+
+.controlsCard {
+  background: #fffdf0;
+  border: 1.5px solid #ffe066;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  box-shadow: 0 2px 6px rgba(212, 184, 74, 0.12);
+}
+
+.controlsLeftGroup,
+.controlsCenterGroup,
+.controlsRightGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ------------------------------------------------------ */
+/* Desktop Layout Wrappers */
+/* ------------------------------------------------------ */
+
+.desktopMainAndSidebar {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  height: calc(100vh - 220px);
+}
+
+.timelineCardWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebarWrapper {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+}
+
+/* ------------------------------------------------------ */
+/* Month Layout Desktop */
+/* ------------------------------------------------------ */
+
+.monthLayoutWide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  width: 100%;
+}
+
+.monthCalendarContainer {
+  width: 100%;
+  min-width: 0;
+}
+
+.monthCalendarContainer > * {
+  width: 100%;
+}
+
+/* ------------------------------------------------------ */
+/* MOBILE / DESKTOP VISIBILITY CONTROLS */
+/* ------------------------------------------------------ */
+
+.onlyMobile {
+  display: none;
+}
+
+.onlyDesktop {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .onlyMobile {
+    display: block;
+  }
+
+  .onlyDesktop {
+    display: none;
+  }
+
+  /* Sidebar full width under controls */
+  .sidebarWrapper {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-top: 20px;
+  }
+}
+
+/* --- MOBILE JOBS LIST PANEL --- */
+.mobileJobsPanel {
+  margin-top: 24px;
+  background: #fffef8;
+  border-radius: 16px 16px 0 0;
+  padding: 18px 14px 40px 14px;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.mobileJobsPanel h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #6a5700;
+}
+
+.mobileJobsPanelDivider {
+  height: 1px;
+  background: #e6d9a8;
+  margin: 10px 0 20px 0;
+}
+
+/* ------------------------------------------------------ */
+/* Mobile Wrapper (legacy fallback) */
+/* ------------------------------------------------------ */
+
+.mobileWrapper {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .desktopWrapper {
+    display: none;
+  }
+  .mobileWrapper {
+    display: block;
+  }
+}

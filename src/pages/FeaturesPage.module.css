@@ -1,0 +1,123 @@
+.featuresBg {
+  background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
+  /* ↓ Yükseklik zorlamasını kaldır – boş alanın sebebiydi */
+  /* min-height: calc(100vh - var(--header-h, 0px)); */
+  min-height: 0;
+  font-family: "Roboto", Arial, sans-serif;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 0; /* alt ekstra boşluk yok */
+  margin-bottom: 0;
+}
+
+.hero {
+  text-align: center;
+  padding: 60px 16px 30px 16px;
+}
+
+.title {
+  font-size: 2.25rem;
+  color: #232323;
+  margin-bottom: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  font-size: 1.19rem;
+  color: #595959;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+.featuresSection {
+  /* ↓ Footer’a yaklaşsın */
+  margin: 0 auto 12px auto;
+  max-width: 1100px;
+  padding: 0 16px;
+  width: 100%;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.featureCard {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px #f5b40116, 0 1px 24px #ffe0660c inset;
+  border: 1.5px solid #ffe066;
+  text-align: left;
+  padding: 28px 22px 22px 22px;
+  transition: transform 0.15s, box-shadow 0.17s, border 0.13s;
+  position: relative;
+}
+
+.featureCard:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 12px 40px #ffd60060;
+  border-color: #f9b300;
+  z-index: 2;
+}
+
+.icon {
+  font-size: 2.4rem;
+  margin-bottom: 13px;
+  display: inline-block;
+  color: #b99a2a;
+}
+
+.featureCard h3 {
+  font-size: 1.15rem;
+  color: #232323;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.featureCard p {
+  font-size: 1.02rem;
+  color: #595959;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* 📱 Responsive */
+@media (max-width: 900px) {
+  .featuresGrid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .featureCard {
+    padding: 20px 16px;
+  }
+
+  .hero {
+    padding: 40px 8px 20px 8px;
+  }
+
+  .title {
+    font-size: 1.7rem;
+  }
+  .subtitle {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .featuresBg {
+    padding-bottom: 0;
+  } /* Sizde bu var; sorun değil */
+}
+/* İsterseniz 768 altına genel güvenlik: */
+@media (max-width: 768px) {
+  .featuresBg {
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+}

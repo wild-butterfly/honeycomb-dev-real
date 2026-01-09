@@ -1,0 +1,197 @@
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #fefbf3;
+  padding: 30px 20px;
+}
+
+.mainCard {
+  flex: 1;
+  background: #fffdf5;
+  border-radius: 16px;
+  border: 1px solid #f0e6c2;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+  margin-left: 20px;
+}
+
+/* HEADER */
+.pageHeader h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #3a2e0f;
+}
+
+/* SECTIONS */
+.section {
+  margin-top: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #eadfba;
+  padding: 20px;
+}
+
+.sectionTitle {
+  font-size: 17px;
+  margin-bottom: 12px;
+  color: #5d4a16;
+  font-weight: 700;
+}
+
+/* DESCRIPTION */
+.detailBox {
+  background: #ffffff;
+  border: 1px solid #e8dfc8;
+  padding: 12px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+
+/* ASSIGNMENT */
+.assignRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d8cdac;
+  font-size: 14px;
+  width: 260px;
+}
+
+.assignBtn {
+  padding: 8px 16px;
+  background: #e3c95b;
+  border: 1px solid #d2b94f;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.assignBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scheduleBtn {
+  padding: 8px 20px;
+  background: #ffd447;
+  border: 1px solid #e3bf3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ASSIGNED STAFF (SAME BOX) */
+.employeeList {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e8dcb7;
+}
+
+.employeeItem {
+  background: #fffdf3;
+  border: 1px solid #eee0bd;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.empName {
+  font-weight: 600;
+  color: #3b320d;
+}
+
+.empHours {
+  font-size: 12px;
+  color: #7c6a3f;
+}
+
+.clickToEdit {
+  cursor: pointer;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #fffdf6;
+  border: 1px dashed transparent;
+  transition: all 0.2s ease;
+  white-space: pre-wrap;
+}
+
+.clickToEdit:hover {
+  border-color: #f7b500;
+  background: #fff7dd;
+}
+
+.editBox {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fffefa;
+  border: 1px solid #f1e2b8;
+  padding-bottom: 12px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.editActionsInline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.saveBtn {
+  padding: 8px 16px;
+
+  background: #e6c15a;
+  color: #ffffff;
+
+  border: 2px solid #d4b84a;
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.saveBtn:hover {
+  background: #d6b24f;
+}
+
+.cancelBtn {
+  padding: 8px 16px;
+
+  background: #fffdf6;
+  color: #3b2c14;
+
+  border: 2px solid #d4b84a;
+  border-radius: 6px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: #fff2c2;
+}
