@@ -1,53 +1,63 @@
-import { CalendarJob } from "../pages/CalendarPage";
+import type { CalendarJob } from "../pages/CalendarPage";
 
-/* -----------------------------------------
-   INTERNAL HELPERS
------------------------------------------- */
+/* ================= ASSIGNMENT HELPERS (NEW CORE) ================= */
 
-function getSortedAssignments(job: CalendarJob) {
-  return [...job.assignments].sort(
-    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-  );
+export function getAssignmentForEmployee(
+  job: CalendarJob,
+  employeeId: number
+) {
+  return job.assignments?.find(a => a.employeeId === employeeId) || null;
 }
 
-/* -----------------------------------------
-   PUBLIC API
------------------------------------------- */
-
-/**
- * Primary assignment = earliest start
- */
-export function getPrimaryAssignment(job: CalendarJob) {
-  const sorted = getSortedAssignments(job);
-  return sorted[0] ?? null;
+export function getAssignmentStart(
+  job: CalendarJob,
+  employeeId: number
+): Date | null {
+  const a = getAssignmentForEmployee(job, employeeId);
+  if (!a?.start) return null;
+  const d = new Date(a.start);
+  return isNaN(d.getTime()) ? null : d;
 }
 
+export function getAssignmentEnd(
+  job: CalendarJob,
+  employeeId: number
+): Date | null {
+  const a = getAssignmentForEmployee(job, employeeId);
+  if (!a?.end) return null;
+  const d = new Date(a.end);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/* ================= LEGACY COMPAT (DO NOT REMOVE YET) ================= */
+
 /**
- * Job start time (safe)
+ * 🔁 Legacy fallback:
+ * Returns earliest assignment start
+ * Used by Month / Week / Mobile views
  */
 export function getJobStart(job: CalendarJob): Date {
-  const a = getPrimaryAssignment(job);
-  return a ? new Date(a.start) : new Date(0); // 🔒 NEVER null
+  const first = job.assignments?.[0];
+  if (!first?.start) return new Date(0);
+  const d = new Date(first.start);
+  return isNaN(d.getTime()) ? new Date(0) : d;
 }
 
 /**
- * Job end time = latest end across all assignments
+ * 🔁 Legacy fallback:
+ * Returns latest assignment end
  */
 export function getJobEnd(job: CalendarJob): Date {
-  if (job.assignments.length === 0) return new Date(0);
-
-  const max = Math.max(
-    ...job.assignments.map((a) => new Date(a.end).getTime())
-  );
-
-  return new Date(max);
+  const last = job.assignments?.[job.assignments.length - 1];
+  if (!last?.end) return new Date(0);
+  const d = new Date(last.end);
+  return isNaN(d.getTime()) ? new Date(0) : d;
 }
 
 /**
- * All assigned employee IDs (unique)
+ * 🔁 Legacy helper:
+ * Used everywhere for filtering
  */
 export function getAssignedEmployeeIds(job: CalendarJob): number[] {
-  return Array.from(
-    new Set(job.assignments.map((a) => a.employeeId))
-  );
+  return job.assignments?.map(a => a.employeeId) || [];
 }

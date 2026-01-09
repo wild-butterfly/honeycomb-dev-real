@@ -32,11 +32,8 @@ import {
   deleteJobFromFirestore,
 } from "../utils/saveJobToFirestore";
 
-import {
-  getJobStart,
-  getAssignedEmployeeIds,
-  getJobEnd,
-} from "../utils/jobTime";
+import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
+import { Timestamp } from "firebase/firestore";
 
 /* TYPES */
 export type Employee = {
@@ -71,25 +68,29 @@ const jobsSeed: CalendarJob[] = [];
 
 /* HELPERS */
 function isSameDay(job: CalendarJob, day: Date) {
-  const d = getJobStart(job);
-  return (
-    d.getFullYear() === day.getFullYear() &&
-    d.getMonth() === day.getMonth() &&
-    d.getDate() === day.getDate()
-  );
+  return job.assignments.some((a) => {
+    const d = new Date(a.start);
+    return (
+      d.getFullYear() === day.getFullYear() &&
+      d.getMonth() === day.getMonth() &&
+      d.getDate() === day.getDate()
+    );
+  });
 }
 
 function isSameWeek(job: CalendarJob, week: Date) {
-  const d = getJobStart(job);
   const ws = new Date(week);
-  ws.setDate(ws.getDate() - ws.getDay() + 1); // Monday start
+  ws.setDate(ws.getDate() - ws.getDay() + 1);
   ws.setHours(0, 0, 0, 0);
 
   const we = new Date(ws);
   we.setDate(ws.getDate() + 6);
   we.setHours(23, 59, 59, 999);
 
-  return d >= ws && d <= we;
+  return job.assignments.some((a) => {
+    const d = new Date(a.start);
+    return d >= ws && d <= we;
+  });
 }
 
 /* ------------------------------------------------------ */
@@ -108,12 +109,16 @@ const CalendarPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
 
-  //SCHEDULE MODE
-
+  // SCHEDULE MODE
   const [scheduleMode, setScheduleMode] = useState<{
     jobId: string;
     employeeId: number;
   } | null>(null);
+
+  // (Bu fonksiyon kullanılmıyor ama kalsın istersen)
+  const startSchedule = (jobId: string, employeeId: number) => {
+    setScheduleMode({ jobId, employeeId });
+  };
 
   const [openJobId, setOpenJobId] = useState<string | null>(null);
 
@@ -178,47 +183,48 @@ const CalendarPage: React.FC = () => {
   }, [employees]);
 
   /* LIVE LOAD JOBS FROM FIRESTORE */
+  /* LIVE LOAD JOBS + ASSIGNMENTS (SINGLE SOURCE OF TRUTH) */
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "jobs"), async (snap) => {
-      const jobsWithAssignments: CalendarJob[] = await Promise.all(
-        snap.docs.map(async (jobDoc) => {
-          const jobData = jobDoc.data();
+    const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
+      jobsSnap.docs.forEach((jobDoc) => {
+        const jobId = String(jobDoc.id);
 
-          const assignmentsSnap = await getDocs(
-            collection(db, "jobs", jobDoc.id, "assignments")
-          );
+        // 🔥 her job için assignments LIVE dinlenir
+        onSnapshot(
+          collection(db, "jobs", jobId, "assignments"),
+          (assignSnap) => {
+            setJobs((prev) => {
+              const existing = prev.find((j) => j.id === jobId);
 
-          const assignments: Assignment[] = assignmentsSnap.docs.map((a) => ({
-            id: a.id,
-            employeeId: Number(a.data().employeeId),
-            start: String(a.data().start || ""),
-            end: String(a.data().end || ""),
-          }));
+              const assignments = assignSnap.docs.map((a) => ({
+                id: a.id,
+                ...(a.data() as any),
+              }));
 
-          return {
-            id: jobDoc.id,
-            title: jobData.title || "New Job",
-            customer: jobData.customer || "",
-            status: jobData.status || "active",
-            color: jobData.color || "#faf7dc",
-            location: jobData.location || "",
-            siteContact: jobData.siteContact || "",
-            contactInfo: jobData.contactInfo || "",
-            notes: jobData.notes || "",
-            assignments,
-          };
-        })
-      );
+              const nextJob: CalendarJob = {
+                id: jobId,
+                ...(jobDoc.data() as any),
+                assignments,
+              };
 
-      setJobs(jobsWithAssignments);
+              if (!existing) {
+                return [...prev, nextJob];
+              }
+
+              return prev.map((j) => (j.id === jobId ? nextJob : j));
+            });
+          }
+        );
+      });
     });
 
-    return () => unsub();
+    return () => unsubJobs();
   }, []);
 
   // ✅ When a job is opened (URL or click), jump calendar to that job’s day
   useEffect(() => {
     if (!openJobId) return;
+    if (scheduleMode) return;
 
     const job = jobs.find((j) => j.id === openJobId);
     if (!job) return;
@@ -233,43 +239,56 @@ const CalendarPage: React.FC = () => {
       setSelectedDate(jobDate);
       setRangeMode("day");
     }
-  }, [openJobId, jobs, selectedDate]);
+  }, [openJobId, jobs, selectedDate, scheduleMode]);
 
-  /* MOVE JOB (update/create assignment for employee) */
+  /* ✅ MOVE JOB (update/create assignment for employee) */
   const handleJobMove = async (
     jobId: string,
     employeeId: number,
     newStart: Date,
     newEnd: Date
   ) => {
-    const existing = jobs.find((j) => j.id === jobId);
-    if (!existing) return;
+    // 🔹 Optimistic UI (calendar anında güncellensin)
+    setJobs((prev) =>
+      prev.map((job) => {
+        if (job.id !== jobId) return job;
 
-    // update local state: replace or add assignment for this employeeId
-    const nextAssignments = [
-      ...existing.assignments.filter((a) => a.employeeId !== employeeId),
-      {
-        id: String(employeeId),
-        employeeId,
-        start: newStart.toISOString(),
-        end: newEnd.toISOString(),
-      },
-    ];
+        const hasAssignment = job.assignments.some(
+          (a) => Number(a.employeeId) === employeeId
+        );
 
-    const updated: CalendarJob = { ...existing, assignments: nextAssignments };
+        const nextAssignments = hasAssignment
+          ? job.assignments.map((a) =>
+              Number(a.employeeId) === employeeId
+                ? {
+                    ...a,
+                    start: newStart.toISOString(),
+                    end: newEnd.toISOString(),
+                  }
+                : a
+            )
+          : [
+              ...job.assignments,
+              {
+                id: String(employeeId),
+                employeeId,
+                start: newStart.toISOString(),
+                end: newEnd.toISOString(),
+              },
+            ];
 
-    setJobs((prev) => prev.map((j) => (j.id === jobId ? updated : j)));
+        return { ...job, assignments: nextAssignments };
+      })
+    );
 
-    // save job metadata (safe)
-    await saveJobToFirestore(updated);
-
-    // save assignment doc (source of truth for timing)
+    // 🔹 Firestore (source of truth)
     await setDoc(
       doc(db, "jobs", jobId, "assignments", String(employeeId)),
       {
         employeeId,
         start: newStart.toISOString(),
         end: newEnd.toISOString(),
+        updatedAt: new Date(),
       },
       { merge: true }
     );
@@ -388,17 +407,41 @@ const CalendarPage: React.FC = () => {
           staffFilter={selectedStaff}
           onStaffFilterChange={setSelectedStaff}
           onDateChange={setSelectedDate}
-        />
+        />{" "}
+      </div>
 
-        {/* MONTH */}
-        {rangeMode === "month" && (
-          <>
-            <div className={styles.onlyMobile}>
-              <MobileMonthList
-                selectedDate={selectedDate}
-                monthGroups={groupedMonthJobs}
-                employees={employees}
+      {/* MONTH */}
+      {rangeMode === "month" && (
+        <>
+          <div className={styles.onlyMobile}>
+            <MobileMonthList
+              selectedDate={selectedDate}
+              monthGroups={groupedMonthJobs}
+              employees={employees}
+              onJobClick={setOpenJobId}
+            />
+
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
+                jobs={jobsThisMonth}
                 onJobClick={setOpenJobId}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
+              />
+            </aside>
+          </div>
+
+          <div className={styles.onlyDesktop}>
+            <div className={styles.monthLayoutWide}>
+              <MonthCalendarLayout
+                date={selectedDate}
+                jobs={jobsThisMonth}
+                employees={employees}
+                selectedStaff={selectedStaff}
+                onStaffChange={setSelectedStaff}
+                onJobClick={setOpenJobId}
+                onJobMove={handleJobMove}
+                onAddJobAt={handleAddJobAt}
               />
 
               <aside className={styles.sidebarWrapper}>
@@ -410,45 +453,49 @@ const CalendarPage: React.FC = () => {
                 />
               </aside>
             </div>
+          </div>
+        </>
+      )}
 
-            <div className={styles.onlyDesktop}>
-              <div className={styles.monthLayoutWide}>
-                <MonthCalendarLayout
+      {/* WEEK */}
+      {rangeMode === "week" && (
+        <>
+          <div className={styles.onlyMobile}>
+            <MobileWeekList
+              jobs={staffFilteredJobs.filter((j) =>
+                isSameWeek(j, selectedDate)
+              )}
+              employees={employees}
+              selectedDate={selectedDate}
+              onJobClick={setOpenJobId}
+            />
+
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
+                jobs={staffFilteredJobs.filter((j) =>
+                  isSameWeek(j, selectedDate)
+                )}
+                onJobClick={setOpenJobId}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
+              />
+            </aside>
+          </div>
+
+          <div className={styles.onlyDesktop}>
+            <div className={styles.desktopMainAndSidebar}>
+              <div className={styles.timelineCardWrapper}>
+                <WeekCalendarLayout
                   date={selectedDate}
-                  jobs={jobsThisMonth}
+                  jobs={staffFilteredJobs.filter((j) =>
+                    isSameWeek(j, selectedDate)
+                  )}
                   employees={employees}
-                  selectedStaff={selectedStaff}
-                  onStaffChange={setSelectedStaff}
                   onJobClick={setOpenJobId}
                   onJobMove={handleJobMove}
                   onAddJobAt={handleAddJobAt}
                 />
-
-                <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs
-                    jobs={jobsThisMonth}
-                    onJobClick={setOpenJobId}
-                    jobFilter={jobFilter}
-                    onJobFilterChange={setJobFilter}
-                  />
-                </aside>
               </div>
-            </div>
-          </>
-        )}
-
-        {/* WEEK */}
-        {rangeMode === "week" && (
-          <>
-            <div className={styles.onlyMobile}>
-              <MobileWeekList
-                jobs={staffFilteredJobs.filter((j) =>
-                  isSameWeek(j, selectedDate)
-                )}
-                employees={employees}
-                selectedDate={selectedDate}
-                onJobClick={setOpenJobId}
-              />
 
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
@@ -461,50 +508,55 @@ const CalendarPage: React.FC = () => {
                 />
               </aside>
             </div>
+          </div>
+        </>
+      )}
 
-            <div className={styles.onlyDesktop}>
-              <div className={styles.desktopMainAndSidebar}>
-                <div className={styles.timelineCardWrapper}>
-                  <WeekCalendarLayout
-                    date={selectedDate}
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameWeek(j, selectedDate)
-                    )}
-                    employees={employees}
-                    onJobClick={setOpenJobId}
-                    onJobMove={handleJobMove}
-                    onAddJobAt={handleAddJobAt}
-                  />
-                </div>
+      {/* DAY */}
+      {rangeMode === "day" && (
+        <>
+          <div className={styles.onlyMobile}>
+            <MobileDayList
+              jobs={staffFilteredJobs.filter((j) => isSameDay(j, selectedDate))}
+              employees={employees}
+              selectedDate={selectedDate}
+              onJobClick={setOpenJobId}
+            />
 
-                <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameWeek(j, selectedDate)
-                    )}
-                    onJobClick={setOpenJobId}
-                    jobFilter={jobFilter}
-                    onJobFilterChange={setJobFilter}
-                  />
-                </aside>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* DAY */}
-        {rangeMode === "day" && (
-          <>
-            <div className={styles.onlyMobile}>
-              <MobileDayList
+            <aside className={styles.sidebarWrapper}>
+              <SidebarJobs
                 jobs={staffFilteredJobs.filter((j) =>
                   isSameDay(j, selectedDate)
                 )}
-                employees={employees}
-                selectedDate={selectedDate}
                 onJobClick={setOpenJobId}
+                jobFilter={jobFilter}
+                onJobFilterChange={setJobFilter}
               />
+            </aside>
+          </div>
 
+          <div className={styles.onlyDesktop}>
+            <div className={styles.desktopMainAndSidebar}>
+              {/* 🔥 SOL TARAF – TIMELINE */}
+              <div className={styles.timelineCardWrapper}>
+                <DesktopCalendarLayout
+                  date={selectedDate}
+                  employees={employees}
+                  jobs={staffFilteredJobs.filter((j) =>
+                    isSameDay(j, selectedDate)
+                  )}
+                  onJobClick={setOpenJobId}
+                  selectedEmployeeId={
+                    selectedStaff.length === 1 ? selectedStaff[0] : undefined
+                  }
+                  onAddJobAt={handleAddJobAt}
+                  onMoveJob={handleJobMove}
+                  scheduleMode={scheduleMode}
+                  clearScheduleMode={() => setScheduleMode(null)}
+                />
+              </div>
+
+              {/* 🔥 SAĞ TARAF – SIDEBAR */}
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
                   jobs={staffFilteredJobs.filter((j) =>
@@ -516,63 +568,9 @@ const CalendarPage: React.FC = () => {
                 />
               </aside>
             </div>
-
-            <div className={styles.onlyDesktop}>
-              <div className={styles.desktopMainAndSidebar}>
-                <div className={styles.timelineCardWrapper}>
-                  <DesktopCalendarLayout
-                    date={selectedDate}
-                    employees={employees}
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameDay(j, selectedDate)
-                    )}
-                    onJobClick={setOpenJobId}
-                    selectedEmployeeId={
-                      selectedStaff.length === 1 ? selectedStaff[0] : undefined
-                    }
-                    onAddJobAt={handleAddJobAt}
-                    onMoveJob={handleJobMove}
-                    // 🔥 SCHEDULE MODE
-                    scheduleMode={scheduleMode}
-                    onScheduleExistingJob={async (
-                      jobId: string,
-                      employeeId: number
-                    ) => {
-                      const job = jobs.find((j) => j.id === jobId);
-                      if (!job) return;
-
-                      const originalStart = getJobStart(job);
-                      const originalEnd = getJobEnd(job);
-
-                      if (!originalStart || !originalEnd) return;
-
-                      await handleJobMove(
-                        jobId,
-                        employeeId,
-                        originalStart,
-                        originalEnd
-                      );
-
-                      setScheduleMode(null);
-                    }}
-                  />
-                </div>
-
-                <aside className={styles.sidebarWrapper}>
-                  <SidebarJobs
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameDay(j, selectedDate)
-                    )}
-                    onJobClick={setOpenJobId}
-                    jobFilter={jobFilter}
-                    onJobFilterChange={setJobFilter}
-                  />
-                </aside>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* MODAL */}
       {openJob && !scheduleMode && (
@@ -589,6 +587,11 @@ const CalendarPage: React.FC = () => {
           onDelete={async () => {
             setJobs((prev) => prev.filter((j) => j.id !== openJob.id));
             await deleteJobFromFirestore(openJob.id);
+          }}
+          onStartSchedule={(jobId, employeeId) => {
+            setScheduleMode({ jobId, employeeId });
+            setRangeMode("day");
+            setOpenJobId(null);
           }}
         />
       )}

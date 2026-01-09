@@ -1,15 +1,15 @@
 // Created by Honeycomb © 2025
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
-  getDoc,
   getDocs,
   query,
   where,
   onSnapshot,
   setDoc,
   deleteDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -32,8 +32,47 @@ interface EmployeeDoc {
 }
 
 type TabType = "scheduling" | "labour";
-
 const ENABLED_TABS: TabType[] = ["scheduling", "labour"];
+
+/* ================= HELPERS ================= */
+
+function toDateSafe(v: any): Date | null {
+  if (!v) return null;
+
+  // Firestore Timestamp
+  if (v instanceof Timestamp) return v.toDate();
+
+  // Timestamp-like { toDate() }
+  if (typeof v === "object" && typeof v.toDate === "function") {
+    const d = v.toDate();
+    return d instanceof Date && !isNaN(d.getTime()) ? d : null;
+  }
+
+  // ISO string
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return !isNaN(d.getTime()) ? d : null;
+  }
+
+  // Date
+  if (v instanceof Date) return !isNaN(v.getTime()) ? v : null;
+
+  return null;
+}
+
+function toIsoSafe(v: any): string | undefined {
+  const d = toDateSafe(v);
+  return d ? d.toISOString() : undefined;
+}
+
+function calcHours(startIso?: string, endIso?: string): number {
+  if (!startIso || !endIso) return 0;
+  const s = new Date(startIso).getTime();
+  const e = new Date(endIso).getTime();
+  if (Number.isNaN(s) || Number.isNaN(e)) return 0;
+  const hours = (e - s) / (1000 * 60 * 60);
+  return Math.round(hours);
+}
 
 /* ================= COMPONENT ================= */
 
@@ -50,26 +89,16 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   >([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
-  /* ================= SCHEDULE HANDLER ================= */
-
-  const handleScheduleClick = () => {
-    if (!safeJobId) return;
-
-    navigate(`/dashboard/calendar?view=day&jobId=${safeJobId}`);
-  };
-
   /* ================= TAB SAFETY ================= */
 
   useEffect(() => {
-    if (!ENABLED_TABS.includes(activeTab)) {
-      setActiveTab("scheduling");
-    }
+    if (!ENABLED_TABS.includes(activeTab)) setActiveTab("scheduling");
   }, [activeTab]);
 
   /* ================= LOAD EMPLOYEES ================= */
 
   useEffect(() => {
-    const loadEmployees = async () => {
+    (async () => {
       const snap = await getDocs(collection(db, "employees"));
       setEmployees(
         snap.docs.map((d) => ({
@@ -77,96 +106,113 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           ...(d.data() as any),
         }))
       );
-    };
-    loadEmployees();
+    })();
   }, []);
 
-  /* ================= LOAD ASSIGNED EMPLOYEES (SINGLE SOURCE OF TRUTH) ================= */
+  // hızlı lookup (UI’da name garanti)
+  const employeeNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    employees.forEach((e) => {
+      const name = e.name || e.fullName || e.displayName || `Employee ${e.id}`;
+      m.set(String(e.id), name);
+    });
+    return m;
+  }, [employees]);
 
+  /* ================= LOAD ASSIGNMENTS (SOURCE OF TRUTH) ================= */
   useEffect(() => {
     if (!safeJobId) return;
 
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       async (snap) => {
-        if (snap.empty) {
-          setAssignedEmployees([]);
-          return;
+        // 1) assignments -> Map(empId => AssignedEmployee)
+        // ✅ empId = doc.id (en doğru ve stabil key)
+        const grouped = new Map<string, AssignedEmployee>();
+
+        for (const d of snap.docs) {
+          const empId = String(d.id); // ✅ key olarak doc.id
+          const data = d.data() as any;
+
+          const startIso = toIsoSafe(data.start);
+          const endIso = toIsoSafe(data.end);
+          const hours = calcHours(startIso, endIso);
+
+          // ensure exists
+          if (!grouped.has(empId)) {
+            grouped.set(empId, {
+              employeeId: empId,
+              name: employeeNameById.get(empId) || "Loading...",
+              schedules: [],
+              labour: { enteredHours: 0, completed: false },
+            });
+          }
+
+          const target = grouped.get(empId);
+          if (!target) continue;
+
+          // name güncelle
+          target.name =
+            employeeNameById.get(empId) || target.name || "Loading...";
+
+          // ✅ Bu çalışan için TEK schedule istiyoruz:
+          // Drag ile update geldiğinde ekstra satır eklemek yerine overwrite.
+          target.schedules = [];
+
+          if (startIso && endIso) {
+            target.schedules.push({
+              start: startIso,
+              end: endIso,
+              hours,
+            });
+          }
         }
 
-        const assignmentDocs = snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+        // 2) Eğer employees listesi daha yüklenmediyse, eksik isimleri Firestore’dan çek
+        const missing = Array.from(grouped.values())
+          .filter((x) => !x.name || x.name === "Loading...")
+          .map((x) => x.employeeId);
 
-        // 🔹 Unique employee IDs
-        const employeeIds = Array.from(
-          new Set(assignmentDocs.map((a) => String(a.employeeId)))
-        );
+        if (missing.length > 0) {
+          const empSnap = await getDocs(
+            query(
+              collection(db, "employees"),
+              where("__name__", "in", missing.slice(0, 10))
+            )
+          );
 
-        if (employeeIds.length === 0) {
-          setAssignedEmployees([]);
-          return;
+          empSnap.docs.forEach((e) => {
+            const emp = e.data() as any;
+            const id = String(e.id);
+            const target = grouped.get(id);
+            if (target) {
+              target.name =
+                emp.name || emp.fullName || emp.displayName || `Employee ${id}`;
+            }
+          });
+
+          Array.from(grouped.entries()).forEach(([id, val]) => {
+            if (!val.name || val.name === "Loading...") {
+              grouped.delete(id);
+            }
+          });
         }
 
-        const empQuery = query(
-          collection(db, "employees"),
-          where("__name__", "in", employeeIds.slice(0, 10))
-        );
-
-        const empSnap = await getDocs(empQuery);
-
-        const employeesMap = new Map(
-          empSnap.docs.map((d) => [d.id, d.data() as any])
-        );
-
-        const list: AssignedEmployee[] = assignmentDocs.map((a) => {
-          const emp = employeesMap.get(String(a.employeeId));
-
-          const hours =
-            a.start && a.end
-              ? Math.round(
-                  (new Date(a.end).getTime() - new Date(a.start).getTime()) /
-                    (1000 * 60 * 60)
-                )
-              : 0;
-
-          return {
-            employeeId: String(a.employeeId),
-            name:
-              emp?.name ||
-              emp?.fullName ||
-              emp?.displayName ||
-              "Unnamed employee",
-            schedules: [
-              {
-                start: a.start ?? null,
-                end: a.end ?? null,
-                hours,
-              },
-            ],
-            labour: {
-              enteredHours: 0,
-              completed: false,
-            },
-          };
-        });
-
-        setAssignedEmployees(list);
+        setAssignedEmployees(Array.from(grouped.values()));
       }
     );
 
     return () => unsub();
-  }, [safeJobId]);
+  }, [safeJobId, employeeNameById]);
 
   /* ================= ASSIGN ================= */
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
     await setDoc(
-      doc(db, "jobs", safeJobId, "assignments", selectedEmployee),
+      doc(db, "jobs", safeJobId, "assignments", String(selectedEmployee)),
       {
-        employeeId: selectedEmployee,
+        employeeId: String(selectedEmployee), // optional ama tutarlı kalsın
         start: null,
         end: null,
         createdAt: new Date(),
@@ -178,9 +224,10 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   };
 
   /* ================= UNASSIGN ================= */
-
   const handleUnassignEmployee = async (employeeId: string) => {
-    await deleteDoc(doc(db, "jobs", safeJobId, "assignments", employeeId));
+    await deleteDoc(
+      doc(db, "jobs", safeJobId, "assignments", String(employeeId))
+    );
   };
 
   /* ================= RENDER ================= */
@@ -220,14 +267,18 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             className={styles.select}
           >
             <option value="">Select Employee</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.name ||
-                  emp.fullName ||
-                  emp.displayName ||
-                  `Employee ${emp.id}`}
-              </option>
-            ))}
+            {employees.map((emp) => {
+              const name =
+                emp.name ||
+                emp.fullName ||
+                emp.displayName ||
+                `Employee ${emp.id}`;
+              return (
+                <option key={emp.id} value={emp.id}>
+                  {name}
+                </option>
+              );
+            })}
           </select>
 
           <button
@@ -241,8 +292,9 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           <button
             className={styles.primaryBtn}
             onClick={() => {
+              if (!selectedEmployee) return;
               navigate(
-                `/dashboard/calendar?mode=schedule&jobId=${jobId}&employeeId=${selectedEmployee}`
+                `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}`
               );
             }}
           >
@@ -262,7 +314,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             jobId={safeJobId}
             employees={assignedEmployees.map((emp) => ({
               id: emp.employeeId,
-              name: emp.name ?? "Unnamed employee",
+              name: emp.name || "Unnamed employee",
               role: "Technician",
               rate: 95,
             }))}

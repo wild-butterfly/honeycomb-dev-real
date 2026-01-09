@@ -1,12 +1,13 @@
-// Created by Clevermode © 2025
-import React, { useMemo, useRef, useEffect, useState } from "react";
+// Created by Clevermode © 2025. All rights reserved.
+import React, {
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import styles from "./DesktopCalendarLayout.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
-import {
-  getJobStart,
-  getJobEnd,
-  getAssignedEmployeeIds,
-} from "../utils/jobTime";
 
 interface Props {
   date: Date;
@@ -14,7 +15,9 @@ interface Props {
   jobs: CalendarJob[];
 
   onJobClick: (jobId: string) => void;
+
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
+
   onMoveJob: (
     jobId: string,
     employeeId: number,
@@ -24,17 +27,8 @@ interface Props {
 
   selectedEmployeeId?: number;
 
-  // 🔥 SCHEDULE MODE
-  scheduleMode?: {
-    jobId: string;
-    employeeId: number;
-  } | null;
-
-  onScheduleExistingJob?: (
-    jobId: string,
-    employeeId: number,
-    start: Date
-  ) => void;
+  scheduleMode?: { jobId: string; employeeId: number } | null;
+  clearScheduleMode?: () => void;
 }
 
 const DAY_START_HOUR = 0;
@@ -61,6 +55,94 @@ function safeDate(d: Date | null | undefined, fallback: Date) {
   return d instanceof Date && !isNaN(d.getTime()) ? d : fallback;
 }
 
+// ✅ minutes to nearest 15
+function snap15(mins: number) {
+  return Math.round(mins / 15) * 15;
+}
+
+type PreviewTimes = Record<string, { start: Date; end: Date }>;
+type DragMode = "move" | "resize";
+
+type ActiveDrag = {
+  mode: DragMode;
+  jobId: string;
+  employeeId: number; // row employee
+  laneLeft: number;
+  blockLeftAtMouseDown: number; // for drag offset
+  mouseStartX: number;
+  originalStart: Date;
+  originalEnd: Date;
+};
+
+/* ================= ASSIGNMENT HELPERS =================
+   Expect:
+   - job.assignments: [{ employeeId, start, end, ... }]   (preferred)
+   - (optional) job.assignmentsMap: { [employeeId]: { start, end } }
+   Supports:
+   - ISO string
+   - Date
+   - Firestore Timestamp (has toDate())
+======================================================== */
+
+const toJsDate = (v: any): Date | null => {
+  if (!v) return null;
+
+  // Date
+  if (v instanceof Date) return v;
+
+  // Firestore Timestamp or Timestamp-like
+  if (typeof v?.toDate === "function") {
+    const d = v.toDate();
+    return d instanceof Date && !isNaN(d.getTime()) ? d : null;
+  }
+
+  // ISO string
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return !isNaN(d.getTime()) ? d : null;
+  }
+
+  return null;
+};
+
+const getAssignmentForEmployee = (job: CalendarJob, employeeId: number) => {
+  const anyJob = job as any;
+
+  // ✅ Array form: assignments: [{employeeId,start,end}]
+  if (Array.isArray(anyJob.assignments)) {
+    return (
+      anyJob.assignments.find(
+        (x: any) => Number(x?.employeeId) === Number(employeeId)
+      ) || null
+    );
+  }
+
+  // ✅ Map form: assignmentsMap: { "1": {start,end} }
+  if (anyJob.assignmentsMap && anyJob.assignmentsMap[String(employeeId)]) {
+    return anyJob.assignmentsMap[String(employeeId)];
+  }
+
+  return null;
+};
+
+const getAssignedEmployeeIdsFromAssignments = (job: CalendarJob): number[] => {
+  const anyJob = job as any;
+
+  if (Array.isArray(anyJob.assignments)) {
+    return anyJob.assignments
+      .map((a: any) => Number(a?.employeeId))
+      .filter((n: number) => Number.isFinite(n));
+  }
+
+  if (anyJob.assignmentsMap && typeof anyJob.assignmentsMap === "object") {
+    return Object.keys(anyJob.assignmentsMap)
+      .map((k) => Number(k))
+      .filter((n) => Number.isFinite(n));
+  }
+
+  return [];
+};
+
 const DesktopCalendarLayout: React.FC<Props> = ({
   date,
   employees,
@@ -69,44 +151,49 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   selectedEmployeeId,
   onAddJobAt,
   onMoveJob,
-
   scheduleMode,
-  onScheduleExistingJob,
+  clearScheduleMode,
 }) => {
+  /* ================= REFS ================= */
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
 
-  const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
-  const [dragOffsetX, setDragOffsetX] = useState(0);
+  // Active drag context lives in a ref to avoid rerender spam
+  const activeDragRef = useRef<ActiveDrag | null>(null);
+
+  // Prevent accidental modal-open click right after drag
+  const suppressClickRef = useRef(false);
+
+  /* ================= STATE ================= */
+  // Local preview per (jobId-empId)
+  const [previewTimes, setPreviewTimes] = useState<PreviewTimes>({});
 
   const hours = useMemo(
     () => Array.from({ length: DAY_END_HOUR - DAY_START_HOUR }, (_, i) => i),
     []
   );
 
-  /* ================= MAP JOBS BY EMPLOYEE (ASSIGNMENTS) ================= */
+  const findJobById = useCallback(
+    (id: string) => jobs.find((j) => j.id === id) || null,
+    [jobs]
+  );
+
+  /* ================= MAP JOBS BY EMPLOYEE (ASSIGNMENT-BASED) ================= */
   const jobsByEmployee: Record<number, CalendarJob[]> = useMemo(() => {
     const map: Record<number, CalendarJob[]> = {};
     for (const e of employees) map[e.id] = [];
 
     for (const job of jobs) {
-      const empIds = getAssignedEmployeeIds(job) ?? [];
-
-      for (const raw of empIds) {
-        const empId = Number(raw);
-        if (!Number.isFinite(empId)) continue;
+      const empIds = getAssignedEmployeeIdsFromAssignments(job);
+      for (const empId of empIds) {
         if (!map[empId]) continue;
-
         if (!selectedEmployeeId || empId === selectedEmployeeId) {
           map[empId].push(job);
         }
       }
     }
-
     return map;
   }, [jobs, employees, selectedEmployeeId]);
-
-  const findJobById = (id: string) => jobs.find((j) => j.id === id) || null;
 
   /* ================= SCROLL SYNC ================= */
   useEffect(() => {
@@ -128,56 +215,119 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     }
   }, []);
 
-  /* ================= DRAG DROP ================= */
-  const handleDropOnSlot = (
-    e: React.DragEvent<HTMLDivElement>,
-    employeeId: number
+  /* ================= START/END PER EMPLOYEE (ASSIGNMENT SOURCE OF TRUTH) ================= */
+  const getStartForEmployee = (
+    job: CalendarJob,
+    employeeId: number,
+    fallback: Date
   ) => {
-    e.preventDefault();
-    if (!draggingJobId || !onMoveJob) return;
-
-    const job = findJobById(draggingJobId);
-    if (!job) return;
-
-    const lane = (e.currentTarget as HTMLElement).closest(
-      `.${styles.jobsLane}`
-    ) as HTMLElement | null;
-    if (!lane) return;
-
-    const rect = lane.getBoundingClientRect();
-    const relativeX = e.clientX - rect.left - dragOffsetX;
-
-    if (!Number.isFinite(relativeX)) return;
-
-    const rawHour = relativeX / HOUR_WIDTH_PX;
-    const hour = Math.floor(rawHour);
-    const minuteFloat = (rawHour % 1) * 60;
-    const minuteRounded = Math.round(minuteFloat / 15) * 15;
-
-    const finalHour = hour + (minuteRounded === 60 ? 1 : 0);
-    const finalMinute = minuteRounded === 60 ? 0 : minuteRounded;
-
-    const newStart = new Date(date);
-    newStart.setHours(finalHour, finalMinute, 0, 0);
-
-    // duration = oldEnd - oldStart (safe)
-    const fallbackStart = new Date(date);
-    fallbackStart.setHours(9, 0, 0, 0);
-    const fallbackEnd = new Date(date);
-    fallbackEnd.setHours(10, 0, 0, 0);
-
-    const oStart = safeDate(getJobStart(job) as any, fallbackStart);
-    const oEnd = safeDate(getJobEnd(job) as any, fallbackEnd);
-    const duration = Math.max(
-      15 * 60 * 1000,
-      oEnd.getTime() - oStart.getTime()
-    ); // min 15dk
-
-    const newEnd = new Date(newStart.getTime() + duration);
-
-    onMoveJob(job.id, employeeId, newStart, newEnd);
-    setDraggingJobId(null);
+    const a = getAssignmentForEmployee(job, employeeId);
+    const d = toJsDate(a?.start);
+    return safeDate(d, fallback);
   };
+
+  const getEndForEmployee = (
+    job: CalendarJob,
+    employeeId: number,
+    fallback: Date
+  ) => {
+    const a = getAssignmentForEmployee(job, employeeId);
+    const d = toJsDate(a?.end);
+    return safeDate(d, fallback);
+  };
+
+  /* ================= GLOBAL MOUSE MOVE (PREVIEW ONLY) ================= */
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const ctx = activeDragRef.current;
+      if (!ctx) return;
+
+      const job = findJobById(ctx.jobId);
+      if (!job) return;
+
+      const key = `${ctx.jobId}-${ctx.employeeId}`;
+
+      if (ctx.mode === "move") {
+        const x = e.clientX - ctx.laneLeft - ctx.blockLeftAtMouseDown;
+        if (!Number.isFinite(x)) return;
+
+        const hourFloat = x / HOUR_WIDTH_PX;
+        const hour = Math.floor(hourFloat);
+        const minute = snap15((hourFloat % 1) * 60);
+
+        const finalHour = hour + (minute === 60 ? 1 : 0);
+        const finalMinute = minute === 60 ? 0 : minute;
+
+        const newStart = new Date(date);
+        newStart.setHours(finalHour, finalMinute, 0, 0);
+
+        const duration = Math.max(
+          15 * 60 * 1000,
+          ctx.originalEnd.getTime() - ctx.originalStart.getTime()
+        );
+        const newEnd = new Date(newStart.getTime() + duration);
+
+        setPreviewTimes((prev) => ({
+          ...prev,
+          [key]: { start: newStart, end: newEnd },
+        }));
+      }
+
+      if (ctx.mode === "resize") {
+        const deltaX = e.clientX - ctx.mouseStartX;
+        const deltaMinutes = snap15((deltaX / HOUR_WIDTH_PX) * 60);
+
+        const start = ctx.originalStart;
+        const minEnd = new Date(start.getTime() + 15 * 60000);
+
+        const proposed = new Date(
+          ctx.originalEnd.getTime() + deltaMinutes * 60000
+        );
+        const newEnd = proposed < minEnd ? minEnd : proposed;
+
+        setPreviewTimes((prev) => ({
+          ...prev,
+          [key]: { start: ctx.originalStart, end: newEnd },
+        }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      const ctx = activeDragRef.current;
+      if (!ctx) return;
+
+      const key = `${ctx.jobId}-${ctx.employeeId}`;
+      const pv = previewTimes[key];
+
+      // Commit only ONCE on mouseup
+      if (pv) {
+        onMoveJob(ctx.jobId, ctx.employeeId, pv.start, pv.end);
+      }
+
+      // Clear preview + drag
+      activeDragRef.current = null;
+
+      setPreviewTimes((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+
+      // suppress click that fires after mouseup
+      suppressClickRef.current = true;
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [date, onMoveJob, previewTimes, findJobById]);
 
   /* ================= RENDER ================= */
   return (
@@ -241,13 +391,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                         <div
                           key={h}
                           className={styles.timeSlotCell}
-                          onDragOver={(e) => {
-                            if (draggingJobId) e.preventDefault();
-                          }}
-                          onDrop={(e) => handleDropOnSlot(e, emp.id)}
                           onMouseDown={(e) => {
-                            if (!scheduleMode || !onScheduleExistingJob) return;
-
+                            // schedule mode: click slot to place scheduled job on this employee row
+                            if (!scheduleMode) return;
                             if (emp.id !== scheduleMode.employeeId) return;
 
                             e.preventDefault();
@@ -256,11 +402,16 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                             const start = new Date(date);
                             start.setHours(h, 0, 0, 0);
 
-                            onScheduleExistingJob(
+                            const end = new Date(start);
+                            end.setHours(start.getHours() + 1);
+
+                            onMoveJob(
                               scheduleMode.jobId,
                               scheduleMode.employeeId,
-                              start
+                              start,
+                              end
                             );
+                            clearScheduleMode?.();
                           }}
                         >
                           {onAddJobAt && (
@@ -282,17 +433,23 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                   {/* JOB BLOCKS */}
                   {empJobs.map((job) => {
+                    const key = `${job.id}-${emp.id}`;
+
+                    // Fallback ONLY if assignment missing (should not happen if mapped correctly)
                     const fallbackStart = new Date(date);
                     fallbackStart.setHours(9, 0, 0, 0);
                     const fallbackEnd = new Date(date);
                     fallbackEnd.setHours(10, 0, 0, 0);
 
-                    const start = safeDate(
-                      getJobStart(job) as any,
-                      fallbackStart
-                    );
-                    const end = safeDate(getJobEnd(job) as any, fallbackEnd);
+                    // Use preview if dragging/resizing this exact row
+                    const pv = previewTimes[key];
+                    const start =
+                      pv?.start ??
+                      getStartForEmployee(job, emp.id, fallbackStart);
+                    const end =
+                      pv?.end ?? getEndForEmployee(job, emp.id, fallbackEnd);
 
+                    // Only show blocks on the selected day
                     if (!sameDay(start, date)) return null;
 
                     const startMinutes =
@@ -304,48 +461,93 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                     const left = (startMinutes / 60) * HOUR_WIDTH_PX;
                     const width = Math.max(
-                      (durationMinutes / 60) * HOUR_WIDTH_PX - 6,
-                      70
+                      (durationMinutes / 60) * HOUR_WIDTH_PX,
+                      60
                     );
 
                     return (
                       <div
-                        key={job.id}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggingJobId(job.id);
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setDragOffsetX(e.clientX - rect.left);
-                        }}
-                        onDragEnd={() => setDraggingJobId(null)}
-                        onClick={(e) => {
-                          if (scheduleMode && scheduleMode.jobId === job.id) {
-                            e.stopPropagation();
-                            return;
-                          }
-
-                          onJobClick(job.id);
-                        }}
+                        key={key}
                         className={styles.jobBlock}
                         style={{
                           left,
                           width,
                           backgroundColor: job.color || "#fffdf0",
-                          cursor:
-                            scheduleMode && scheduleMode.jobId === job.id
-                              ? "not-allowed"
-                              : "pointer",
+                        }}
+                        onMouseDown={(e) => {
+                          // ignore if resize handle
+                          if ((e.target as HTMLElement).dataset.resize) return;
+
+                          const lane = (e.currentTarget as HTMLElement).closest(
+                            `.${styles.jobsLane}`
+                          ) as HTMLElement | null;
+                          if (!lane) return;
+
+                          const laneRect = lane.getBoundingClientRect();
+                          const blockRect = (
+                            e.currentTarget as HTMLElement
+                          ).getBoundingClientRect();
+
+                          activeDragRef.current = {
+                            mode: "move",
+                            jobId: job.id,
+                            employeeId: emp.id,
+                            laneLeft: laneRect.left,
+                            blockLeftAtMouseDown: e.clientX - blockRect.left,
+                            mouseStartX: e.clientX,
+                            originalStart: start,
+                            originalEnd: end,
+                          };
+                        }}
+                        onClick={(e) => {
+                          // prevent accidental open on mouseup after drag
+                          if (suppressClickRef.current) {
+                            e.stopPropagation();
+                            return;
+                          }
+                          onJobClick(job.id);
                         }}
                       >
                         <div className={styles.jobBlockTitle}>{job.title}</div>
                         <div className={styles.jobBlockCustomer}>
                           {job.customer}
                         </div>
-                        {job.location && (
-                          <div className={styles.jobBlockLocation}>
-                            {job.location}
-                          </div>
-                        )}
+
+                        {/* RESIZE HANDLE */}
+                        <div
+                          data-resize="1"
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            top: 0,
+                            width: 10,
+                            height: "100%",
+                            cursor: "ew-resize",
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+
+                            const lane = (
+                              e.currentTarget as HTMLElement
+                            ).closest(
+                              `.${styles.jobsLane}`
+                            ) as HTMLElement | null;
+                            if (!lane) return;
+
+                            const laneRect = lane.getBoundingClientRect();
+
+                            activeDragRef.current = {
+                              mode: "resize",
+                              jobId: job.id,
+                              employeeId: emp.id,
+                              laneLeft: laneRect.left,
+                              blockLeftAtMouseDown: 0,
+                              mouseStartX: e.clientX,
+                              originalStart: start,
+                              originalEnd: end,
+                            };
+                          }}
+                        />
                       </div>
                     );
                   })}

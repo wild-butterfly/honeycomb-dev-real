@@ -33,6 +33,7 @@ interface Props {
   onClose: () => void;
   onDelete: () => void;
   onSave: (job: CalendarJob) => void;
+  onStartSchedule: (jobId: string, employeeId: number) => void;
 }
 
 /* ================= CONTACT PARSER ================= */
@@ -127,6 +128,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   onClose,
   onDelete,
   onSave,
+  onStartSchedule,
 }) => {
   const navigate = useNavigate();
 
@@ -436,6 +438,44 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
+        {/* TIME */}
+        <div className={styles.section}>
+          <div className={styles.sectionLabel}>TIME</div>
+
+          {editMode ? (
+            <div style={{ display: "flex", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12 }}>Start</label>
+                <input
+                  type="time"
+                  value={localStart.toISOString().substring(11, 16)}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    const d = new Date(localStart);
+                    d.setHours(h, m, 0, 0);
+                    setLocalStart(d);
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12 }}>End</label>
+                <input
+                  type="time"
+                  value={localEnd.toISOString().substring(11, 16)}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    const d = new Date(localEnd);
+                    d.setHours(h, m, 0, 0);
+                    setLocalEnd(d);
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className={styles.sectionValue}>{timeLabel}</div>
+          )}
+        </div>
         {/* STAFF */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
@@ -454,11 +494,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
                     // remove assignment doc
                     await removeAssignment(id);
-
-                    // optimistic local update
-                    setAssignments((prev) =>
-                      prev.filter((a) => a.employeeId !== id)
-                    );
 
                     // Calendar state (local)
                     onSave({
@@ -519,30 +554,12 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                     className={`${styles.staffPickerItem} ${
                       isSelected ? styles.staffSelected : ""
                     }`}
-                    onClick={async () => {
-                      if (isSelected) {
-                        // remove
-                        await removeAssignment(emp.id);
-                        setAssignments((prev) =>
-                          prev.filter((a) => a.employeeId !== emp.id)
-                        );
-                      } else {
-                        // add
-                        await upsertAssignment(emp.id, localStart, localEnd);
-                        setAssignments((prev) => [
-                          ...prev,
-                          {
-                            id: String(emp.id),
-                            employeeId: emp.id,
-                            start: localStart.toISOString(),
-                            end: localEnd.toISOString(),
-                          },
-                        ]);
-                      }
+                    onClick={() => {
+                      onStartSchedule(job.id, emp.id);
+                      setShowStaffPicker(false);
                     }}
                   >
                     {emp.name}
-                    {isSelected && <span className={styles.checkmark}>✓</span>}
                   </div>
                 );
               })}
