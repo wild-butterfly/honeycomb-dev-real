@@ -4,26 +4,30 @@ import styles from "./AssignedEmployees.module.css";
 import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 
+/* ================= TYPES ================= */
+
 export interface AssignedEmployee {
   employeeId: string;
-  name?: string;
-  fullName?: string;
-  displayName?: string;
-  schedules?: {
-    start?: string;
-    end?: string;
-    hours?: number;
+  name: string;
+
+  schedules: {
+    start: string;
+    end: string;
+    hours: number;
   }[];
-  labour?: {
-    enteredHours?: number;
-    completed?: boolean;
+
+  labour: {
+    enteredHours: number;
+    completed: boolean;
   };
 }
 
 interface Props {
   employees?: AssignedEmployee[];
-  onUnassign?: (employeeId: string) => void; // ✅ YENİ (opsiyonel)
+  onUnassign?: (employeeId: string) => void;
 }
+
+/* ================= COMPONENT ================= */
 
 const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
   if (!employees || employees.length === 0) {
@@ -40,24 +44,13 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
       <h3 className={styles.subTitle}>Assigned Employees</h3>
 
       <div className={styles.list}>
-        {employees.map((emp, index) => {
-          const name =
-            emp.name || emp.fullName || emp.displayName || "Unnamed employee";
+        {employees.map((emp) => {
+          const { name, schedules, labour } = emp;
 
-          const schedules = Array.isArray(emp.schedules) ? emp.schedules : [];
-
-          const labour = emp.labour || {
-            enteredHours: 0,
-            completed: false,
-          };
-
-          const totalScheduled = schedules.reduce(
-            (sum, s) => sum + (s.hours || 0),
-            0
-          );
+          const totalScheduled = schedules.reduce((sum, s) => sum + s.hours, 0);
 
           return (
-            <div key={emp.employeeId || index} className={styles.employeeCard}>
+            <div key={emp.employeeId} className={styles.employeeCard}>
               {/* ================= HEADER ================= */}
               <div className={styles.employeeTop}>
                 <div className={styles.left}>
@@ -75,7 +68,7 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                 <div className={styles.right}>
                   <span className={styles.totals}>
                     Total Scheduled: {totalScheduled} hours | Total Time
-                    Entered: {labour.enteredHours || 0} hours
+                    Entered: {labour.enteredHours} hours
                   </span>
 
                   {!labour.completed && (
@@ -85,7 +78,6 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                     </button>
                   )}
 
-                  {/* 🔥 FERGUS STYLE REMOVE X */}
                   {onUnassign && (
                     <button
                       className={styles.removeBtn}
@@ -105,10 +97,8 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                     <div key={i} className={styles.scheduleRow}>
                       <CalendarDaysIcon className={styles.icon} />
                       <span>
-                        Scheduled:{" "}
-                        {s.start ? new Date(s.start).toLocaleString() : "—"} –{" "}
-                        {s.end ? new Date(s.end).toLocaleTimeString() : "—"} (
-                        {s.hours || 0} hours)
+                        Scheduled: {new Date(s.start).toLocaleString()} –{" "}
+                        {new Date(s.end).toLocaleTimeString()} ({s.hours} hours)
                       </span>
                     </div>
                   ))
@@ -119,9 +109,7 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                 <div className={styles.timeEntry}>
                   Time Entry:{" "}
                   <span className={styles.muted}>
-                    {labour.enteredHours && labour.enteredHours > 0
-                      ? "Entered"
-                      : "Labour not entered"}
+                    {labour.enteredHours > 0 ? "Entered" : "Labour not entered"}
                   </span>
                 </div>
               </div>

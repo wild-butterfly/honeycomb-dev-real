@@ -74,6 +74,10 @@ function calcHours(startIso?: string, endIso?: string): number {
   return Math.round(hours);
 }
 
+function uniqueScheduleKey(start?: string, end?: string) {
+  return `${start || "x"}__${end || "y"}`;
+}
+
 /* ================= COMPONENT ================= */
 
 const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
@@ -126,19 +130,23 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       async (snap) => {
-        // 1) assignments -> Map(empId => AssignedEmployee)
-        // ✅ empId = doc.id (en doğru ve stabil key)
+        /**
+         * ✅ Burada en kritik şey:
+         * - doc.id her zaman employeeId olmayabilir (uuid olabilir)
+         * - employeeId varsa onu kullan
+         * - tek doc'ta start/end olabilir (legacy)
+         * - tek doc'ta schedules[] olabilir (new)
+         * - birden fazla doc aynı employee için olabilir (uuid docId senaryosu)
+         */
         const grouped = new Map<string, AssignedEmployee>();
 
         for (const d of snap.docs) {
-          const empId = String(d.id); // ✅ key olarak doc.id
           const data = d.data() as any;
 
-          const startIso = toIsoSafe(data.start);
-          const endIso = toIsoSafe(data.end);
-          const hours = calcHours(startIso, endIso);
+          const empId = String(
+            data.employeeId ?? data.empId ?? data.employee ?? d.id
+          );
 
-          // ensure exists
           if (!grouped.has(empId)) {
             grouped.set(empId, {
               employeeId: empId,
@@ -153,22 +161,57 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           // name güncelle
           target.name =
-            employeeNameById.get(empId) || target.name || "Loading...";
+            employeeNameById.get(empId) || target.name || `Employee ${empId}`;
 
-          // ✅ Bu çalışan için TEK schedule istiyoruz:
-          // Drag ile update geldiğinde ekstra satır eklemek yerine overwrite.
-          target.schedules = [];
+          // ✅ 1) NEW FORMAT: schedules[]
+          if (Array.isArray(data.schedules)) {
+            for (const s of data.schedules) {
+              const startIso = toIsoSafe(s?.start);
+              const endIso = toIsoSafe(s?.end);
+              if (!startIso || !endIso) continue;
+
+              const key = uniqueScheduleKey(startIso, endIso);
+              const exists = target.schedules.some(
+                (x) => uniqueScheduleKey(x.start, x.end) === key
+              );
+              if (exists) continue;
+
+              target.schedules.push({
+                start: startIso,
+                end: endIso,
+                hours: calcHours(startIso, endIso),
+              });
+            }
+            continue;
+          }
+
+          // ✅ 2) LEGACY FORMAT: start/end
+          const startIso = toIsoSafe(data.start);
+          const endIso = toIsoSafe(data.end);
 
           if (startIso && endIso) {
-            target.schedules.push({
-              start: startIso,
-              end: endIso,
-              hours,
-            });
+            const key = uniqueScheduleKey(startIso, endIso);
+            const exists = target.schedules.some(
+              (x) => uniqueScheduleKey(x.start, x.end) === key
+            );
+            if (!exists) {
+              target.schedules.push({
+                start: startIso,
+                end: endIso,
+                hours: calcHours(startIso, endIso),
+              });
+            }
           }
         }
 
-        // 2) Eğer employees listesi daha yüklenmediyse, eksik isimleri Firestore’dan çek
+        // schedules sıralama (UI düzgün dursun)
+        grouped.forEach((val) => {
+          val.schedules.sort(
+            (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+          );
+        });
+
+        // eksik isimleri Firestore’dan çek (sadece gerekirse)
         const missing = Array.from(grouped.values())
           .filter((x) => !x.name || x.name === "Loading...")
           .map((x) => x.employeeId);
@@ -191,6 +234,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             }
           });
 
+          // hala bulunamayan varsa listeye alma (yanlış charge olmasın)
           Array.from(grouped.entries()).forEach(([id, val]) => {
             if (!val.name || val.name === "Loading...") {
               grouped.delete(id);
@@ -209,12 +253,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
+    // ✅ burada "start/end: null" yerine schedules: [] yazmak daha temiz
     await setDoc(
       doc(db, "jobs", safeJobId, "assignments", String(selectedEmployee)),
       {
-        employeeId: String(selectedEmployee), // optional ama tutarlı kalsın
-        start: null,
-        end: null,
+        employeeId: String(selectedEmployee),
+        schedules: [],
         createdAt: new Date(),
       },
       { merge: true }
@@ -314,7 +358,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             jobId={safeJobId}
             employees={assignedEmployees.map((emp) => ({
               id: emp.employeeId,
-              name: emp.name || "Unnamed employee",
+              name: emp.name ?? "Unnamed employee", // ✅ string garanti
               role: "Technician",
               rate: 95,
             }))}

@@ -182,43 +182,47 @@ const CalendarPage: React.FC = () => {
     }, 300);
   }, [employees]);
 
-  /* LIVE LOAD JOBS FROM FIRESTORE */
   /* LIVE LOAD JOBS + ASSIGNMENTS (SINGLE SOURCE OF TRUTH) */
   useEffect(() => {
-    const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
-      jobsSnap.docs.forEach((jobDoc) => {
-        const jobId = String(jobDoc.id);
+    const assignmentUnsubs: (() => void)[] = [];
 
-        // 🔥 her job için assignments LIVE dinlenir
-        onSnapshot(
+    const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
+      setJobs([]); // 🔥 ÖNEMLİ: günü değiştirince state temizlenir
+
+      jobsSnap.docs.forEach((jobDoc) => {
+        const jobId = jobDoc.id;
+
+        const unsubAssignments = onSnapshot(
           collection(db, "jobs", jobId, "assignments"),
           (assignSnap) => {
+            const assignments = assignSnap.docs.map((a) => ({
+              id: a.id,
+              ...(a.data() as any),
+            }));
+
             setJobs((prev) => {
-              const existing = prev.find((j) => j.id === jobId);
+              const exists = prev.find((j) => j.id === jobId);
 
-              const assignments = assignSnap.docs.map((a) => ({
-                id: a.id,
-                ...(a.data() as any),
-              }));
-
-              const nextJob: CalendarJob = {
+              const nextJob = {
                 id: jobId,
                 ...(jobDoc.data() as any),
                 assignments,
               };
 
-              if (!existing) {
-                return [...prev, nextJob];
-              }
-
+              if (!exists) return [...prev, nextJob];
               return prev.map((j) => (j.id === jobId ? nextJob : j));
             });
           }
         );
+
+        assignmentUnsubs.push(unsubAssignments);
       });
     });
 
-    return () => unsubJobs();
+    return () => {
+      unsubJobs();
+      assignmentUnsubs.forEach((u) => u());
+    };
   }, []);
 
   // ✅ When a job is opened (URL or click), jump calendar to that job’s day
