@@ -7,7 +7,7 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 /* ================= TYPES ================= */
 
 export interface AssignedEmployee {
-  employeeId: string;
+  employeeId: number;
   name: string;
 
   schedules: {
@@ -24,7 +24,7 @@ export interface AssignedEmployee {
 
 interface Props {
   employees?: AssignedEmployee[];
-  onUnassign?: (employeeId: string) => void;
+  onUnassign?: (employeeId: number) => void;
 }
 
 /* ================= COMPONENT ================= */

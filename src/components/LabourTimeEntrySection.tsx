@@ -35,12 +35,12 @@ const FALLBACK_REASONS = [
 
 /* ================= TYPES ================= */
 
-export interface LabourEmployee {
-  id: string;
+export type LabourEmployee = {
+  id: number;
   name: string;
   role: string;
   rate: number;
-}
+};
 
 interface Props {
   jobId: string;
@@ -49,18 +49,25 @@ interface Props {
 
 interface LabourEntry {
   id: string;
-  employeeId: string;
+
+  jobId: string;
+  employeeId: number;
   employeeName: string;
   role: string;
+
   date: string;
   startTime: string;
   endTime: string;
+
   workedHours: number;
   rate: number;
   chargedOut: number;
+
   reason: string;
   paid: boolean;
   description: string;
+
+  createdAt: Timestamp;
 }
 
 /* ================= COMPONENT ================= */
@@ -71,7 +78,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
   const [entries, setEntries] = useState<LabourEntry[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [employeeId, setEmployeeId] = useState("");
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -132,22 +139,40 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
   /* ---------- SAVE ---------- */
 
   const handleSave = async () => {
-    const emp = employees.find((e) => e.id === employeeId);
-    const reasonObj = reasons.find((r) => r.id === selectedReason);
+    // 🔒 HARD GUARDS (TypeScript + runtime safety)
+    if (employeeId === null) {
+      return alert("Select employee");
+    }
 
+    const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return alert("Select employee");
+
+    const reasonObj = reasons.find((r) => r.id === selectedReason);
     if (!reasonObj) return alert("Select reason");
-    if (!date || !startTime || !endTime) return alert("Date and time required");
+
+    if (!date || !startTime || !endTime) {
+      return alert("Date and time required");
+    }
 
     const start = new Date(`${date}T${startTime}`);
     const end = new Date(`${date}T${endTime}`);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return alert("Invalid date/time");
+    }
+
     const workedHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+    if (workedHours <= 0) {
+      return alert("End time must be after start time");
+    }
 
     const chargedOut = reasonObj.chargeable ? workedHours * emp.rate : 0;
 
-    const payload = {
+    // ✅ EXPLICIT TYPE (kills TS2345 forever)
+    const payload: Omit<LabourEntry, "id"> = {
       jobId,
-      employeeId: emp.id,
+      employeeId: emp.id, // number ✅
       employeeName: emp.name,
       role: emp.role,
       date,
@@ -164,10 +189,15 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
     if (editingId) {
       await updateDoc(doc(db, "labourEntries", editingId), payload);
-      loadEntries();
+      await loadEntries();
     } else {
       const ref = await addDoc(collection(db, "labourEntries"), payload);
-      setEntries((prev) => [{ id: ref.id, ...payload }, ...prev]);
+
+      // ✅ force correct type into state
+      setEntries((prev) => [
+        { id: ref.id, ...payload } as LabourEntry,
+        ...prev,
+      ]);
     }
 
     resetForm();
@@ -194,7 +224,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
   const resetForm = () => {
     setEditingId(null);
-    setEmployeeId("");
+    setEmployeeId(null);
     setDate("");
     setStartTime("");
     setEndTime("");
@@ -203,7 +233,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
   /* ---------- GROUP ---------- */
 
-  const grouped = entries.reduce<Record<string, LabourEntry[]>>((acc, e) => {
+  const grouped = entries.reduce<Record<number, LabourEntry[]>>((acc, e) => {
     acc[e.employeeId] = acc[e.employeeId] || [];
     acc[e.employeeId].push(e);
     return acc;
@@ -217,13 +247,15 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
       <div className={styles.form}>
         <select
-          value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
+          value={employeeId ?? ""}
+          onChange={(e) =>
+            setEmployeeId(e.target.value ? Number(e.target.value) : null)
+          }
         >
           <option value="">Select employee</option>
           {employees.map((e) => (
             <option key={e.id} value={e.id}>
-              {e.name} ({e.role})
+              {e.name}
             </option>
           ))}
         </select>

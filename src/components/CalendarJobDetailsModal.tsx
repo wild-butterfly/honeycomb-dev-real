@@ -275,8 +275,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   // Helpers
   const assignedTo = useMemo(
-    () => getAssignedEmployeeIds({ ...job, assignments }),
-    [job, assignments]
+    () => assignments.map((a) => a.employeeId),
+    [assignments]
   );
 
   const openMap = (address: string) => {
@@ -490,18 +490,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   key={id}
                   className={styles.staffChip}
                   onClick={async () => {
-                    if (!editMode) return; // sadece edit modda kaldır
-
-                    // remove assignment doc
+                    if (!editMode) return;
                     await removeAssignment(id);
-
-                    // Calendar state (local)
-                    onSave({
-                      ...job,
-                      assignments: (assignments ?? []).filter(
-                        (a) => a.employeeId !== id
-                      ),
-                    });
                   }}
                   style={{ cursor: editMode ? "pointer" : "default" }}
                   title={editMode ? "Click to remove" : ""}

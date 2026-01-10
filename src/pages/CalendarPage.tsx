@@ -225,26 +225,6 @@ const CalendarPage: React.FC = () => {
     };
   }, []);
 
-  // ✅ When a job is opened (URL or click), jump calendar to that job’s day
-  useEffect(() => {
-    if (!openJobId) return;
-    if (scheduleMode) return;
-
-    const job = jobs.find((j) => j.id === openJobId);
-    if (!job) return;
-
-    const jobDate = getJobStart(job);
-
-    if (
-      selectedDate.getFullYear() !== jobDate.getFullYear() ||
-      selectedDate.getMonth() !== jobDate.getMonth() ||
-      selectedDate.getDate() !== jobDate.getDate()
-    ) {
-      setSelectedDate(jobDate);
-      setRangeMode("day");
-    }
-  }, [openJobId, jobs, selectedDate, scheduleMode]);
-
   /* ✅ MOVE JOB (update/create assignment for employee) */
   const handleJobMove = async (
     jobId: string,
@@ -583,9 +563,6 @@ const CalendarPage: React.FC = () => {
           employees={employees}
           onClose={() => setOpenJobId(null)}
           onSave={async (updatedJob) => {
-            setJobs((prev) =>
-              prev.map((j) => (j.id === updatedJob.id ? updatedJob : j))
-            );
             await saveJobToFirestore(updatedJob);
           }}
           onDelete={async () => {

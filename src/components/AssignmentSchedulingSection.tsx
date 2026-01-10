@@ -114,11 +114,14 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   }, []);
 
   const employeeNameById = useMemo(() => {
-    const m = new Map<string, string>();
+    const m = new Map<number, string>();
+
     employees.forEach((e) => {
-      const name = e.name || e.fullName || e.displayName || `Employee ${e.id}`;
-      m.set(String(e.id), name);
+      const id = Number(e.id);
+      const name = e.name || e.fullName || e.displayName || `Employee ${id}`;
+      m.set(id, name);
     });
+
     return m;
   }, [employees]);
 
@@ -129,12 +132,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       async (snap) => {
-        const grouped = new Map<string, AssignedEmployee>();
+        const grouped = new Map<number, AssignedEmployee>();
 
         for (const d of snap.docs) {
           const data = d.data() as any;
 
-          const empId = String(
+          const empId = Number(
             data.employeeId ?? data.empId ?? data.employee ?? d.id
           );
 
@@ -214,7 +217,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           empSnap.docs.forEach((e) => {
             const emp = e.data() as any;
-            const id = String(e.id);
+            const id = Number(e.id);
             const target = grouped.get(id);
             if (target) {
               target.name =
@@ -224,7 +227,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           Array.from(grouped.entries()).forEach(([id, val]) => {
             if (!val.name || val.name === "Loading...") {
-              grouped.delete(id);
+              val.name = `Employee ${id}`;
             }
           });
         }
@@ -254,9 +257,9 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   };
 
   /* ================= UNASSIGN ================= */
-  const handleUnassignEmployee = async (employeeId: string) => {
+  const handleUnassignEmployee = async (employeeId: number) => {
     await deleteDoc(
-      doc(db, "jobs", safeJobId, "assignments", String(employeeId))
+      doc(db, "jobs", safeJobId, "assignments", String(employeeId)) // 🔥 Firestore için string
     );
   };
 
