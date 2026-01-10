@@ -25,7 +25,7 @@ interface Props {
 }
 
 interface EmployeeDoc {
-  id: string;
+  id: string; // 🔒 Firestore ID
   name?: string;
   fullName?: string;
   displayName?: string;
@@ -38,25 +38,16 @@ const ENABLED_TABS: TabType[] = ["scheduling", "labour"];
 
 function toDateSafe(v: any): Date | null {
   if (!v) return null;
-
-  // Firestore Timestamp
   if (v instanceof Timestamp) return v.toDate();
-
-  // Timestamp-like { toDate() }
   if (typeof v === "object" && typeof v.toDate === "function") {
     const d = v.toDate();
     return d instanceof Date && !isNaN(d.getTime()) ? d : null;
   }
-
-  // ISO string
   if (typeof v === "string") {
     const d = new Date(v);
     return !isNaN(d.getTime()) ? d : null;
   }
-
-  // Date
   if (v instanceof Date) return !isNaN(v.getTime()) ? v : null;
-
   return null;
 }
 
@@ -70,8 +61,7 @@ function calcHours(startIso?: string, endIso?: string): number {
   const s = new Date(startIso).getTime();
   const e = new Date(endIso).getTime();
   if (Number.isNaN(s) || Number.isNaN(e)) return 0;
-  const hours = (e - s) / (1000 * 60 * 60);
-  return Math.round(hours);
+  return Math.round((e - s) / (1000 * 60 * 60));
 }
 
 function uniqueScheduleKey(start?: string, end?: string) {
@@ -91,7 +81,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const [assignedEmployees, setAssignedEmployees] = useState<
     AssignedEmployee[]
   >([]);
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
 
   /* ================= TAB SAFETY ================= */
 
@@ -113,37 +103,40 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     })();
   }, []);
 
+  /* ================= NAME LOOKUP ================= */
+
   const employeeNameById = useMemo(() => {
-    const m = new Map<number, string>();
+    const map = new Map<string, string>();
 
     employees.forEach((e) => {
-      const id = Number(e.id);
-      const name = e.name || e.fullName || e.displayName || `Employee ${id}`;
-      m.set(id, name);
+      const name = e.name || e.fullName || e.displayName || `Employee ${e.id}`;
+      map.set(String(e.id), name);
     });
 
-    return m;
+    return map;
   }, [employees]);
 
-  /* ================= LOAD ASSIGNMENTS (SOURCE OF TRUTH) ================= */
+  /* ================= LOAD ASSIGNMENTS ================= */
+
   useEffect(() => {
     if (!safeJobId) return;
 
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       async (snap) => {
-        const grouped = new Map<number, AssignedEmployee>();
+        const grouped = new Map<string, AssignedEmployee>();
 
         for (const d of snap.docs) {
           const data = d.data() as any;
 
-          const empId = Number(
+          const empId = String(
             data.employeeId ?? data.empId ?? data.employee ?? d.id
           );
 
           if (!grouped.has(empId)) {
             grouped.set(empId, {
-              employeeId: empId,
+              assignmentId: d.id,
+              employeeId: String(empId),
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
               labour: { enteredHours: 0, completed: false },
@@ -156,7 +149,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           target.name =
             employeeNameById.get(empId) || target.name || `Employee ${empId}`;
 
-          // ✅ 1) NEW FORMAT: schedules[]
+          // NEW FORMAT
           if (Array.isArray(data.schedules)) {
             for (const s of data.schedules) {
               const startIso = toIsoSafe(s?.start);
@@ -164,10 +157,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
               if (!startIso || !endIso) continue;
 
               const key = uniqueScheduleKey(startIso, endIso);
-              const exists = target.schedules.some(
-                (x) => uniqueScheduleKey(x.start, x.end) === key
-              );
-              if (exists) continue;
+              if (
+                target.schedules.some(
+                  (x) => uniqueScheduleKey(x.start, x.end) === key
+                )
+              )
+                continue;
 
               target.schedules.push({
                 start: startIso,
@@ -178,16 +173,17 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             continue;
           }
 
-          // ✅ 2) LEGACY FORMAT: start/end
+          // LEGACY FORMAT
           const startIso = toIsoSafe(data.start);
           const endIso = toIsoSafe(data.end);
 
           if (startIso && endIso) {
             const key = uniqueScheduleKey(startIso, endIso);
-            const exists = target.schedules.some(
-              (x) => uniqueScheduleKey(x.start, x.end) === key
-            );
-            if (!exists) {
+            if (
+              !target.schedules.some(
+                (x) => uniqueScheduleKey(x.start, x.end) === key
+              )
+            ) {
               target.schedules.push({
                 start: startIso,
                 end: endIso,
@@ -197,15 +193,16 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           }
         }
 
-        grouped.forEach((val) => {
-          val.schedules.sort(
+        grouped.forEach((v) =>
+          v.schedules.sort(
             (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-          );
-        });
+          )
+        );
 
+        // 🔥 MISSING NAMES (Firestore needs STRING IDS)
         const missing = Array.from(grouped.values())
           .filter((x) => !x.name || x.name === "Loading...")
-          .map((x) => x.employeeId);
+          .map((x) => String(x.employeeId));
 
         if (missing.length > 0) {
           const empSnap = await getDocs(
@@ -217,17 +214,11 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           empSnap.docs.forEach((e) => {
             const emp = e.data() as any;
-            const id = Number(e.id);
+            const id = String(e.id);
             const target = grouped.get(id);
             if (target) {
               target.name =
                 emp.name || emp.fullName || emp.displayName || `Employee ${id}`;
-            }
-          });
-
-          Array.from(grouped.entries()).forEach(([id, val]) => {
-            if (!val.name || val.name === "Loading...") {
-              val.name = `Employee ${id}`;
             }
           });
         }
@@ -240,13 +231,14 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   }, [safeJobId, employeeNameById]);
 
   /* ================= ASSIGN ================= */
+
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
     await setDoc(
-      doc(db, "jobs", safeJobId, "assignments", String(selectedEmployee)),
+      doc(db, "jobs", safeJobId, "assignments", selectedEmployee),
       {
-        employeeId: String(selectedEmployee),
+        employeeId: selectedEmployee,
         schedules: [],
         createdAt: new Date(),
       },
@@ -257,42 +249,30 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   };
 
   /* ================= UNASSIGN ================= */
-  const handleUnassignEmployee = async (employeeId: number) => {
-    await deleteDoc(
-      doc(db, "jobs", safeJobId, "assignments", String(employeeId)) // 🔥 Firestore için string
-    );
+
+  const handleUnassignEmployee = async (assignmentId: string) => {
+    await deleteDoc(doc(db, "jobs", safeJobId, "assignments", assignmentId));
   };
 
   /* ================= RENDER ================= */
 
   return (
     <div className={styles.wrapper}>
-      {/* TABS */}
       <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${
-            activeTab === "scheduling" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("scheduling")}
-        >
-          Scheduling
-        </button>
-
-        <button
-          className={`${styles.tab} ${
-            activeTab === "labour" ? styles.active : ""
-          }`}
-          onClick={() => setActiveTab("labour")}
-        >
-          Labour
-        </button>
+        {ENABLED_TABS.map((t) => (
+          <button
+            key={t}
+            className={`${styles.tab} ${activeTab === t ? styles.active : ""}`}
+            onClick={() => setActiveTab(t)}
+          >
+            {t === "scheduling" ? "Scheduling" : "Labour"}
+          </button>
+        ))}
       </div>
 
-      {/* CARD */}
       <div className={styles.card}>
         <h3 className={styles.title}>Assignment & Scheduling</h3>
 
-        {/* ASSIGN ROW */}
         <div className={styles.assignRow}>
           <select
             value={selectedEmployee}
@@ -300,18 +280,11 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             className={styles.select}
           >
             <option value="">Select Employee</option>
-            {employees.map((emp) => {
-              const name =
-                emp.name ||
-                emp.fullName ||
-                emp.displayName ||
-                `Employee ${emp.id}`;
-              return (
-                <option key={emp.id} value={emp.id}>
-                  {name}
-                </option>
-              );
-            })}
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name || emp.fullName || emp.displayName}
+              </option>
+            ))}
           </select>
 
           <button
@@ -324,12 +297,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           <button
             className={styles.primaryBtn}
-            onClick={() => {
-              if (!selectedEmployee) return;
+            onClick={() =>
+              selectedEmployee &&
               navigate(
                 `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}`
-              );
-            }}
+              )
+            }
           >
             Schedule
           </button>

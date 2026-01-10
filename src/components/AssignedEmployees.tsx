@@ -7,7 +7,8 @@ import { CheckCircleIcon } from "@heroicons/react/24/outline";
 /* ================= TYPES ================= */
 
 export interface AssignedEmployee {
-  employeeId: number;
+  assignmentId: string; // 🔥 FIRESTORE DOC ID
+  employeeId: string; // 🔹 employee reference
   name: string;
 
   schedules: {
@@ -24,7 +25,7 @@ export interface AssignedEmployee {
 
 interface Props {
   employees?: AssignedEmployee[];
-  onUnassign?: (employeeId: number) => void;
+  onUnassign?: (assignmentId: string) => void;
 }
 
 /* ================= COMPONENT ================= */
@@ -45,21 +46,22 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
 
       <div className={styles.list}>
         {employees.map((emp) => {
-          const { name, schedules, labour } = emp;
-
-          const totalScheduled = schedules.reduce((sum, s) => sum + s.hours, 0);
+          const totalScheduled = emp.schedules.reduce(
+            (sum, s) => sum + s.hours,
+            0
+          );
 
           return (
-            <div key={emp.employeeId} className={styles.employeeCard}>
+            <div key={emp.assignmentId} className={styles.employeeCard}>
               {/* ================= HEADER ================= */}
               <div className={styles.employeeTop}>
                 <div className={styles.left}>
-                  <div className={styles.avatar}>{name.charAt(0)}</div>
+                  <div className={styles.avatar}>{emp.name.charAt(0)}</div>
 
-                  <strong>{name}</strong>
+                  <strong>{emp.name}</strong>
 
                   <span className={styles.status}>
-                    {labour.completed
+                    {emp.labour.completed
                       ? "LABOUR COMPLETED"
                       : "LABOUR NOT COMPLETED"}
                   </span>
@@ -68,10 +70,10 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                 <div className={styles.right}>
                   <span className={styles.totals}>
                     Total Scheduled: {totalScheduled} hours | Total Time
-                    Entered: {labour.enteredHours} hours
+                    Entered: {emp.labour.enteredHours} hours
                   </span>
 
-                  {!labour.completed && (
+                  {!emp.labour.completed && (
                     <button className={styles.completeBtn}>
                       <CheckCircleIcon className={styles.btnIcon} />
                       Mark labour as completed
@@ -82,7 +84,7 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                     <button
                       className={styles.removeBtn}
                       title="Remove from job"
-                      onClick={() => onUnassign(emp.employeeId)}
+                      onClick={() => onUnassign(emp.assignmentId)} // ✅ DOĞRU
                     >
                       ×
                     </button>
@@ -92,8 +94,8 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
 
               {/* ================= BODY ================= */}
               <div className={styles.employeeBody}>
-                {schedules.length > 0 ? (
-                  schedules.map((s, i) => (
+                {emp.schedules.length > 0 ? (
+                  emp.schedules.map((s, i) => (
                     <div key={i} className={styles.scheduleRow}>
                       <CalendarDaysIcon className={styles.icon} />
                       <span>
@@ -109,7 +111,9 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                 <div className={styles.timeEntry}>
                   Time Entry:{" "}
                   <span className={styles.muted}>
-                    {labour.enteredHours > 0 ? "Entered" : "Labour not entered"}
+                    {emp.labour.enteredHours > 0
+                      ? "Entered"
+                      : "Labour not entered"}
                   </span>
                 </div>
               </div>

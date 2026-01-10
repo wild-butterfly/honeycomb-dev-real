@@ -1,5 +1,5 @@
 // Created by Honeycomb © 2025
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   collection,
   addDoc,
@@ -36,7 +36,7 @@ const FALLBACK_REASONS = [
 /* ================= TYPES ================= */
 
 export type LabourEmployee = {
-  id: number;
+  id: string; // ✅ string
   name: string;
   role: string;
   rate: number;
@@ -51,7 +51,7 @@ interface LabourEntry {
   id: string;
 
   jobId: string;
-  employeeId: number;
+  employeeId: string; // ✅ string
   employeeName: string;
   role: string;
 
@@ -70,6 +70,8 @@ interface LabourEntry {
   createdAt: Timestamp;
 }
 
+type Reason = { id: string; name: string; chargeable: boolean };
+
 /* ================= COMPONENT ================= */
 
 const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
@@ -78,13 +80,13 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
   const [entries, setEntries] = useState<LabourEntry[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const [employeeId, setEmployeeId] = useState<string | null>(null); // ✅ string|null
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [description, setDescription] = useState("");
 
-  const [reasons, setReasons] = useState(FALLBACK_REASONS);
+  const [reasons, setReasons] = useState<Reason[]>(FALLBACK_REASONS);
   const [selectedReason, setSelectedReason] = useState("");
 
   /* ---------- LOAD REASONS ---------- */
@@ -94,7 +96,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
       try {
         const snap = await getDocs(collection(db, "unchargedReasons"));
         if (!snap.empty) {
-          const loaded = snap.docs.map((d) => {
+          const loaded: Reason[] = snap.docs.map((d) => {
             const data: any = d.data();
             return {
               id: d.id,
@@ -102,6 +104,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
               chargeable: Boolean(data.chargeable ?? data.paid),
             };
           });
+
           setReasons(loaded);
           setSelectedReason(loaded[0]?.id ?? "");
         } else {
@@ -111,12 +114,13 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
         setSelectedReason(FALLBACK_REASONS[0].id);
       }
     };
+
     loadReasons();
   }, []);
 
   /* ---------- LOAD ENTRIES ---------- */
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     if (!jobId) return;
 
     try {
@@ -125,24 +129,48 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
         where("jobId", "==", jobId),
         orderBy("createdAt", "desc")
       );
+
       const snap = await getDocs(q);
-      setEntries(snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })));
+
+      const list = snap.docs.map((d) => {
+        const data = d.data() as any;
+
+        return {
+          id: d.id,
+          jobId: String(data.jobId ?? ""),
+          employeeId: String(data.employeeId ?? ""),
+          employeeName: String(data.employeeName ?? ""),
+          role: String(data.role ?? ""),
+          date: String(data.date ?? ""),
+          startTime: String(data.startTime ?? ""),
+          endTime: String(data.endTime ?? ""),
+          workedHours: Number(data.workedHours ?? 0),
+          rate: Number(data.rate ?? 0),
+          chargedOut: Number(data.chargedOut ?? 0),
+          reason: String(data.reason ?? ""),
+          paid: Boolean(data.paid ?? false),
+          description: String(data.description ?? ""),
+          createdAt:
+            data.createdAt instanceof Timestamp
+              ? data.createdAt
+              : Timestamp.now(),
+        } as LabourEntry;
+      });
+
+      setEntries(list);
     } catch (err) {
       console.error("🔥 loadEntries failed:", err);
     }
-  };
+  }, [jobId]);
 
   useEffect(() => {
     loadEntries();
-  }, [jobId]);
+  }, [loadEntries]);
 
   /* ---------- SAVE ---------- */
 
   const handleSave = async () => {
-    // 🔒 HARD GUARDS (TypeScript + runtime safety)
-    if (employeeId === null) {
-      return alert("Select employee");
-    }
+    if (!employeeId) return alert("Select employee");
 
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return alert("Select employee");
@@ -157,22 +185,18 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
     const start = new Date(`${date}T${startTime}`);
     const end = new Date(`${date}T${endTime}`);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       return alert("Invalid date/time");
     }
 
     const workedHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-
-    if (workedHours <= 0) {
-      return alert("End time must be after start time");
-    }
+    if (workedHours <= 0) return alert("End time must be after start time");
 
     const chargedOut = reasonObj.chargeable ? workedHours * emp.rate : 0;
 
-    // ✅ EXPLICIT TYPE (kills TS2345 forever)
     const payload: Omit<LabourEntry, "id"> = {
       jobId,
-      employeeId: emp.id, // number ✅
+      employeeId: emp.id, // ✅ string
       employeeName: emp.name,
       role: emp.role,
       date,
@@ -192,12 +216,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
       await loadEntries();
     } else {
       const ref = await addDoc(collection(db, "labourEntries"), payload);
-
-      // ✅ force correct type into state
-      setEntries((prev) => [
-        { id: ref.id, ...payload } as LabourEntry,
-        ...prev,
-      ]);
+      setEntries((prev) => [{ id: ref.id, ...payload }, ...prev]);
     }
 
     resetForm();
@@ -207,11 +226,12 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
   const handleEdit = (e: LabourEntry) => {
     setEditingId(e.id);
-    setEmployeeId(e.employeeId);
+    setEmployeeId(e.employeeId); // ✅ string
     setDate(e.date);
     setStartTime(e.startTime);
     setEndTime(e.endTime);
     setDescription(e.description);
+
     const r = reasons.find((x) => x.name === e.reason);
     setSelectedReason(r?.id ?? reasons[0]?.id ?? "");
   };
@@ -219,7 +239,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
   const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this time entry?")) return;
     await deleteDoc(doc(db, "labourEntries", id));
-    loadEntries();
+    await loadEntries();
   };
 
   const resetForm = () => {
@@ -233,9 +253,10 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
 
   /* ---------- GROUP ---------- */
 
-  const grouped = entries.reduce<Record<number, LabourEntry[]>>((acc, e) => {
-    acc[e.employeeId] = acc[e.employeeId] || [];
-    acc[e.employeeId].push(e);
+  const grouped = entries.reduce<Record<string, LabourEntry[]>>((acc, e) => {
+    const key = String(e.employeeId);
+    acc[key] = acc[key] || [];
+    acc[key].push(e);
     return acc;
   }, {});
 
@@ -248,9 +269,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
       <div className={styles.form}>
         <select
           value={employeeId ?? ""}
-          onChange={(e) =>
-            setEmployeeId(e.target.value ? Number(e.target.value) : null)
-          }
+          onChange={(e) => setEmployeeId(e.target.value || null)}
         >
           <option value="">Select employee</option>
           {employees.map((e) => (
@@ -299,12 +318,12 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
       </div>
 
       {/* ===== SUMMARY ===== */}
-      {Object.entries(grouped).map(([_, empEntries]) => {
+      {Object.entries(grouped).map(([empKey, empEntries]) => {
         const totalHours = empEntries.reduce((s, e) => s + e.workedHours, 0);
         const totalCharge = empEntries.reduce((s, e) => s + e.chargedOut, 0);
 
         return (
-          <div key={empEntries[0].employeeId} className={styles.employeeBlock}>
+          <div key={empKey} className={styles.employeeBlock}>
             <h4>
               {empEntries[0].employeeName} | ${empEntries[0].rate.toFixed(2)}
             </h4>
