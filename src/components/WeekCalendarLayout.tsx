@@ -15,6 +15,10 @@ import {
   getAssignedEmployeeIds,
 } from "../utils/jobTime";
 
+/* ========================================================= */
+/* TYPES */
+/* ========================================================= */
+
 interface Props {
   date: Date;
   jobs: CalendarJob[];
@@ -29,6 +33,10 @@ interface Props {
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
+/* ========================================================= */
+/* MAIN COMPONENT */
+/* ========================================================= */
+
 const WeekCalendarLayout: React.FC<Props> = ({
   date,
   jobs,
@@ -42,7 +50,8 @@ const WeekCalendarLayout: React.FC<Props> = ({
   /* ================= WEEK RANGE ================= */
 
   const startOfWeek = new Date(date);
-  startOfWeek.setDate(date.getDate() - date.getDay() + 1);
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(date.getDate() - ((date.getDay() + 6) % 7)); // Monday
 
   const daysOfWeek = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(startOfWeek);
@@ -56,7 +65,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
     const { active, over } = event;
     if (!over) return;
 
-    const jobId = String(active.id);
+    const jobId = String(active.id).split("::")[0];
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
@@ -96,6 +105,8 @@ const WeekCalendarLayout: React.FC<Props> = ({
       .map((n) => n[0])
       .join("")
       .toUpperCase();
+
+  /* ================= RENDER ================= */
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
@@ -190,8 +201,9 @@ function DroppableCell({
     >
       {jobs.map((job) => (
         <DraggableJob
-          key={job.id}
+          key={`${job.id}::${employee.id}`}
           job={job}
+          employeeId={employee.id}
           onClick={() => onJobClick(job.id)}
         />
       ))}
@@ -211,13 +223,17 @@ function DroppableCell({
 
 function DraggableJob({
   job,
+  employeeId,
   onClick,
 }: {
   job: CalendarJob;
+  employeeId: number;
   onClick: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: job.id });
+    useDraggable({
+      id: `${job.id}::${employeeId}`,
+    });
 
   const style: React.CSSProperties = {
     transform: transform
@@ -225,7 +241,6 @@ function DraggableJob({
       : undefined,
     opacity: isDragging ? 0.6 : 1,
     backgroundColor: job.color || "#faf7dc",
-    cursor: "grab",
   };
 
   let badge = null;
@@ -242,12 +257,20 @@ function DraggableJob({
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      onClick={onClick}
       className={styles.jobBox}
       style={style}
+      onClick={onClick}
     >
+      {/* DRAG HANDLE */}
+      <div
+        className={styles.dragHandle}
+        {...attributes}
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+      >
+        ⋮⋮
+      </div>
+
       {badge}
 
       <div className={styles.jobTitle}>{job.title}</div>

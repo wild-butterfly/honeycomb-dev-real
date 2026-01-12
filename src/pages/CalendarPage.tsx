@@ -199,10 +199,13 @@ const CalendarPage: React.FC = () => {
 
     if (date) setSelectedDate(new Date(date));
 
-    if (jobId) setOpenJobId(String(jobId));
+    // ✅ openJobId SADECE ilk load’da set edilsin
+    if (jobId && openJobId == null) {
+      setOpenJobId(String(jobId));
+    }
 
-    // 🔥 SCHEDULE MODE
-    if (mode === "schedule" && jobId && employeeId) {
+    // ✅ schedule mode SADECE modal kapalıyken aktif olsun
+    if (mode === "schedule" && jobId && employeeId && openJobId == null) {
       setScheduleMode({
         jobId,
         employeeId: Number(employeeId),
@@ -210,6 +213,10 @@ const CalendarPage: React.FC = () => {
       setRangeMode("day");
     }
   }, [location.search]);
+
+  useEffect(() => {
+    console.log("openJobId:", openJobId, "scheduleMode:", scheduleMode);
+  }, [openJobId, scheduleMode]);
 
   // LOAD EMPLOYEES
   useEffect(() => {
@@ -280,7 +287,11 @@ const CalendarPage: React.FC = () => {
     };
   }, []);
 
-  /* ✅ MOVE ASSIGNMENT (time + optional employee change) */
+  const handleOpenJob = (jobId: string) => {
+    setScheduleMode(null); // 🔥 en kritik satır
+    setOpenJobId(jobId);
+  };
+
   /* ✅ MOVE ASSIGNMENT (time + optional employee change) */
   const handleJobMove = async (
     jobId: string,
@@ -455,13 +466,13 @@ const CalendarPage: React.FC = () => {
               selectedDate={selectedDate}
               monthGroups={groupedMonthJobs}
               employees={employees}
-              onJobClick={setOpenJobId}
+              onJobClick={handleOpenJob}
             />
 
             <aside className={styles.sidebarWrapper}>
               <SidebarJobs
                 jobs={jobsThisMonth}
-                onJobClick={setOpenJobId}
+                onJobClick={handleOpenJob}
                 jobFilter={jobFilter}
                 onJobFilterChange={setJobFilter}
               />
@@ -476,7 +487,7 @@ const CalendarPage: React.FC = () => {
                 employees={employees}
                 selectedStaff={selectedStaff}
                 onStaffChange={setSelectedStaff}
-                onJobClick={setOpenJobId}
+                onJobClick={handleOpenJob}
                 onJobMove={handleJobMove}
                 onAddJobAt={handleAddJobAt}
               />
@@ -484,7 +495,7 @@ const CalendarPage: React.FC = () => {
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
                   jobs={jobsThisMonth}
-                  onJobClick={setOpenJobId}
+                  onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
                 />
@@ -504,7 +515,7 @@ const CalendarPage: React.FC = () => {
               )}
               employees={employees}
               selectedDate={selectedDate}
-              onJobClick={setOpenJobId}
+              onJobClick={handleOpenJob}
             />
 
             <aside className={styles.sidebarWrapper}>
@@ -512,7 +523,7 @@ const CalendarPage: React.FC = () => {
                 jobs={staffFilteredJobs.filter((j) =>
                   isSameWeek(j, selectedDate)
                 )}
-                onJobClick={setOpenJobId}
+                onJobClick={handleOpenJob}
                 jobFilter={jobFilter}
                 onJobFilterChange={setJobFilter}
               />
@@ -528,7 +539,7 @@ const CalendarPage: React.FC = () => {
                     isSameWeek(j, selectedDate)
                   )}
                   employees={employees}
-                  onJobClick={setOpenJobId}
+                  onJobClick={handleOpenJob}
                   onJobMove={handleJobMove}
                   onAddJobAt={handleAddJobAt}
                 />
@@ -539,7 +550,7 @@ const CalendarPage: React.FC = () => {
                   jobs={staffFilteredJobs.filter((j) =>
                     isSameWeek(j, selectedDate)
                   )}
-                  onJobClick={setOpenJobId}
+                  onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
                 />
@@ -557,7 +568,7 @@ const CalendarPage: React.FC = () => {
               jobs={staffFilteredJobs.filter((j) => isSameDay(j, selectedDate))}
               employees={employees}
               selectedDate={selectedDate}
-              onJobClick={setOpenJobId}
+              onJobClick={handleOpenJob}
             />
 
             <aside className={styles.sidebarWrapper}>
@@ -565,7 +576,7 @@ const CalendarPage: React.FC = () => {
                 jobs={staffFilteredJobs.filter((j) =>
                   isSameDay(j, selectedDate)
                 )}
-                onJobClick={setOpenJobId}
+                onJobClick={handleOpenJob}
                 jobFilter={jobFilter}
                 onJobFilterChange={setJobFilter}
               />
@@ -582,7 +593,7 @@ const CalendarPage: React.FC = () => {
                   jobs={staffFilteredJobs.filter((j) =>
                     isSameDay(j, selectedDate)
                   )}
-                  onJobClick={setOpenJobId}
+                  onJobClick={handleOpenJob}
                   selectedEmployeeId={
                     selectedStaff.length === 1 ? selectedStaff[0] : undefined
                   }
@@ -599,7 +610,7 @@ const CalendarPage: React.FC = () => {
                   jobs={staffFilteredJobs.filter((j) =>
                     isSameDay(j, selectedDate)
                   )}
-                  onJobClick={setOpenJobId}
+                  onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
                 />
@@ -610,7 +621,7 @@ const CalendarPage: React.FC = () => {
       )}
 
       {/* MODAL */}
-      {openJob && !scheduleMode && (
+      {openJob && scheduleMode == null && (
         <CalendarJobDetailsModal
           job={openJob}
           employees={employees}

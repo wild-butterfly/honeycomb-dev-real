@@ -70,7 +70,14 @@ type ActiveDrag = {
   employeeId: number; // row employee
   laneLeft: number;
   blockLeftAtMouseDown: number; // for drag offset
+
+  // mouse position at drag start
   mouseStartX: number;
+  mouseStartY: number;
+
+  // movement flag
+  moved: boolean;
+
   originalStart: Date;
   originalEnd: Date;
 };
@@ -89,6 +96,7 @@ function normalizeDay(d: Date) {
   x.setHours(0, 0, 0, 0);
   return x.getTime();
 }
+
 const toJsDate = (v: any): Date | null => {
   if (!v) return null;
 
@@ -163,6 +171,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
 
+  // ✅ click guard for real drag
+  const didDragRef = useRef(false);
+
   // Active drag context lives in a ref to avoid rerender spam
   const activeDragRef = useRef<ActiveDrag | null>(null);
 
@@ -183,13 +194,36 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     [jobs]
   );
 
+  /* ================= DAY BOUNDS HELPERS ================= */
+  const getDayBounds = useCallback((d: Date) => {
+    const dayStart = new Date(d);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const dayEnd = new Date(d);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    return { dayStart, dayEnd };
+  }, []);
+
+  const clampToDay = useCallback(
+    (rawStart: Date, rawEnd: Date, day: Date) => {
+      const { dayStart, dayEnd } = getDayBounds(day);
+
+      const start = rawStart < dayStart ? dayStart : rawStart;
+      const end = rawEnd > dayEnd ? dayEnd : rawEnd;
+
+      return { start, end };
+    },
+    [getDayBounds]
+  );
+
   /* ================= MAP JOBS BY EMPLOYEE (CALENDAR = scheduled true OR legacy undefined) ================= */
   const jobsByEmployee: Record<number, CalendarJob[]> = useMemo(() => {
     const map: Record<number, CalendarJob[]> = {};
     for (const e of employees) map[e.id] = [];
 
     for (const job of jobs) {
-      for (const a of job.assignments ?? []) {
+      for (const a of (job as any).assignments ?? []) {
         // ✅ CALENDAR RULE:
         // - hide only if explicitly scheduled:false
         // - show if scheduled:true OR scheduled is missing (legacy data)
@@ -199,10 +233,22 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         // must have start/end to be drawable
         if (!a.start || !a.end) continue;
 
-        // ✅ must be on the currently selected day (otherwise week/day gets messy)
         const startDate = new Date(a.start);
-        if (isNaN(startDate.getTime())) continue;
-        if (!sameDay(startDate, date)) continue;
+        const endDate = new Date(a.end);
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) continue;
+
+        // ✅ DAY VIEW RULE:
+        // show if it overlaps selected day (not only if start is same day)
+        const { dayStart, dayEnd } = (() => {
+          const s = new Date(date);
+          s.setHours(0, 0, 0, 0);
+          const e = new Date(date);
+          e.setHours(23, 59, 59, 999);
+          return { dayStart: s, dayEnd: e };
+        })();
+
+        const overlaps = startDate <= dayEnd && endDate >= dayStart;
+        if (!overlaps) continue;
 
         const empId = Number(a.employeeId);
         if (!Number.isFinite(empId)) continue;
@@ -263,9 +309,21 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
   /* ================= GLOBAL MOUSE MOVE (PREVIEW ONLY) ================= */
   useEffect(() => {
+    const DRAG_THRESHOLD_PX = 3;
+
     const handleMouseMove = (e: MouseEvent) => {
       const ctx = activeDragRef.current;
       if (!ctx) return;
+
+      // ✅ mark as real drag only if moved past threshold
+      if (!ctx.moved) {
+        const dx = Math.abs(e.clientX - ctx.mouseStartX);
+        const dy = Math.abs(e.clientY - ctx.mouseStartY);
+        if (dx >= DRAG_THRESHOLD_PX || dy >= DRAG_THRESHOLD_PX) {
+          ctx.moved = true;
+          didDragRef.current = true;
+        }
+      }
 
       const job = findJobById(ctx.jobId);
       if (!job) return;
@@ -292,9 +350,13 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         );
         const newEnd = new Date(newStart.getTime() + duration);
 
+        // ✅ clamp preview to the day so it never becomes “infinite”
+        const clamped = clampToDay(newStart, newEnd, date);
+        if (clamped.end <= clamped.start) return;
+
         setPreviewTimes((prev) => ({
           ...prev,
-          [key]: { start: newStart, end: newEnd },
+          [key]: { start: clamped.start, end: clamped.end },
         }));
       }
 
@@ -310,9 +372,13 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         );
         const newEnd = proposed < minEnd ? minEnd : proposed;
 
+        // ✅ clamp preview to the day
+        const clamped = clampToDay(ctx.originalStart, newEnd, date);
+        if (clamped.end <= clamped.start) return;
+
         setPreviewTimes((prev) => ({
           ...prev,
-          [key]: { start: ctx.originalStart, end: newEnd },
+          [key]: { start: clamped.start, end: clamped.end },
         }));
       }
     };
@@ -324,16 +390,16 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       const key = `${ctx.jobId}-${ctx.employeeId}`;
       const pv = previewTimes[key];
 
-      if (pv) {
-        // 🔍 Mouse altındaki employee row’u bul
+      // ✅ Only commit move/resize if user actually dragged (prevents “click = move” bugs)
+      if (pv && ctx.moved) {
+        // 🔍 Find employee row under mouse
         const el = document.elementFromPoint(e.clientX, e.clientY);
         const row = el?.closest("[data-employee-id]") as HTMLElement | null;
 
         const targetEmployeeId = row
           ? Number(row.dataset.employeeId)
-          : ctx.employeeId; // fallback = aynı employee
+          : ctx.employeeId; // fallback
 
-        // 🧪 Debug (ilk testte çok faydalı)
         console.log("DRAG DROP", {
           from: ctx.employeeId,
           to: targetEmployeeId,
@@ -357,11 +423,17 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         return next;
       });
 
-      // suppress click that fires after mouseup
-      suppressClickRef.current = true;
-      window.setTimeout(() => {
+      // ✅ suppress click that fires after mouseup (ghost click)
+      if (ctx.moved) {
+        suppressClickRef.current = true;
+        window.setTimeout(() => {
+          suppressClickRef.current = false;
+          didDragRef.current = false;
+        }, 0);
+      } else {
         suppressClickRef.current = false;
-      }, 0);
+        didDragRef.current = false;
+      }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -371,7 +443,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [date, onMoveJob, previewTimes, findJobById]);
+  }, [date, onMoveJob, previewTimes, findJobById, clampToDay]);
 
   /* ================= RENDER ================= */
   return (
@@ -491,17 +563,25 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                     // Use preview if dragging/resizing this exact row
                     const pv = previewTimes[key];
-                    const start =
+
+                    const rawStart =
                       pv?.start ??
                       getStartForEmployee(job, emp.id, fallbackStart);
-                    const end =
+
+                    const rawEnd =
                       pv?.end ?? getEndForEmployee(job, emp.id, fallbackEnd);
 
-                    // Only show blocks on the selected day
-                    if (normalizeDay(start) !== normalizeDay(date)) return null;
+                    // ✅ Clamp to the selected day so blocks never exceed 24h width
+                    const clamped = clampToDay(rawStart, rawEnd, date);
+                    const start = clamped.start;
+                    const end = clamped.end;
+
+                    // If nothing overlaps today after clamp, skip render
+                    if (end <= start) return null;
 
                     const startMinutes =
                       start.getHours() * 60 + start.getMinutes();
+
                     const durationMinutes = Math.max(
                       15,
                       (end.getTime() - start.getTime()) / 60000
@@ -526,6 +606,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                           // ignore if resize handle
                           if ((e.target as HTMLElement).dataset.resize) return;
 
+                          // ✅ reset flags for this interaction
+                          didDragRef.current = false;
+
                           const lane = (e.currentTarget as HTMLElement).closest(
                             `.${styles.jobsLane}`
                           ) as HTMLElement | null;
@@ -542,17 +625,20 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                             employeeId: emp.id,
                             laneLeft: laneRect.left,
                             blockLeftAtMouseDown: e.clientX - blockRect.left,
+
                             mouseStartX: e.clientX,
-                            originalStart: start,
-                            originalEnd: end,
+                            mouseStartY: e.clientY,
+                            moved: false,
+
+                            // IMPORTANT: use RAW times for duration correctness while dragging
+                            // (preview itself is clamped, but duration should reflect real duration)
+                            originalStart: rawStart,
+                            originalEnd: rawEnd,
                           };
                         }}
-                        onClick={(e) => {
-                          // prevent accidental open on mouseup after drag
-                          if (suppressClickRef.current) {
-                            e.stopPropagation();
-                            return;
-                          }
+                        onClick={() => {
+                          if (suppressClickRef.current) return;
+                          if (didDragRef.current) return;
                           onJobClick(job.id);
                         }}
                       >
@@ -575,6 +661,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                           onMouseDown={(e) => {
                             e.stopPropagation();
 
+                            // ✅ reset flags for this interaction
+                            didDragRef.current = false;
+
                             const lane = (
                               e.currentTarget as HTMLElement
                             ).closest(
@@ -590,9 +679,14 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                               employeeId: emp.id,
                               laneLeft: laneRect.left,
                               blockLeftAtMouseDown: 0,
+
                               mouseStartX: e.clientX,
-                              originalStart: start,
-                              originalEnd: end,
+                              mouseStartY: e.clientY,
+                              moved: false,
+
+                              // use RAW times
+                              originalStart: rawStart,
+                              originalEnd: rawEnd,
                             };
                           }}
                         />
