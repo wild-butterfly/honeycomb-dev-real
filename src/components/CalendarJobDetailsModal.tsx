@@ -95,7 +95,78 @@ function renderContactCard(rawText: string) {
 
 /* ================= DATE FORMAT ================= */
 
+// ✅ Safe ISO for Date
+const safeISO = (d?: Date | null) =>
+  d instanceof Date && !isNaN(d.getTime()) ? d.toISOString() : "";
+
+// ✅ Safe: convert any Firestore-ish date value to a valid ISO string (or "")
+// handles: ISO string, Date, number(ms), {seconds,nanoseconds}, Firestore Timestamp-like
+function toISOFromAny(value: any): string {
+  try {
+    if (!value) return "";
+
+    // Already a Date
+    if (value instanceof Date) return safeISO(value);
+
+    // Firestore Timestamp object (has toDate)
+    if (typeof value?.toDate === "function") {
+      const d = value.toDate();
+      return safeISO(d);
+    }
+
+    // { seconds, nanoseconds }
+    if (
+      typeof value === "object" &&
+      typeof value.seconds === "number" &&
+      typeof value.nanoseconds === "number"
+    ) {
+      const ms = value.seconds * 1000 + Math.floor(value.nanoseconds / 1e6);
+      const d = new Date(ms);
+      return safeISO(d);
+    }
+
+    // number (ms)
+    if (typeof value === "number") {
+      const d = new Date(value);
+      return safeISO(d);
+    }
+
+    // string
+    if (typeof value === "string") {
+      // If it's already ISO-ish, new Date should parse it
+      const d = new Date(value);
+      return safeISO(d);
+    }
+
+    // fallback
+    const d = new Date(String(value));
+    return safeISO(d);
+  } catch {
+    return "";
+  }
+}
+
+// ✅ Safe: HH:MM for <input type="time">
+const safeTimeValue = (d?: Date | null) => {
+  const iso = safeISO(d);
+  // input type="time" needs HH:MM
+  return iso ? iso.substring(11, 16) : "00:00";
+};
+
+// ✅ Safe: validate Date
+const isValidDate = (d: any): d is Date =>
+  d instanceof Date && !isNaN(d.getTime());
+
 function formatDateLine(start: Date, end: Date) {
+  // ✅ Guard: if invalid dates sneak in, don't crash UI
+  if (!isValidDate(start) || !isValidDate(end)) {
+    return {
+      dateLabel: "—",
+      timeLabel: "—",
+      durationLabel: "—",
+    };
+  }
+
   const dateLabel = start.toLocaleDateString("en-AU", {
     weekday: "long",
     day: "numeric",
@@ -228,23 +299,39 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     const unsub = onSnapshot(ref, (snap) => {
       const list: Assignment[] = snap.docs.map((d) => {
         const data = d.data() as any;
+
+        // ✅ normalize start/end to ISO strings or ""
+        const startISO = toISOFromAny(data.start);
+        const endISO = toISOFromAny(data.end);
+
         return {
           id: d.id,
           employeeId: Number(data.employeeId),
-          start: String(data.start),
-          end: String(data.end),
+          start: startISO,
+          end: endISO,
         };
       });
 
       setAssignments(list);
 
-      // derive time range from assignments
-      if (list.length > 0) {
-        const starts = list.map((a) => new Date(a.start).getTime());
-        const ends = list.map((a) => new Date(a.end).getTime());
+      // ✅ derive time range from valid assignments only
+      const validStarts = list
+        .map((a) => new Date(a.start))
+        .filter(isValidDate)
+        .map((d) => d.getTime());
 
-        setLocalStart(new Date(Math.min(...starts)));
-        setLocalEnd(new Date(Math.max(...ends)));
+      const validEnds = list
+        .map((a) => new Date(a.end))
+        .filter(isValidDate)
+        .map((d) => d.getTime());
+
+      if (validStarts.length > 0 && validEnds.length > 0) {
+        const newStart = new Date(Math.min(...validStarts));
+        const newEnd = new Date(Math.max(...validEnds));
+
+        // ✅ only set if valid (extra safe)
+        if (isValidDate(newStart)) setLocalStart(newStart);
+        if (isValidDate(newEnd)) setLocalEnd(newEnd);
       }
     });
 
@@ -266,8 +353,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setStatus(job.status || "active");
 
     // SAFE fallback
-    setLocalStart(getJobStart(job) ?? new Date());
-    setLocalEnd(getJobEnd(job) ?? new Date());
+    const s = getJobStart(job) ?? new Date();
+    const e = getJobEnd(job) ?? new Date();
+    setLocalStart(isValidDate(s) ? s : new Date());
+    setLocalEnd(isValidDate(e) ? e : new Date());
 
     // ❗ assignments BURADA SET EDİLMİYOR
     // çünkü Firestore snapshot source of truth
@@ -304,8 +393,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       aRef,
       {
         employeeId,
-        start: start.toISOString(),
-        end: end.toISOString(),
+        start: safeISO(start),
+        end: safeISO(end),
       },
       { merge: true }
     );
@@ -364,10 +453,12 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       notes,
       color: jobColor,
       status,
+
+      // ✅ never call localStart.toISOString() directly
       assignments: assignments.map((a) => ({
         ...a,
-        start: localStart.toISOString(),
-        end: localEnd.toISOString(),
+        start: safeISO(localStart),
+        end: safeISO(localEnd),
       })),
     };
 
@@ -448,10 +539,13 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                 <label style={{ fontSize: 12 }}>Start</label>
                 <input
                   type="time"
-                  value={localStart.toISOString().substring(11, 16)}
+                  value={safeTimeValue(localStart)}
                   onChange={(e) => {
                     const [h, m] = e.target.value.split(":").map(Number);
-                    const d = new Date(localStart);
+                    const base = isValidDate(localStart)
+                      ? localStart
+                      : new Date();
+                    const d = new Date(base);
                     d.setHours(h, m, 0, 0);
                     setLocalStart(d);
                   }}
@@ -462,10 +556,11 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                 <label style={{ fontSize: 12 }}>End</label>
                 <input
                   type="time"
-                  value={localEnd.toISOString().substring(11, 16)}
+                  value={safeTimeValue(localEnd)}
                   onChange={(e) => {
                     const [h, m] = e.target.value.split(":").map(Number);
-                    const d = new Date(localEnd);
+                    const base = isValidDate(localEnd) ? localEnd : new Date();
+                    const d = new Date(base);
                     d.setHours(h, m, 0, 0);
                     setLocalEnd(d);
                   }}
@@ -476,6 +571,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             <div className={styles.sectionValue}>{timeLabel}</div>
           )}
         </div>
+
         {/* STAFF */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>

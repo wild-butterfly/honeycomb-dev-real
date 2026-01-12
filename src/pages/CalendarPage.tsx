@@ -232,32 +232,49 @@ const CalendarPage: React.FC = () => {
     newStart: Date,
     newEnd: Date
   ) => {
-    // 🔹 Optimistic UI (calendar anında güncellensin)
+    /* 🔒 HARD GUARDS */
+    if (!jobId || typeof jobId !== "string") {
+      console.error("Invalid jobId in handleJobMove", jobId);
+      return;
+    }
+
+    if (
+      !(newStart instanceof Date) ||
+      isNaN(newStart.getTime()) ||
+      !(newEnd instanceof Date) ||
+      isNaN(newEnd.getTime())
+    ) {
+      console.error("Invalid dates in handleJobMove", { newStart, newEnd });
+      return;
+    }
+
+    const startISO = newStart.toISOString();
+    const endISO = newEnd.toISOString();
+
+    /* 🔹 Optimistic UI (calendar anında güncellensin) */
     setJobs((prev) =>
       prev.map((job) => {
-        if (job.id !== jobId) return job;
+        if (String(job.id) !== String(jobId)) return job;
 
-        const hasAssignment = job.assignments.some(
+        const assignments = job.assignments ?? [];
+
+        const hasAssignment = assignments.some(
           (a) => Number(a.employeeId) === employeeId
         );
 
         const nextAssignments = hasAssignment
-          ? job.assignments.map((a) =>
+          ? assignments.map((a) =>
               Number(a.employeeId) === employeeId
-                ? {
-                    ...a,
-                    start: newStart.toISOString(),
-                    end: newEnd.toISOString(),
-                  }
+                ? { ...a, start: startISO, end: endISO }
                 : a
             )
           : [
-              ...job.assignments,
+              ...assignments,
               {
-                id: String(employeeId),
+                id: `${jobId}-${employeeId}`, // ✅ stable + unique
                 employeeId,
-                start: newStart.toISOString(),
-                end: newEnd.toISOString(),
+                start: startISO,
+                end: endISO,
               },
             ];
 
@@ -265,22 +282,35 @@ const CalendarPage: React.FC = () => {
       })
     );
 
-    // 🔹 Firestore (source of truth)
+    /* 🔹 Firestore (source of truth) */
     await setDoc(
-      doc(db, "jobs", jobId, "assignments", String(employeeId)),
+      doc(db, "jobs", String(jobId), "assignments", String(employeeId)),
       {
         employeeId,
-        start: newStart.toISOString(),
-        end: newEnd.toISOString(),
+        start: startISO,
+        end: endISO,
         updatedAt: new Date(),
       },
       { merge: true }
     );
   };
-
-  /* ADD JOB (create job doc + first assignment) */
+  /* ➕ ADD JOB (create job doc + first assignment) */
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    // create job doc
+    /* 🔒 DATE GUARD */
+    if (
+      !(start instanceof Date) ||
+      isNaN(start.getTime()) ||
+      !(end instanceof Date) ||
+      isNaN(end.getTime())
+    ) {
+      console.error("Invalid dates in handleAddJobAt", { start, end });
+      return;
+    }
+
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+
+    /* 1️⃣ create job doc */
     const jobRef = await addDoc(collection(db, "jobs"), {
       title: "New Job",
       customer: "New Customer",
@@ -290,19 +320,21 @@ const CalendarPage: React.FC = () => {
       location: "",
       siteContact: "",
       contactInfo: "",
+      createdAt: new Date(),
     });
 
-    // create assignment doc (use employeeId as doc id to match your migration style)
+    /* 2️⃣ create assignment doc (employeeId = doc id) */
     await setDoc(
       doc(db, "jobs", jobRef.id, "assignments", String(employeeId)),
       {
         employeeId,
-        start: start.toISOString(),
-        end: end.toISOString(),
+        start: startISO,
+        end: endISO,
+        createdAt: new Date(),
       }
     );
 
-    // local optimistic add (optional; snapshot will also refresh)
+    /* 3️⃣ optimistic local add (snapshot yine de sync eder) */
     const newJob: CalendarJob = {
       id: jobRef.id,
       title: "New Job",
@@ -315,10 +347,10 @@ const CalendarPage: React.FC = () => {
       contactInfo: "",
       assignments: [
         {
-          id: String(employeeId),
+          id: `${jobRef.id}-${employeeId}`, // ✅ calendar-safe id
           employeeId,
-          start: start.toISOString(),
-          end: end.toISOString(),
+          start: startISO,
+          end: endISO,
         },
       ],
     };
