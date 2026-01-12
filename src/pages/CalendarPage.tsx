@@ -354,8 +354,6 @@ const CalendarPage: React.FC = () => {
         },
       ],
     };
-
-    setJobs((prev) => [...prev, newJob]);
   };
 
   /* FILTERS */
