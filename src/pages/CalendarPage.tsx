@@ -7,6 +7,7 @@ import {
   addDoc,
   doc,
   setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useLocation } from "react-router-dom";
@@ -42,10 +43,11 @@ export type Employee = {
 };
 
 export type Assignment = {
-  id: string; // assignment doc id
+  id: string;
   employeeId: number;
-  start: string; // ISO
-  end: string; // ISO
+  start?: string;
+  end?: string;
+  scheduled?: boolean;
 };
 
 export type CalendarJob = {
@@ -67,9 +69,57 @@ export type CalendarJob = {
 const jobsSeed: CalendarJob[] = [];
 
 /* HELPERS */
+
+function toJsDate(v: any): Date | null {
+  if (!v) return null;
+
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+
+  if (typeof v?.toDate === "function") {
+    const d = v.toDate();
+    return d instanceof Date && !isNaN(d.getTime()) ? d : null;
+  }
+
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return !isNaN(d.getTime()) ? d : null;
+  }
+
+  return null;
+}
+
+function normalizeDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.getTime();
+}
+
+function getWeekRange(ref: Date) {
+  const day = new Date(ref);
+  day.setHours(0, 0, 0, 0);
+
+  const monday = new Date(day);
+  monday.setDate(day.getDate() - ((day.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { monday, sunday };
+}
+
 function isSameDay(job: CalendarJob, day: Date) {
   return job.assignments.some((a) => {
+    // 🔑 scheduled true OLANLAR
+    // 🔑 VEYA eski kayıtlar (scheduled yok ama start/end var)
+    if (a.scheduled === false) return false;
+
+    if (!a.start) return false;
+
     const d = new Date(a.start);
+    if (isNaN(d.getTime())) return false;
+
     return (
       d.getFullYear() === day.getFullYear() &&
       d.getMonth() === day.getMonth() &&
@@ -78,18 +128,23 @@ function isSameDay(job: CalendarJob, day: Date) {
   });
 }
 
-function isSameWeek(job: CalendarJob, week: Date) {
-  const ws = new Date(week);
-  ws.setDate(ws.getDate() - ws.getDay() + 1);
-  ws.setHours(0, 0, 0, 0);
+function isSameWeek(job: CalendarJob, ref: Date) {
+  const monday = new Date(ref);
+  monday.setDate(ref.getDate() - ((ref.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
 
-  const we = new Date(ws);
-  we.setDate(ws.getDate() + 6);
-  we.setHours(23, 59, 59, 999);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
 
   return job.assignments.some((a) => {
+    if (a.scheduled === false) return false;
+    if (!a.start) return false;
+
     const d = new Date(a.start);
-    return d >= ws && d <= we;
+    if (isNaN(d.getTime())) return false;
+
+    return d >= monday && d <= sunday;
   });
 }
 
@@ -225,70 +280,61 @@ const CalendarPage: React.FC = () => {
     };
   }, []);
 
-  /* ✅ MOVE JOB (update/create assignment for employee) */
+  /* ✅ MOVE ASSIGNMENT (time + optional employee change) */
+  /* ✅ MOVE ASSIGNMENT (time + optional employee change) */
   const handleJobMove = async (
     jobId: string,
-    employeeId: number,
+    employeeId: number, // dragged assignment owner
     newStart: Date,
-    newEnd: Date
+    newEnd: Date,
+    targetEmployeeId?: number
   ) => {
-    /* 🔒 HARD GUARDS */
-    if (!jobId || typeof jobId !== "string") {
-      console.error("Invalid jobId in handleJobMove", jobId);
-      return;
-    }
-
-    if (
-      !(newStart instanceof Date) ||
-      isNaN(newStart.getTime()) ||
-      !(newEnd instanceof Date) ||
-      isNaN(newEnd.getTime())
-    ) {
-      console.error("Invalid dates in handleJobMove", { newStart, newEnd });
-      return;
-    }
+    if (!jobId || typeof jobId !== "string") return;
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) return;
 
     const startISO = newStart.toISOString();
     const endISO = newEnd.toISOString();
 
-    /* 🔹 Optimistic UI (calendar anında güncellensin) */
+    const finalEmployeeId = targetEmployeeId ?? employeeId;
+
+    /* 🔹 Optimistic UI */
     setJobs((prev) =>
       prev.map((job) => {
         if (String(job.id) !== String(jobId)) return job;
 
-        const assignments = job.assignments ?? [];
-
-        const hasAssignment = assignments.some(
-          (a) => Number(a.employeeId) === employeeId
+        const filtered = job.assignments.filter(
+          (a) => Number(a.employeeId) !== employeeId
         );
 
-        const nextAssignments = hasAssignment
-          ? assignments.map((a) =>
-              Number(a.employeeId) === employeeId
-                ? { ...a, start: startISO, end: endISO }
-                : a
-            )
-          : [
-              ...assignments,
-              {
-                id: `${jobId}-${employeeId}`, // ✅ stable + unique
-                employeeId,
-                start: startISO,
-                end: endISO,
-              },
-            ];
-
-        return { ...job, assignments: nextAssignments };
+        return {
+          ...job,
+          assignments: [
+            ...filtered,
+            {
+              id: `${jobId}-${finalEmployeeId}`,
+              employeeId: finalEmployeeId,
+              start: startISO,
+              end: endISO,
+            },
+          ],
+        };
       })
     );
 
-    /* 🔹 Firestore (source of truth) */
+    /* 🔥 Firestore */
+    if (finalEmployeeId !== employeeId) {
+      await deleteDoc(
+        doc(db, "jobs", String(jobId), "assignments", String(employeeId))
+      );
+    }
+
     await setDoc(
-      doc(db, "jobs", String(jobId), "assignments", String(employeeId)),
+      doc(db, "jobs", String(jobId), "assignments", String(finalEmployeeId)),
       {
-        employeeId,
+        employeeId: finalEmployeeId,
         start: startISO,
         end: endISO,
+        scheduled: true,
         updatedAt: new Date(),
       },
       { merge: true }
@@ -296,7 +342,6 @@ const CalendarPage: React.FC = () => {
   };
   /* ➕ ADD JOB (create job doc + first assignment) */
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    /* 🔒 DATE GUARD */
     if (
       !(start instanceof Date) ||
       isNaN(start.getTime()) ||
@@ -310,7 +355,6 @@ const CalendarPage: React.FC = () => {
     const startISO = start.toISOString();
     const endISO = end.toISOString();
 
-    /* 1️⃣ create job doc */
     const jobRef = await addDoc(collection(db, "jobs"), {
       title: "New Job",
       customer: "New Customer",
@@ -323,37 +367,16 @@ const CalendarPage: React.FC = () => {
       createdAt: new Date(),
     });
 
-    /* 2️⃣ create assignment doc (employeeId = doc id) */
     await setDoc(
       doc(db, "jobs", jobRef.id, "assignments", String(employeeId)),
       {
         employeeId,
         start: startISO,
         end: endISO,
+        scheduled: true,
         createdAt: new Date(),
       }
     );
-
-    /* 3️⃣ optimistic local add (snapshot yine de sync eder) */
-    const newJob: CalendarJob = {
-      id: jobRef.id,
-      title: "New Job",
-      customer: "New Customer",
-      status: "active",
-      color: "#faf7dc",
-      notes: "",
-      location: "",
-      siteContact: "",
-      contactInfo: "",
-      assignments: [
-        {
-          id: `${jobRef.id}-${employeeId}`, // ✅ calendar-safe id
-          employeeId,
-          start: startISO,
-          end: endISO,
-        },
-      ],
-    };
   };
 
   /* FILTERS */

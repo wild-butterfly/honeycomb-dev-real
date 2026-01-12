@@ -315,14 +315,15 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       setAssignments(list);
 
       // ✅ derive time range from valid assignments only
+      // ✅ derive time range from valid assignments only
       const validStarts = list
-        .map((a) => new Date(a.start))
-        .filter(isValidDate)
+        .map((a) => (a.start ? new Date(a.start) : null))
+        .filter((d): d is Date => d instanceof Date && !isNaN(d.getTime()))
         .map((d) => d.getTime());
 
       const validEnds = list
-        .map((a) => new Date(a.end))
-        .filter(isValidDate)
+        .map((a) => (a.end ? new Date(a.end) : null))
+        .filter((d): d is Date => d instanceof Date && !isNaN(d.getTime()))
         .map((d) => d.getTime());
 
       if (validStarts.length > 0 && validEnds.length > 0) {

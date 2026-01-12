@@ -25,7 +25,7 @@ interface Props {
 }
 
 interface EmployeeDoc {
-  id: string; // 🔒 Firestore ID
+  id: string; // Firestore ID (STRING)
   name?: string;
   fullName?: string;
   displayName?: string;
@@ -36,34 +36,63 @@ const ENABLED_TABS: TabType[] = ["scheduling", "labour"];
 
 /* ================= HELPERS ================= */
 
+/**
+ * Safely convert Firestore / ISO / Date → Date
+ */
 function toDateSafe(v: any): Date | null {
   if (!v) return null;
+
   if (v instanceof Timestamp) return v.toDate();
+
   if (typeof v === "object" && typeof v.toDate === "function") {
     const d = v.toDate();
     return d instanceof Date && !isNaN(d.getTime()) ? d : null;
   }
+
   if (typeof v === "string") {
     const d = new Date(v);
     return !isNaN(d.getTime()) ? d : null;
   }
-  if (v instanceof Date) return !isNaN(v.getTime()) ? v : null;
+
+  if (v instanceof Date) {
+    return !isNaN(v.getTime()) ? v : null;
+  }
+
   return null;
 }
 
+/**
+ * Safely convert to ISO string
+ */
 function toIsoSafe(v: any): string | undefined {
   const d = toDateSafe(v);
   return d ? d.toISOString() : undefined;
 }
 
+/**
+ * 🔥 SAFE HOUR CALCULATION
+ * - blocks negatives
+ * - blocks invalid dates
+ * - 15 min precision
+ */
 function calcHours(startIso?: string, endIso?: string): number {
   if (!startIso || !endIso) return 0;
-  const s = new Date(startIso).getTime();
-  const e = new Date(endIso).getTime();
-  if (Number.isNaN(s) || Number.isNaN(e)) return 0;
-  return Math.round((e - s) / (1000 * 60 * 60));
+
+  const s = Date.parse(startIso);
+  const e = Date.parse(endIso);
+
+  if (!Number.isFinite(s) || !Number.isFinite(e)) return 0;
+  if (e <= s) return 0;
+
+  const hours = (e - s) / (1000 * 60 * 60);
+
+  // 0.25h precision (15 mins)
+  return Math.round(hours * 4) / 4;
 }
 
+/**
+ * Prevent duplicate schedules
+ */
 function uniqueScheduleKey(start?: string, end?: string) {
   return `${start || "x"}__${end || "y"}`;
 }
@@ -86,7 +115,9 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   /* ================= TAB SAFETY ================= */
 
   useEffect(() => {
-    if (!ENABLED_TABS.includes(activeTab)) setActiveTab("scheduling");
+    if (!ENABLED_TABS.includes(activeTab)) {
+      setActiveTab("scheduling");
+    }
   }, [activeTab]);
 
   /* ================= LOAD EMPLOYEES ================= */
@@ -136,7 +167,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           if (!grouped.has(empId)) {
             grouped.set(empId, {
               assignmentId: d.id,
-              employeeId: String(empId),
+              employeeId: empId,
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
               labour: { enteredHours: 0, completed: false },
@@ -149,7 +180,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           target.name =
             employeeNameById.get(empId) || target.name || `Employee ${empId}`;
 
-          // NEW FORMAT
+          /* ---------- NEW FORMAT (MULTI-SCHEDULE) ---------- */
           if (Array.isArray(data.schedules)) {
             for (const s of data.schedules) {
               const startIso = toIsoSafe(s?.start);
@@ -173,33 +204,36 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             continue;
           }
 
-          // LEGACY FORMAT
+          /* ---------- LEGACY FORMAT ---------- */
+          // 🚫 Assign-only records must NOT count as schedule
+          if (data.scheduled === false) continue;
+
           const startIso = toIsoSafe(data.start);
           const endIso = toIsoSafe(data.end);
+          if (!startIso || !endIso) continue;
 
-          if (startIso && endIso) {
-            const key = uniqueScheduleKey(startIso, endIso);
-            if (
-              !target.schedules.some(
-                (x) => uniqueScheduleKey(x.start, x.end) === key
-              )
-            ) {
-              target.schedules.push({
-                start: startIso,
-                end: endIso,
-                hours: calcHours(startIso, endIso),
-              });
-            }
+          const key = uniqueScheduleKey(startIso, endIso);
+          if (
+            !target.schedules.some(
+              (x) => uniqueScheduleKey(x.start, x.end) === key
+            )
+          ) {
+            target.schedules.push({
+              start: startIso,
+              end: endIso,
+              hours: calcHours(startIso, endIso),
+            });
           }
         }
 
+        /* ---------- SORT SCHEDULES ---------- */
         grouped.forEach((v) =>
           v.schedules.sort(
             (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
           )
         );
 
-        // 🔥 MISSING NAMES (Firestore needs STRING IDS)
+        /* ---------- FIX MISSING NAMES ---------- */
         const missing = Array.from(grouped.values())
           .filter((x) => !x.name || x.name === "Loading...")
           .map((x) => String(x.employeeId));
@@ -239,7 +273,10 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
       doc(db, "jobs", safeJobId, "assignments", selectedEmployee),
       {
         employeeId: selectedEmployee,
-        schedules: [],
+        scheduled: false,
+        start: null,
+        end: null,
+        role: "technician",
         createdAt: new Date(),
       },
       { merge: true }

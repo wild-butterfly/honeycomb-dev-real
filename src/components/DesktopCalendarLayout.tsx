@@ -18,11 +18,12 @@ interface Props {
 
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 
-  onMoveJob: (
+  onMoveJob?: (
     jobId: string,
     employeeId: number,
-    newStart: Date,
-    newEnd: Date
+    start: Date,
+    end: Date,
+    targetEmployeeId?: number
   ) => void;
 
   selectedEmployeeId?: number;
@@ -83,7 +84,11 @@ type ActiveDrag = {
    - Date
    - Firestore Timestamp (has toDate())
 ======================================================== */
-
+function normalizeDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x.getTime();
+}
 const toJsDate = (v: any): Date | null => {
   if (!v) return null;
 
@@ -178,22 +183,42 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     [jobs]
   );
 
-  /* ================= MAP JOBS BY EMPLOYEE (ASSIGNMENT-BASED) ================= */
+  /* ================= MAP JOBS BY EMPLOYEE (CALENDAR = scheduled true OR legacy undefined) ================= */
   const jobsByEmployee: Record<number, CalendarJob[]> = useMemo(() => {
     const map: Record<number, CalendarJob[]> = {};
     for (const e of employees) map[e.id] = [];
 
     for (const job of jobs) {
-      const empIds = getAssignedEmployeeIdsFromAssignments(job);
-      for (const empId of empIds) {
+      for (const a of job.assignments ?? []) {
+        // ✅ CALENDAR RULE:
+        // - hide only if explicitly scheduled:false
+        // - show if scheduled:true OR scheduled is missing (legacy data)
+        const scheduledFlag = (a as any).scheduled;
+        if (scheduledFlag === false) continue;
+
+        // must have start/end to be drawable
+        if (!a.start || !a.end) continue;
+
+        // ✅ must be on the currently selected day (otherwise week/day gets messy)
+        const startDate = new Date(a.start);
+        if (isNaN(startDate.getTime())) continue;
+        if (!sameDay(startDate, date)) continue;
+
+        const empId = Number(a.employeeId);
+        if (!Number.isFinite(empId)) continue;
         if (!map[empId]) continue;
+
         if (!selectedEmployeeId || empId === selectedEmployeeId) {
-          map[empId].push(job);
+          // avoid duplicates
+          if (!map[empId].some((j) => j.id === job.id)) {
+            map[empId].push(job);
+          }
         }
       }
     }
+
     return map;
-  }, [jobs, employees, selectedEmployeeId]);
+  }, [jobs, employees, selectedEmployeeId, date]);
 
   /* ================= SCROLL SYNC ================= */
   useEffect(() => {
@@ -292,16 +317,35 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       const ctx = activeDragRef.current;
       if (!ctx) return;
 
       const key = `${ctx.jobId}-${ctx.employeeId}`;
       const pv = previewTimes[key];
 
-      // Commit only ONCE on mouseup
       if (pv) {
-        onMoveJob(ctx.jobId, ctx.employeeId, pv.start, pv.end);
+        // 🔍 Mouse altındaki employee row’u bul
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const row = el?.closest("[data-employee-id]") as HTMLElement | null;
+
+        const targetEmployeeId = row
+          ? Number(row.dataset.employeeId)
+          : ctx.employeeId; // fallback = aynı employee
+
+        // 🧪 Debug (ilk testte çok faydalı)
+        console.log("DRAG DROP", {
+          from: ctx.employeeId,
+          to: targetEmployeeId,
+        });
+
+        onMoveJob?.(
+          ctx.jobId,
+          ctx.employeeId,
+          pv.start,
+          pv.end,
+          targetEmployeeId
+        );
       }
 
       // Clear preview + drag
@@ -377,7 +421,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                 : jobsByEmployee[emp.id] || [];
 
             return (
-              <div key={emp.id} className={styles.timelineRow}>
+              <div
+                key={emp.id}
+                className={styles.timelineRow}
+                data-employee-id={emp.id}
+              >
                 <div className={styles.jobsLane}>
                   {/* GRID */}
                   <div className={styles.timeSlotsRow}>
@@ -405,7 +453,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                             const end = new Date(start);
                             end.setHours(start.getHours() + 1);
 
-                            onMoveJob(
+                            onMoveJob?.(
                               scheduleMode.jobId,
                               scheduleMode.employeeId,
                               start,
@@ -450,7 +498,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       pv?.end ?? getEndForEmployee(job, emp.id, fallbackEnd);
 
                     // Only show blocks on the selected day
-                    if (!sameDay(start, date)) return null;
+                    if (normalizeDay(start) !== normalizeDay(date)) return null;
 
                     const startMinutes =
                       start.getHours() * 60 + start.getMinutes();
