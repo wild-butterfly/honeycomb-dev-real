@@ -5,10 +5,8 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 import styles from "./JobPage.module.css";
 import LeftSidebar from "../components/LeftSidebar";
-import JobPhaseSection from "../components/JobPhaseSection";
 import { db } from "../firebase";
 import AssignmentSchedulingSection from "../components/AssignmentSchedulingSection";
-
 
 /* ===================== TYPES ===================== */
 
@@ -75,7 +73,9 @@ const JobPage: React.FC = () => {
                 }}
                 className={styles.clickToEdit}
               >
-                {job.notes || <span style={{ color: "#aaa" }}>Add job phase notes…</span>}
+                {job.notes || (
+                  <span style={{ color: "#aaa" }}>Add job phase notes…</span>
+                )}
               </div>
             ) : (
               <div className={styles.editBox}>
@@ -122,7 +122,7 @@ const JobPage: React.FC = () => {
           </div>
         </div>
 
-            {/* ASSIGNMENT & SCHEDULING */}
+        {/* ASSIGNMENT & SCHEDULING */}
         <div className={styles.section}>
           <AssignmentSchedulingSection jobId={job.id} />
         </div>
