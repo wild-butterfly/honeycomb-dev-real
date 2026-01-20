@@ -447,7 +447,17 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
                   <span className={styles.staffName}>{emp.name}</span>
 
-                  {editMode && <span className={styles.removeX}>×</span>}
+                  {editMode && (
+                    <span
+                      className={styles.removeX}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeAssignment(id);
+                      }}
+                    >
+                      ×
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -485,8 +495,28 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                     className={`${styles.staffPickerItem} ${
                       isSelected ? styles.staffSelected : ""
                     }`}
-                    onClick={() => {
-                      onStartSchedule(job.id, emp.id);
+                    onClick={async () => {
+                      // ✅ 1) Job'ın bulunduğu günü referans al
+                      let baseDate: Date;
+
+                      if (assignments.length > 0 && assignments[0].start) {
+                        baseDate = new Date(assignments[0].start);
+                      } else {
+                        // fallback (çok nadir)
+                        baseDate = new Date();
+                      }
+
+                      // ✅ 2) Default saatler
+                      const start = new Date(baseDate);
+                      start.setHours(9, 0, 0, 0);
+
+                      const end = new Date(baseDate);
+                      end.setHours(17, 0, 0, 0);
+
+                      // ✅ 3) Firestore'a ekle
+                      await upsertAssignment(emp.id, start, end);
+
+                      setEditingEmployeeId(emp.id);
                       setShowStaffPicker(false);
                     }}
                   >
