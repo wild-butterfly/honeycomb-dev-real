@@ -104,27 +104,23 @@ type ActiveDrag = {
   mode: DragMode;
   jobId: string;
 
-  fromEmployeeId: number; // drag start row
-  currentTargetEmployeeId: number; // changes as you move vertically
+  fromEmployeeId: number;
+  currentTargetEmployeeId: number;
 
-  // pointerdown snapshot
   pointerStartX: number;
   pointerStartY: number;
   moved: boolean;
 
-  // geometry snapshot
-  laneLeftPx: number; // viewport px (left of lane)
-  rowTopInTimelinePx: number; // content px top (relative to timeline content)
+  laneLeftPx: number;
+  rowTopInTimelinePx: number;
 
-  // keep grab offset so dragging feels "attached"
-  grabOffsetX: number; // px in lane-content coordinates: (pointerX in lane content) - (blockLeftPx)
+  grabOffsetX: number;
+  resizeOffsetX?: number;
 
-  // original times (from assignment)
   originalStart: Date;
   originalEnd: Date;
   durationMs: number;
 
-  // computed live
   liveStart: Date;
   liveEnd: Date;
 };
@@ -399,7 +395,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
       if (ctx.mode === "resize") {
         // resize is driven directly by pointer X (no grabOffset)
-        const endMinutesRaw = pxToMinutes(x - ctx.laneLeftPx + scrollLeftNow);
+        const laneContentX =
+          x - ctx.laneLeftPx + scrollLeftNow - (ctx.resizeOffsetX ?? 0);
+
+        const endMinutesRaw = pxToMinutes(laneContentX);
         const endSnapped = snap15(endMinutesRaw);
 
         const startMins =
@@ -539,6 +538,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
       activeDragRef.current = {
         mode: "move",
+
         jobId: job.id,
         fromEmployeeId: rowEmployeeId,
         currentTargetEmployeeId: rowEmployeeId,
@@ -552,8 +552,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
         grabOffsetX,
 
-        originalStart: rawStart,
-        originalEnd: rawEnd,
+        originalStart: clamped.start,
+        originalEnd: clamped.end,
         durationMs,
 
         liveStart: clamped.start,
@@ -600,6 +600,19 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         clamped.end.getTime() - clamped.start.getTime(),
       );
 
+      // ✅ SAĞ KENAR HESABI (DOĞRU YER)
+      const startMinutes =
+        clamped.start.getHours() * 60 + clamped.start.getMinutes();
+
+      const durationMinutes =
+        (clamped.end.getTime() - clamped.start.getTime()) / 60000;
+
+      const blockRightPx = minutesToPx(startMinutes + durationMinutes);
+
+      const laneContentX = e.clientX - laneRect.left + body.scrollLeft;
+
+      const resizeOffsetX = laneContentX - blockRightPx;
+
       activeDragRef.current = {
         mode: "resize",
         jobId: job.id,
@@ -614,6 +627,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         rowTopInTimelinePx: laneRect.top - timelineRect.top + body.scrollTop,
 
         grabOffsetX: 0,
+        resizeOffsetX,
 
         originalStart: clamped.start,
         originalEnd: clamped.end,
@@ -624,7 +638,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       };
 
       setDraggingKey(`${job.id}-${rowEmployeeId}`);
-
       lastPointerRef.current = { x: e.clientX, y: e.clientY };
       scheduleRaf();
     },
@@ -695,42 +708,49 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     {hours.map((h) => {
                       const slotStart = new Date(date);
                       slotStart.setHours(h, 0, 0, 0);
+
                       const slotEnd = new Date(slotStart);
                       slotEnd.setHours(slotEnd.getHours() + 1);
+
+                      const isScheduleTargetRow =
+                        !!scheduleMode && emp.id === scheduleMode.employeeId;
 
                       return (
                         <div
                           key={h}
                           className={styles.timeSlotCell}
                           onMouseDown={(ev) => {
-                            if (!scheduleMode) return;
-                            if (emp.id !== scheduleMode.employeeId) return;
+                            if (!isScheduleTargetRow) return;
 
                             ev.preventDefault();
                             ev.stopPropagation();
 
-                            const start = new Date(date);
-                            start.setHours(h, 0, 0, 0);
-
-                            const end = new Date(start);
-                            end.setHours(start.getHours() + 1);
-
                             onMoveJob?.(
-                              scheduleMode.jobId,
-                              scheduleMode.employeeId,
-                              start,
-                              end,
+                              scheduleMode!.jobId,
+                              scheduleMode!.employeeId,
+                              slotStart,
+                              slotEnd,
                             );
+
                             clearScheduleMode?.();
                           }}
                         >
-                          {onAddJobAt && (
+                          {isScheduleTargetRow && (
                             <button
                               type="button"
                               className={styles.slotAddButton}
-                              onClick={(ev) => {
+                              onMouseDown={(ev) => {
+                                ev.preventDefault();
                                 ev.stopPropagation();
-                                onAddJobAt(emp.id, slotStart, slotEnd);
+
+                                onMoveJob?.(
+                                  scheduleMode!.jobId,
+                                  scheduleMode!.employeeId,
+                                  slotStart,
+                                  slotEnd,
+                                );
+
+                                clearScheduleMode?.();
                               }}
                             >
                               +
@@ -740,7 +760,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       );
                     })}
                   </div>
-
                   {/* JOB BLOCKS */}
                   {empJobs.map((job) => {
                     const key = `${job.id}-${emp.id}`;

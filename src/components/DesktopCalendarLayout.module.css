@@ -128,7 +128,7 @@
   position: absolute;
   inset: 0;
   display: flex;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .timeSlotCell {
@@ -137,6 +137,7 @@
   border-right: 1px solid rgba(212, 184, 74, 0.15);
   border-bottom: 1px solid rgba(212, 184, 74, 0.25);
   background: #ffffff !important;
+  pointer-events: auto;
 }
 
 /* ==========================================
@@ -161,6 +162,10 @@
 }
 
 .timeSlotCell:hover .slotAddButton {
+  opacity: 1;
+  pointer-events: auto;
+}
+.slotAddVisible {
   opacity: 1;
   pointer-events: auto;
 }
