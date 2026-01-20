@@ -713,29 +713,37 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       slotEnd.setHours(slotEnd.getHours() + 1);
 
                       const isScheduleTargetRow =
-                        !!scheduleMode && emp.id === scheduleMode.employeeId;
+                        !scheduleMode || emp.id === scheduleMode.employeeId;
 
                       return (
                         <div
                           key={h}
                           className={styles.timeSlotCell}
                           onMouseDown={(ev) => {
-                            if (!isScheduleTargetRow) return;
-
                             ev.preventDefault();
                             ev.stopPropagation();
 
-                            onMoveJob?.(
-                              scheduleMode!.jobId,
-                              scheduleMode!.employeeId,
-                              slotStart,
-                              slotEnd,
-                            );
+                            // 🔁 MOVE EXISTING JOB
+                            if (scheduleMode) {
+                              if (!isScheduleTargetRow) return;
 
-                            clearScheduleMode?.();
+                              onMoveJob?.(
+                                scheduleMode.jobId,
+                                scheduleMode.employeeId,
+                                slotStart,
+                                slotEnd,
+                              );
+
+                              clearScheduleMode?.();
+                              return;
+                            }
+
+                            // ➕ ADD NEW JOB
+                            onAddJobAt(emp.id, slotStart, slotEnd);
                           }}
                         >
-                          {isScheduleTargetRow && (
+                          {/* ➕ HOVER BUTTON */}
+                          {(scheduleMode || true) && (
                             <button
                               type="button"
                               className={styles.slotAddButton}
@@ -743,14 +751,23 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                                 ev.preventDefault();
                                 ev.stopPropagation();
 
-                                onMoveJob?.(
-                                  scheduleMode!.jobId,
-                                  scheduleMode!.employeeId,
-                                  slotStart,
-                                  slotEnd,
-                                );
+                                // 🔁 MOVE EXISTING JOB
+                                if (scheduleMode) {
+                                  if (!isScheduleTargetRow) return;
 
-                                clearScheduleMode?.();
+                                  onMoveJob?.(
+                                    scheduleMode.jobId,
+                                    scheduleMode.employeeId,
+                                    slotStart,
+                                    slotEnd,
+                                  );
+
+                                  clearScheduleMode?.();
+                                  return;
+                                }
+
+                                // ➕ ADD NEW JOB
+                                onAddJobAt(emp.id, slotStart, slotEnd);
                               }}
                             >
                               +
@@ -760,6 +777,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       );
                     })}
                   </div>
+
                   {/* JOB BLOCKS */}
                   {empJobs.map((job) => {
                     const key = `${job.id}-${emp.id}`;

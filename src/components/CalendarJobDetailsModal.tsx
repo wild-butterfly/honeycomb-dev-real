@@ -21,12 +21,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
-import {
-  getJobStart,
-  getJobEnd,
-  getAssignedEmployeeIds,
-} from "../utils/jobTime";
-
 interface Props {
   job: CalendarJob;
   employees: Employee[];
@@ -93,28 +87,24 @@ function renderContactCard(rawText: string) {
   );
 }
 
-/* ================= DATE FORMAT ================= */
+/* ================= DATE FORMAT (TIME REMOVED) ================= */
 
-// ✅ Safe ISO for Date
+// ✅ Safe ISO for Date (kept because used by upsertAssignment)
 const safeISO = (d?: Date | null) =>
   d instanceof Date && !isNaN(d.getTime()) ? d.toISOString() : "";
 
 // ✅ Safe: convert any Firestore-ish date value to a valid ISO string (or "")
-// handles: ISO string, Date, number(ms), {seconds,nanoseconds}, Firestore Timestamp-like
 function toISOFromAny(value: any): string {
   try {
     if (!value) return "";
 
-    // Already a Date
     if (value instanceof Date) return safeISO(value);
 
-    // Firestore Timestamp object (has toDate)
     if (typeof value?.toDate === "function") {
       const d = value.toDate();
       return safeISO(d);
     }
 
-    // { seconds, nanoseconds }
     if (
       typeof value === "object" &&
       typeof value.seconds === "number" &&
@@ -125,70 +115,21 @@ function toISOFromAny(value: any): string {
       return safeISO(d);
     }
 
-    // number (ms)
     if (typeof value === "number") {
       const d = new Date(value);
       return safeISO(d);
     }
 
-    // string
     if (typeof value === "string") {
-      // If it's already ISO-ish, new Date should parse it
       const d = new Date(value);
       return safeISO(d);
     }
 
-    // fallback
     const d = new Date(String(value));
     return safeISO(d);
   } catch {
     return "";
   }
-}
-
-// ✅ Safe: HH:MM for <input type="time">
-const safeTimeValue = (d?: Date | null) => {
-  const iso = safeISO(d);
-  // input type="time" needs HH:MM
-  return iso ? iso.substring(11, 16) : "00:00";
-};
-
-// ✅ Safe: validate Date
-const isValidDate = (d: any): d is Date =>
-  d instanceof Date && !isNaN(d.getTime());
-
-function formatDateLine(start: Date, end: Date) {
-  // ✅ Guard: if invalid dates sneak in, don't crash UI
-  if (!isValidDate(start) || !isValidDate(end)) {
-    return {
-      dateLabel: "—",
-      timeLabel: "—",
-      durationLabel: "—",
-    };
-  }
-
-  const dateLabel = start.toLocaleDateString("en-AU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  const timeLabel =
-    start.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" }) +
-    " – " +
-    end.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
-
-  const durationMinutes = Math.round((end.getTime() - start.getTime()) / 60000);
-  const hours = Math.floor(durationMinutes / 60);
-  const mins = durationMinutes % 60;
-
-  return {
-    dateLabel,
-    timeLabel,
-    durationLabel:
-      hours && mins ? `${hours}h ${mins}m` : hours ? `${hours}h` : `${mins}m`,
-  };
 }
 
 /* ================= COMPONENT ================= */
@@ -202,15 +143,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   onStartSchedule,
 }) => {
   const navigate = useNavigate();
-
-  /* ================= INITIAL TIME (SAFE) ================= */
-
-  const initialStart = useMemo<Date>(
-    () => getJobStart(job) ?? new Date(),
-    [job]
-  );
-
-  const initialEnd = useMemo<Date>(() => getJobEnd(job) ?? new Date(), [job]);
 
   /* ================= UI STATE ================= */
 
@@ -232,16 +164,9 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
-  /* ================= TIME EDIT ================= */
-
-  const [localStart, setLocalStart] = useState<Date>(initialStart);
-  const [localEnd, setLocalEnd] = useState<Date>(initialEnd);
-
-  /* ================= COMPUTED LABELS ================= */
-
-  const { dateLabel, timeLabel, durationLabel } = useMemo(
-    () => formatDateLine(localStart, localEnd),
-    [localStart, localEnd]
+  // 🔥 Which employee is currently being edited
+  const [editingEmployeeId, setEditingEmployeeId] = useState<number | null>(
+    null,
   );
 
   /* ================= CONTACT PARSE ================= */
@@ -300,44 +225,28 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       const list: Assignment[] = snap.docs.map((d) => {
         const data = d.data() as any;
 
-        // ✅ normalize start/end to ISO strings or ""
-        const startISO = toISOFromAny(data.start);
-        const endISO = toISOFromAny(data.end);
-
         return {
           id: d.id,
           employeeId: Number(data.employeeId),
-          start: startISO,
-          end: endISO,
+          start: toISOFromAny(data.start),
+          end: toISOFromAny(data.end),
         };
       });
 
+      // 🔹 source of truth
       setAssignments(list);
 
-      // ✅ derive time range from valid assignments only
-      // ✅ derive time range from valid assignments only
-      const validStarts = list
-        .map((a) => (a.start ? new Date(a.start) : null))
-        .filter((d): d is Date => d instanceof Date && !isNaN(d.getTime()))
-        .map((d) => d.getTime());
+      // 🔹 default selected employee
+      let activeEmployeeId = editingEmployeeId;
 
-      const validEnds = list
-        .map((a) => (a.end ? new Date(a.end) : null))
-        .filter((d): d is Date => d instanceof Date && !isNaN(d.getTime()))
-        .map((d) => d.getTime());
-
-      if (validStarts.length > 0 && validEnds.length > 0) {
-        const newStart = new Date(Math.min(...validStarts));
-        const newEnd = new Date(Math.max(...validEnds));
-
-        // ✅ only set if valid (extra safe)
-        if (isValidDate(newStart)) setLocalStart(newStart);
-        if (isValidDate(newEnd)) setLocalEnd(newEnd);
+      if (activeEmployeeId == null && list.length > 0) {
+        activeEmployeeId = list[0].employeeId;
+        setEditingEmployeeId(activeEmployeeId);
       }
     });
 
     return () => unsub();
-  }, [job?.id]);
+  }, [job?.id, editingEmployeeId]);
 
   /* ================= JOB CHANGE RESET ================= */
 
@@ -353,12 +262,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setJobColor(job.color || "#fff9e6");
     setStatus(job.status || "active");
 
-    // SAFE fallback
-    const s = getJobStart(job) ?? new Date();
-    const e = getJobEnd(job) ?? new Date();
-    setLocalStart(isValidDate(s) ? s : new Date());
-    setLocalEnd(isValidDate(e) ? e : new Date());
-
     // ❗ assignments BURADA SET EDİLMİYOR
     // çünkü Firestore snapshot source of truth
   }, [job]);
@@ -366,7 +269,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   // Helpers
   const assignedTo = useMemo(
     () => assignments.map((a) => a.employeeId),
-    [assignments]
+    [assignments],
   );
 
   const openMap = (address: string) => {
@@ -381,14 +284,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   const upsertAssignment = async (
     employeeId: number,
     start: Date,
-    end: Date
+    end: Date,
   ) => {
     const aRef = doc(
       db,
       "jobs",
       String(job.id),
       "assignments",
-      String(employeeId)
+      String(employeeId),
     );
     await setDoc(
       aRef,
@@ -397,7 +300,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         start: safeISO(start),
         end: safeISO(end),
       },
-      { merge: true }
+      { merge: true },
     );
   };
 
@@ -407,16 +310,9 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       "jobs",
       String(job.id),
       "assignments",
-      String(employeeId)
+      String(employeeId),
     );
     await deleteDoc(aRef);
-  };
-
-  const updateAllAssignmentTimes = async (start: Date, end: Date) => {
-    // update every assignment doc to new time window
-    await Promise.all(
-      (assignments ?? []).map((a) => upsertAssignment(a.employeeId, start, end))
-    );
   };
 
   const handleSaveClick = async () => {
@@ -440,10 +336,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       status,
     });
 
-    // 2) update assignment times (single window for all)
-    await updateAllAssignmentTimes(localStart, localEnd);
-
-    // 3) update local state for CalendarPage
+    // 2) update local state for CalendarPage (TIME REMOVED => assignments unchanged)
     const updatedLocal: CalendarJob = {
       ...job,
       title,
@@ -454,13 +347,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       notes,
       color: jobColor,
       status,
-
-      // ✅ never call localStart.toISOString() directly
-      assignments: assignments.map((a) => ({
-        ...a,
-        start: safeISO(localStart),
-        end: safeISO(localEnd),
-      })),
+      assignments,
     };
 
     onSave(updatedLocal);
@@ -482,7 +369,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             ) : (
               <div className={styles.title}>{title}</div>
             )}
-            <div className={styles.subtitle}>{dateLabel}</div>
           </div>
 
           <button className={styles.closeBtn} onClick={onClose}>
@@ -530,49 +416,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           )}
         </div>
 
-        {/* TIME */}
-        <div className={styles.section}>
-          <div className={styles.sectionLabel}>TIME</div>
-
-          {editMode ? (
-            <div style={{ display: "flex", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12 }}>Start</label>
-                <input
-                  type="time"
-                  value={safeTimeValue(localStart)}
-                  onChange={(e) => {
-                    const [h, m] = e.target.value.split(":").map(Number);
-                    const base = isValidDate(localStart)
-                      ? localStart
-                      : new Date();
-                    const d = new Date(base);
-                    d.setHours(h, m, 0, 0);
-                    setLocalStart(d);
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 12 }}>End</label>
-                <input
-                  type="time"
-                  value={safeTimeValue(localEnd)}
-                  onChange={(e) => {
-                    const [h, m] = e.target.value.split(":").map(Number);
-                    const base = isValidDate(localEnd) ? localEnd : new Date();
-                    const d = new Date(base);
-                    d.setHours(h, m, 0, 0);
-                    setLocalEnd(d);
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className={styles.sectionValue}>{timeLabel}</div>
-          )}
-        </div>
-
         {/* STAFF */}
         <div className={styles.section}>
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
@@ -586,12 +429,13 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                 <div
                   key={id}
                   className={styles.staffChip}
-                  onClick={async () => {
-                    if (!editMode) return;
-                    await removeAssignment(id);
+                  onClick={() => editMode && setEditingEmployeeId(id)}
+                  style={{
+                    outline:
+                      editMode && editingEmployeeId === id
+                        ? "2px solid #d4b84a"
+                        : "none",
                   }}
-                  style={{ cursor: editMode ? "pointer" : "default" }}
-                  title={editMode ? "Click to remove" : ""}
                 >
                   <div className={styles.staffAvatar2}>
                     {emp.name
@@ -691,7 +535,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                     e.target.value
                       .split(",")
                       .map((s) => s.trim())
-                      .filter(Boolean)
+                      .filter(Boolean),
                   )
                 }
               />
@@ -705,7 +549,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                     e.target.value
                       .split(",")
                       .map((s) => s.trim())
-                      .filter(Boolean)
+                      .filter(Boolean),
                   )
                 }
               />
@@ -713,8 +557,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           ) : (
             renderContactCard(
               `${contactInfoName}\n${contactInfoEmails.join(
-                "\n"
-              )}\n${contactInfoPhones.join("\n")}`.trim()
+                "\n",
+              )}\n${contactInfoPhones.join("\n")}`.trim(),
             )
           )}
         </div>
@@ -743,7 +587,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               value={status}
               onChange={(e) =>
                 setStatus(
-                  e.target.value as "active" | "completed" | "return" | "quote"
+                  e.target.value as "active" | "completed" | "return" | "quote",
                 )
               }
             >
