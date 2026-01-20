@@ -20,7 +20,7 @@
   grid-template-columns: 180px 1fr;
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 60;
   background: #fff9e3;
   border-bottom: 1px solid rgba(212, 184, 74, 0.3);
 }
@@ -56,14 +56,16 @@
   overflow-y: auto;
 }
 
-/* STICKY LEFT STAFF LIST */
+/* ==========================================
+   STAFF COLUMN
+========================================== */
 
 .staffColumn {
   position: sticky;
   left: 0;
   top: 0;
   background: #ffffff;
-  z-index: 40;
+  z-index: 50;
   border-right: 1px solid #ffe066;
 }
 
@@ -100,6 +102,7 @@
 ========================================== */
 
 .timelineScroll {
+  position: relative; /* REQUIRED for ghost */
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -112,15 +115,28 @@
   background: #ffffff;
 }
 
+.jobsLane {
+  position: relative;
+  height: 100%;
+}
+
+/* ==========================================
+   TIME GRID
+========================================== */
+
 .timeSlotsRow {
+  position: absolute;
+  inset: 0;
   display: flex;
+  pointer-events: none;
 }
 
 .timeSlotCell {
   flex: 0 0 104px;
-  border-right: 1px solid rgba(212, 184, 74, 0.15);
   position: relative;
-  background: transparent !important;
+  border-right: 1px solid rgba(212, 184, 74, 0.15);
+  border-bottom: 1px solid rgba(212, 184, 74, 0.25);
+  background: #ffffff !important;
 }
 
 /* ==========================================
@@ -140,22 +156,24 @@
   cursor: pointer;
   opacity: 0;
   font-weight: 800;
-  transition: 0.15s;
+  transition: 0.15s ease;
+  pointer-events: none;
 }
 
 .timeSlotCell:hover .slotAddButton {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* ==========================================
-   JOB BLOCKS
+   JOB BLOCKS (REAL)
 ========================================== */
 
 .jobBlock {
   position: absolute;
   top: 10px;
   min-height: 100px;
-  padding: 10px 10px 10px 10px;
+  padding: 10px;
   border: 1.5px solid #b99a2a;
   border-radius: 10px;
   background: #fffef9;
@@ -166,8 +184,15 @@
   color: #232323;
   box-shadow: 0 2px 10px rgba(185, 154, 42, 0.15);
   cursor: grab;
-  overflow: visible;
-  align-items: self-start;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: none;
+
+  /* 🔥 B OPTION PERFORMANCE */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  will-change: transform;
 }
 
 .jobBlockTitle {
@@ -190,28 +215,48 @@
   font-size: 0.7rem;
   color: #555;
   line-height: 1rem;
-  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
-}
-/* FULL BACKGROUND FIX */
-.timeSlotCell,
-.timeSlotRow,
-.timelineRow {
-  background: #ffffff !important; /* FULL WHITE */
-}
-/* GRID LINE FIX */
-.timeSlotCell {
-  border-bottom: 1px solid rgba(212, 184, 74, 0.25) !important;
 }
 
-.jobsLane {
-  position: relative;
+/* ==========================================
+   RESIZE HANDLE
+========================================== */
+
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
   height: 100%;
-  display: flex; /* <<< ensures grid + jobs align */
-  pointer-events: auto;
+  cursor: ew-resize;
+  background: transparent;
+}
+
+/* ==========================================
+   DRAG GHOST (B OPTION CORE)
+========================================== */
+
+.ghostLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.dragGhost {
+  display: none;
+  position: absolute;
+  height: 100px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  opacity: 0.92;
+
+  /* 🚀 GPU acceleration */
+  will-change: transform, width;
+  transform: translate3d(0, 0, 0);
 }
 
 /* ==========================================

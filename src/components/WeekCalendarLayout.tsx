@@ -1,12 +1,5 @@
 // Created by Clevermode © 2025. All rights reserved.
-import React, { useState } from "react";
-import {
-  DndContext,
-  useDraggable,
-  useDroppable,
-  DragEndEvent,
-} from "@dnd-kit/core";
-
+import React, { useMemo, useState } from "react";
 import styles from "./WeekCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import {
@@ -28,10 +21,16 @@ interface Props {
     id: string,
     employeeId: number,
     newStart: Date,
-    newEnd: Date
+    newEnd: Date,
   ) => void;
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
+
+type DragPayload = {
+  jobId: string;
+  fromEmployeeId: number;
+  fromDayKey: string; // toDateString()
+} | null;
 
 /* ========================================================= */
 /* MAIN COMPONENT */
@@ -46,6 +45,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<DragPayload>(null);
 
   /* ================= WEEK RANGE ================= */
 
@@ -53,38 +53,16 @@ const WeekCalendarLayout: React.FC<Props> = ({
   startOfWeek.setHours(0, 0, 0, 0);
   startOfWeek.setDate(date.getDate() - ((date.getDay() + 6) % 7)); // Monday
 
-  const daysOfWeek = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date(startOfWeek);
-    d.setDate(startOfWeek.getDate() + i);
-    return d;
-  });
+  const daysOfWeek = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      return d;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startOfWeek.getTime()]);
 
-  /* ================= DRAG END ================= */
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const jobId = String(active.id).split("::")[0];
-    const job = jobs.find((j) => j.id === jobId);
-    if (!job) return;
-
-    const [dayIndex, employeeId] = String(over.id).split("-");
-    const newDay = daysOfWeek[Number(dayIndex)];
-
-    const oldStart = getJobStart(job);
-    const oldEnd = getJobEnd(job);
-    if (!oldStart || !oldEnd) return;
-
-    const duration = oldEnd.getTime() - oldStart.getTime();
-
-    const newStart = new Date(newDay);
-    newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
-
-    const newEnd = new Date(newStart.getTime() + duration);
-
-    onJobMove(job.id, Number(employeeId), newStart, newEnd);
-  };
+  const findJobById = (id: string) => jobs.find((j) => j.id === id) || null;
 
   /* ================= FILTER JOBS ================= */
 
@@ -106,52 +84,119 @@ const WeekCalendarLayout: React.FC<Props> = ({
       .join("")
       .toUpperCase();
 
+  /* ================= DROP HANDLER ================= */
+
+  const handleDropOnCell = (day: Date, employeeId: number) => {
+    if (!dragging) return;
+
+    const job = findJobById(dragging.jobId);
+    if (!job) {
+      setDragging(null);
+      return;
+    }
+
+    const oldStart = getJobStart(job);
+    const oldEnd = getJobEnd(job);
+    if (!oldStart || !oldEnd) {
+      setDragging(null);
+      return;
+    }
+
+    // Same slot → no-op
+    const targetDayKey = day.toDateString();
+    const sameDay = dragging.fromDayKey === targetDayKey;
+    const sameEmp = dragging.fromEmployeeId === employeeId;
+    if (sameDay && sameEmp) {
+      setDragging(null);
+      return;
+    }
+
+    const duration = oldEnd.getTime() - oldStart.getTime();
+
+    const newStart = new Date(day);
+    newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
+
+    const newEnd = new Date(newStart.getTime() + duration);
+
+    // Optional overlap protection (aynı anda aynı personele çakışma)
+    const conflict = jobs.some((j) => {
+      if (j.id === job.id) return false;
+      const s = getJobStart(j);
+      const e = getJobEnd(j);
+      if (!s || !e) return false;
+
+      return (
+        getAssignedEmployeeIds(j).includes(employeeId) &&
+        s < newEnd &&
+        e > newStart
+      );
+    });
+
+    if (conflict) {
+      alert("This employee already has a job at this time.");
+      setDragging(null);
+      return;
+    }
+
+    onJobMove(job.id, employeeId, newStart, newEnd);
+    setDragging(null);
+  };
+
   /* ================= RENDER ================= */
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className={styles.weekWrapper}>
-        {/* HEADER */}
-        <div className={styles.headerRow}>
-          <div className={styles.staffHeaderCell} />
+    <div className={styles.weekWrapper}>
+      {/* HEADER */}
+      <div className={styles.headerRow}>
+        <div className={styles.staffHeaderCell} />
 
-          {daysOfWeek.map((day, i) => (
-            <div key={i} className={styles.dayHeader}>
-              <div className={styles.dayLabel}>
-                {day.toLocaleDateString("en-AU", {
-                  weekday: "short",
-                  day: "numeric",
-                })}
-              </div>
+        {daysOfWeek.map((day, i) => (
+          <div key={i} className={styles.dayHeader}>
+            <div className={styles.dayLabel}>
+              {day.toLocaleDateString("en-AU", {
+                weekday: "short",
+                day: "numeric",
+              })}
             </div>
-          ))}
-        </div>
-
-        {/* EMPLOYEE ROWS */}
-        {employees.map((emp) => (
-          <div key={emp.id} className={styles.row}>
-            <div className={styles.staffCell}>
-              <div className={styles.avatarCircle}>{getInitials(emp.name)}</div>
-              <span className={styles.staffName}>{emp.name}</span>
-            </div>
-
-            {daysOfWeek.map((day, i) => (
-              <DroppableCell
-                key={`${emp.id}-${i}`}
-                id={`${i}-${emp.id}`}
-                day={day}
-                employee={emp}
-                jobs={getJobsForDayAndEmployee(day, emp.id)}
-                hoverSlot={hoverSlot}
-                setHoverSlot={setHoverSlot}
-                onJobClick={onJobClick}
-                onAddJobAt={onAddJobAt}
-              />
-            ))}
           </div>
         ))}
       </div>
-    </DndContext>
+
+      {/* EMPLOYEE ROWS */}
+      {employees.map((emp) => (
+        <div key={emp.id} className={styles.row}>
+          <div className={styles.staffCell}>
+            <div className={styles.avatarCircle}>{getInitials(emp.name)}</div>
+            <span className={styles.staffName}>{emp.name}</span>
+          </div>
+
+          {daysOfWeek.map((day, i) => {
+            const cellId = `${emp.id}__${day.toISOString().slice(0, 10)}`;
+            const jobsInCell = getJobsForDayAndEmployee(day, emp.id);
+
+            return (
+              <DroppableCell
+                key={cellId}
+                id={cellId}
+                day={day}
+                employee={emp}
+                jobs={jobsInCell}
+                hoverSlot={hoverSlot}
+                setHoverSlot={setHoverSlot}
+                dragging={dragging}
+                onDropOnCell={handleDropOnCell}
+                onJobClick={onJobClick}
+                onAddJobAt={onAddJobAt}
+                onDragStartJob={(jobId, fromEmpId, fromDayKey) =>
+                  setDragging({ jobId, fromEmployeeId: fromEmpId, fromDayKey })
+                }
+                onDragEndJob={() => setDragging(null)}
+              />
+            );
+          })}
+        </div>
+      ))}
+    </div>
   );
 };
 
@@ -168,8 +213,12 @@ function DroppableCell({
   jobs,
   hoverSlot,
   setHoverSlot,
+  dragging,
+  onDropOnCell,
   onJobClick,
   onAddJobAt,
+  onDragStartJob,
+  onDragEndJob,
 }: {
   id: string;
   day: Date;
@@ -177,11 +226,17 @@ function DroppableCell({
   jobs: CalendarJob[];
   hoverSlot: string | null;
   setHoverSlot: (x: string | null) => void;
+  dragging: DragPayload;
+  onDropOnCell: (day: Date, employeeId: number) => void;
   onJobClick: (id: string) => void;
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
+  onDragStartJob: (
+    jobId: string,
+    fromEmpId: number,
+    fromDayKey: string,
+  ) => void;
+  onDragEndJob: () => void;
 }) {
-  const { setNodeRef } = useDroppable({ id });
-
   const handleAdd = () => {
     const start = new Date(day);
     start.setHours(9, 0, 0, 0);
@@ -194,16 +249,22 @@ function DroppableCell({
 
   return (
     <div
-      ref={setNodeRef}
       className={`${styles.dayCell} ${jobs.length > 0 ? styles.hasJob : ""}`}
       onMouseEnter={() => setHoverSlot(id)}
       onMouseLeave={() => setHoverSlot(null)}
+      onDragOver={(e) => {
+        if (dragging) e.preventDefault(); // drop'ı aktif eder
+      }}
+      onDrop={() => onDropOnCell(day, employee.id)}
     >
       {jobs.map((job) => (
-        <DraggableJob
+        <NativeDraggableJob
           key={`${job.id}::${employee.id}`}
           job={job}
           employeeId={employee.id}
+          dayKey={day.toDateString()}
+          onDragStart={onDragStartJob}
+          onDragEnd={onDragEndJob}
           onClick={() => onJobClick(job.id)}
         />
       ))}
@@ -218,31 +279,24 @@ function DroppableCell({
 }
 
 /* ========================================================= */
-/* DRAGGABLE JOB */
+/* NATIVE DRAGGABLE JOB */
 /* ========================================================= */
 
-function DraggableJob({
+function NativeDraggableJob({
   job,
   employeeId,
+  dayKey,
+  onDragStart,
+  onDragEnd,
   onClick,
 }: {
   job: CalendarJob;
   employeeId: number;
+  dayKey: string;
+  onDragStart: (jobId: string, fromEmpId: number, fromDayKey: string) => void;
+  onDragEnd: () => void;
   onClick: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: `${job.id}::${employeeId}`,
-    });
-
-  const style: React.CSSProperties = {
-    transform: transform
-      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      : undefined,
-    opacity: isDragging ? 0.6 : 1,
-    backgroundColor: job.color || "#faf7dc",
-  };
-
   let badge = null;
   if (job.status === "quote") {
     badge = <div className={styles.badgeQuote}>QUOTE</div>;
@@ -256,18 +310,17 @@ function DraggableJob({
 
   return (
     <div
-      ref={setNodeRef}
       className={styles.jobBox}
-      style={style}
+      draggable
+      onDragStart={() => onDragStart(job.id, employeeId, dayKey)}
+      onDragEnd={onDragEnd}
       onClick={onClick}
+      style={{
+        backgroundColor: job.color || "#faf7dc",
+      }}
     >
-      {/* DRAG HANDLE */}
-      <div
-        className={styles.dragHandle}
-        {...attributes}
-        {...listeners}
-        onClick={(e) => e.stopPropagation()}
-      >
+      {/* Month’taki gibi “handle” görünümü istersen sadece görsel */}
+      <div className={styles.dragHandle} aria-hidden>
         ⋮⋮
       </div>
 

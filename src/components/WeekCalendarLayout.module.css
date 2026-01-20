@@ -1,3 +1,7 @@
+/* ========================================================= */
+/* WRAPPER */
+/* ========================================================= */
+
 .weekWrapper {
   width: 100%;
   display: flex;
@@ -5,7 +9,10 @@
   background: #fffdf5;
 }
 
+/* ========================================================= */
 /* HEADER */
+/* ========================================================= */
+
 .headerRow {
   display: grid;
   grid-template-columns: 180px repeat(7, 1fr);
@@ -30,7 +37,10 @@
   color: #715c00;
 }
 
+/* ========================================================= */
 /* EMPLOYEE ROW */
+/* ========================================================= */
+
 .row {
   display: grid;
   grid-template-columns: 180px repeat(7, 1fr);
@@ -56,12 +66,18 @@
   justify-content: center;
 }
 
-/* DAY CELL */
+/* ========================================================= */
+/* DAY CELL (DROPPABLE) */
+/* ========================================================= */
+
 .dayCell {
   position: relative;
-  min-height: 90px;
+  min-height: 140px;
   padding: 4px;
   border-right: 1px dashed #f2e2a3;
+
+  /* Native drag-drop güvenliği */
+  pointer-events: auto;
 }
 
 .dayCell:hover {
@@ -73,7 +89,10 @@
   display: none !important;
 }
 
-/* ===== JOB BOX ===== */
+/* ========================================================= */
+/* JOB BOX (DRAGGABLE) */
+/* ========================================================= */
+
 .jobBox {
   background: #fff4c5;
   border: 1px solid #e2c76b;
@@ -83,7 +102,15 @@
   cursor: grab;
   margin-bottom: 6px;
   position: relative;
+
+  /* Native drag UX */
+  user-select: none;
+  -webkit-user-select: none;
 }
+
+/* ========================================================= */
+/* JOB TEXT */
+/* ========================================================= */
 
 .jobTitle {
   font-weight: 700;
@@ -103,7 +130,10 @@
   color: #a88705;
 }
 
+/* ========================================================= */
 /* BADGES */
+/* ========================================================= */
+
 .badgeQuote,
 .badgeCompleted,
 .badgeReturn {
@@ -115,7 +145,9 @@
   font-weight: 700;
   border-radius: 6px;
   border: 1px solid transparent;
-  pointer-events: none !important;
+
+  /* Badge drag'i bozmasın */
+  pointer-events: none;
 }
 
 .badgeQuote {
@@ -136,7 +168,10 @@
   border-color: #f0c38c;
 }
 
-/* ADD BUTTON */
+/* ========================================================= */
+/* ADD BUTTON (+) */
+/* ========================================================= */
+
 .slotAddButton {
   width: 26px;
   height: 26px;
@@ -144,9 +179,11 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+
   display: flex;
   justify-content: center;
   align-items: center;
+
   background: #ffd600;
   color: #4a3f00;
   font-weight: 900;
@@ -155,10 +192,15 @@
   cursor: pointer;
 
   clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+
   opacity: 0;
-  transition: 0.15s ease;
+  transition: opacity 0.15s ease;
+
+  /* 🔥 DROP BLOKAJI ÖNLENİR */
+  pointer-events: none;
 }
 
 .dayCell:hover .slotAddButton {
   opacity: 1;
+  pointer-events: auto;
 }
