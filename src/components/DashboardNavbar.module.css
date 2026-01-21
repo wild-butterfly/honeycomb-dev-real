@@ -1,5 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap");
 
+/* ================= BASE NAVBAR ================= */
 .navbar {
   display: flex;
   align-items: center;
@@ -12,7 +13,7 @@
   font-family: "Inter", system-ui, sans-serif;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 /* LEFT */
@@ -26,15 +27,18 @@
   margin-top: 54px;
 }
 
-/* HAMBURGER */
+/* ================= HAMBURGER ================= */
 .hamburger {
   display: none;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   background: none;
   border: none;
   cursor: pointer;
   width: 44px;
   height: 44px;
+  z-index: 10001; /* 🔴 menünün de üstünde */
 }
 
 .bar {
@@ -44,6 +48,7 @@
   margin: 4px 0;
   transition: 0.25s;
 }
+
 .barOpen1 {
   transform: rotate(45deg) translate(6px, 6px);
 }
@@ -54,7 +59,7 @@
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* MENU */
+/* ================= MENU (DESKTOP) ================= */
 .menu {
   display: flex;
   flex: 1;
@@ -124,12 +129,13 @@
 .actionBtnSecondary {
   background: #fff;
 }
-
-/* ================= MOBILE + iPad Air ================= */
-@media (max-width: 850px) {
+/* ================= MOBILE + TABLET (≤1024px) ================= */
+@media (max-width: 1024px) {
   .hamburger {
     display: flex;
+    z-index: 10001;
   }
+
   .menu {
     display: none;
   }
@@ -142,61 +148,54 @@
     left: 0;
     width: 100vw;
     background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
-    padding-bottom: 16px;
+    z-index: 10000;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    padding-bottom: 18px;
+    pointer-events: auto;
   }
 
   .center,
   .right {
     flex-direction: column;
-    width: 100%;
+    align-items: stretch;
+    width: 92vw;
     max-width: 420px;
     margin: 0 auto;
+    gap: 14px;
+  }
+
+  .link {
+    font-size: 1.05rem;
+    padding: 14px 24px;
+    width: 100%;
+    text-align: left;
+    border-radius: 0;
+    border-bottom: 1px solid #ffe06644;
   }
 
   .searchBox,
   .actionBtn,
   .actionBtnSecondary {
-    width: 92%;
+    width: 100%;
   }
 
   .menuOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.12);
-    z-index: 90;
+    background: rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    pointer-events: auto;
   }
 }
 
-/* ================= iPad Pro / Surface Pro ================= */
-@media (min-width: 851px) and (max-width: 1200px) {
+/* ================= DESKTOP (≥1025px) ================= */
+@media (min-width: 1025px) {
   .hamburger {
     display: none;
   }
 
-  .center {
-    gap: 10px;
-  }
-
-  .link {
-    font-size: 0.95rem;
-    padding: 6px 10px;
-  }
-
-  .searchBox {
-    min-width: 140px;
-  }
-
-  .actionBtn,
-  .actionBtnSecondary {
-    font-size: 0.9rem;
-    padding: 5px 10px;
-    white-space: nowrap;
-  }
-}
-
-/* ================= DESKTOP ================= */
-@media (min-width: 1201px) {
   .menu {
     display: flex;
+    position: static;
   }
 }

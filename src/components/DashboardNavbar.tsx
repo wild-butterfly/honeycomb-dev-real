@@ -17,7 +17,15 @@ const DashboardNavbar: React.FC<Props> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleNavClick = () => {
+  const closeMenu = () => {
+    setMenuOpen(false);
+  };
+
+  const handleNewJobClick = () => {
+    // 1️⃣ Önce modal / action tetikle
+    onNewJob?.();
+
+    // 2️⃣ Sonra hamburger menüyü kapat
     setMenuOpen(false);
   };
 
@@ -28,7 +36,7 @@ const DashboardNavbar: React.FC<Props> = ({
         <img src="/bee.png" alt="Logo" className={styles.logo} />
       </div>
 
-      {/* HAMBURGER (mobile trigger) */}
+      {/* HAMBURGER */}
       <button
         className={styles.hamburger}
         onClick={() => setMenuOpen((prev) => !prev)}
@@ -40,9 +48,9 @@ const DashboardNavbar: React.FC<Props> = ({
         <span className={`${styles.bar} ${menuOpen ? styles.barOpen3 : ""}`} />
       </button>
 
-      {/* MENU AREA */}
+      {/* MENU */}
       <div className={`${styles.menu} ${menuOpen ? styles.open : ""}`}>
-        {/* CENTER NAV LINKS */}
+        {/* CENTER LINKS */}
         <div className={styles.center}>
           <NavLink
             to="/dashboard"
@@ -50,7 +58,7 @@ const DashboardNavbar: React.FC<Props> = ({
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
-            onClick={handleNavClick}
+            onClick={closeMenu}
           >
             Home
           </NavLink>
@@ -60,7 +68,7 @@ const DashboardNavbar: React.FC<Props> = ({
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
-            onClick={handleNavClick}
+            onClick={closeMenu}
           >
             Jobs
           </NavLink>
@@ -70,35 +78,33 @@ const DashboardNavbar: React.FC<Props> = ({
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
-            onClick={handleNavClick}
+            onClick={closeMenu}
           >
             Customers
           </NavLink>
 
-          {/* 🟡 YENİ: CALENDAR SEKME */}
           <NavLink
             to="/dashboard/calendar"
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
-            onClick={handleNavClick}
+            onClick={closeMenu}
           >
             Calendar
           </NavLink>
-          {/* 🟡 SONU */}
 
           <NavLink
             to="/dashboard/settings"
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
-            onClick={handleNavClick}
+            onClick={closeMenu}
           >
             Settings
           </NavLink>
         </div>
 
-        {/* RIGHT SIDE: search + buttons */}
+        {/* RIGHT SIDE */}
         <div className={styles.right}>
           <div className={styles.searchBox}>
             <input
@@ -131,21 +137,21 @@ const DashboardNavbar: React.FC<Props> = ({
             </span>
           </div>
 
+          {/* ✅ NEW JOB — ARTIK ÇALIŞIYOR */}
           <button
+            type="button"
             className={styles.actionBtn}
-            onClick={() => {
-              onNewJob?.();
-              handleNavClick();
-            }}
+            onClick={handleNewJobClick}
           >
             + New Job
           </button>
 
           <button
+            type="button"
             className={styles.actionBtnSecondary}
             onClick={() => {
               onLogout?.();
-              handleNavClick();
+              closeMenu();
             }}
           >
             Log Out
@@ -153,9 +159,9 @@ const DashboardNavbar: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Overlay */}
+      {/* OVERLAY */}
       {menuOpen && (
-        <div className={styles.menuOverlay} onClick={handleNavClick}></div>
+        <div className={styles.menuOverlay} onClick={closeMenu} aria-hidden />
       )}
     </nav>
   );
