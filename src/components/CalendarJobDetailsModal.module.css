@@ -1,7 +1,11 @@
 /* BACKDROP */
 .backdrop {
   position: fixed;
-  inset: 0;
+  top: 72px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
   background: rgba(255, 248, 214, 0.55);
   display: flex;
   justify-content: flex-end;
@@ -27,16 +31,41 @@
 
 /* HEADER */
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  align-items: center;
+
+  padding: 6px 0 14px 0;
+  background: linear-gradient(
+    180deg,
+    #fffdf5 0%,
+    #fffdf5 80%,
+    rgba(255, 253, 245, 0.85) 100%
+  );
+}
+
+.headerLeft {
+  flex: 1;
+  padding-right: 12px;
 }
 
 .title {
   font-size: 1.2rem;
   font-weight: 800;
   color: #4a3f00;
+}
+
+.modalTop {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.titleSection {
+  margin-bottom: 16px;
 }
 
 .subtitle {
@@ -322,7 +351,9 @@
   font-weight: 700;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease;
   white-space: nowrap;
 }
 

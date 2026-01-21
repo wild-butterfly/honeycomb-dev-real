@@ -137,13 +137,15 @@ const DashboardNavbar: React.FC<Props> = ({
             </span>
           </div>
 
-          {/* ✅ NEW JOB — ARTIK ÇALIŞIYOR */}
           <button
+            className={styles.newJobBtn}
+            onClick={() => {
+              onNewJob?.();
+            }}
             type="button"
-            className={styles.actionBtn}
-            onClick={handleNewJobClick}
           >
-            + New Job
+            <span className={styles.plus}>＋</span>
+            New Job
           </button>
 
           <button

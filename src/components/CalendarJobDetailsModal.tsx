@@ -22,12 +22,18 @@ import {
 import { db } from "../firebase";
 
 interface Props {
-  job: CalendarJob;
+  job?: CalendarJob;
+  mode: "view" | "new";
+  draft?: {
+    start: Date;
+    end: Date;
+    employeeId?: number;
+  };
   employees: Employee[];
   onClose: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   onSave: (job: CalendarJob) => void;
-  onStartSchedule: (jobId: string, employeeId: number) => void;
+  onStartSchedule?: (jobId: string, employeeId: number) => void;
 }
 
 /* ================= CONTACT PARSER ================= */
@@ -136,6 +142,8 @@ function toISOFromAny(value: any): string {
 
 const CalendarJobDetailsModal: React.FC<Props> = ({
   job,
+  mode,
+  draft,
   employees,
   onClose,
   onDelete,
@@ -144,21 +152,40 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 }) => {
   const navigate = useNavigate();
 
+  const isNew = mode === "new";
+
+  const activeJob: CalendarJob = useMemo(() => {
+    if (!isNew && job) return job;
+
+    return {
+      id: "new",
+      title: "",
+      customer: "",
+      status: "active",
+      color: "#fff9e6",
+      location: "",
+      siteContact: "",
+      contactInfo: "",
+      notes: "",
+      assignments: [],
+    };
+  }, [isNew, job]);
+
   /* ================= UI STATE ================= */
 
   const [editMode, setEditMode] = useState(false);
 
   // Job fields
-  const [title, setTitle] = useState(job.title);
-  const [customer, setCustomer] = useState(job.customer);
-  const [location, setLocation] = useState(job.location || "");
-  const [siteContact, setSiteContact] = useState(job.siteContact || "");
-  const [contactInfo, setContactInfo] = useState(job.contactInfo || "");
-  const [notes, setNotes] = useState(job.notes || "");
-  const [jobColor, setJobColor] = useState(job.color || "#fff9e6");
+  const [title, setTitle] = useState(activeJob.title);
+  const [customer, setCustomer] = useState(activeJob.customer);
+  const [location, setLocation] = useState(activeJob.location || "");
+  const [siteContact, setSiteContact] = useState(activeJob.siteContact || "");
+  const [contactInfo, setContactInfo] = useState(activeJob.contactInfo || "");
+  const [notes, setNotes] = useState(activeJob.notes || "");
+  const [jobColor, setJobColor] = useState(activeJob.color || "#fff9e6");
   const [status, setStatus] = useState<
     "active" | "completed" | "return" | "quote"
-  >(job.status || "active");
+  >(activeJob.status || "active");
 
   /* ================= ASSIGNMENTS (SOURCE OF TRUTH = FIRESTORE) ================= */
 
@@ -219,7 +246,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   useEffect(() => {
     if (!job?.id) return;
 
-    const ref = collection(db, "jobs", String(job.id), "assignments");
+    const ref = collection(db, "jobs", String(activeJob.id), "assignments");
 
     const unsub = onSnapshot(ref, (snap) => {
       const list: Assignment[] = snap.docs.map((d) => {
@@ -253,14 +280,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   useEffect(() => {
     setEditMode(false);
 
-    setTitle(job.title);
-    setCustomer(job.customer);
-    setLocation(job.location || "");
-    setSiteContact(job.siteContact || "");
-    setContactInfo(job.contactInfo || "");
-    setNotes(job.notes || "");
-    setJobColor(job.color || "#fff9e6");
-    setStatus(job.status || "active");
+    setTitle(activeJob.title);
+    setCustomer(activeJob.customer);
+    setLocation(activeJob.location || "");
+    setSiteContact(activeJob.siteContact || "");
+    setContactInfo(activeJob.contactInfo || "");
+    setNotes(activeJob.notes || "");
+    setJobColor(activeJob.color || "#fff9e6");
+    setStatus(activeJob.status || "active");
 
     // ❗ assignments BURADA SET EDİLMİYOR
     // çünkü Firestore snapshot source of truth
@@ -289,7 +316,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     const aRef = doc(
       db,
       "jobs",
-      String(job.id),
+      String(activeJob.id),
       "assignments",
       String(employeeId),
     );
@@ -308,7 +335,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     const aRef = doc(
       db,
       "jobs",
-      String(job.id),
+      String(activeJob.id),
       "assignments",
       String(employeeId),
     );
@@ -325,7 +352,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       .join("\n");
 
     // 1) update base job fields (no start/end, no assignedTo)
-    await updateDoc(doc(db, "jobs", String(job.id)), {
+    await updateDoc(doc(db, "jobs", String(activeJob.id)), {
       title,
       customer,
       location,
@@ -338,12 +365,12 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
     // 2) update local state for CalendarPage (TIME REMOVED => assignments unchanged)
     const updatedLocal: CalendarJob = {
-      ...job,
+      ...activeJob,
       title,
       customer,
       location,
       siteContact,
-      contactInfo: combined,
+      contactInfo,
       notes,
       color: jobColor,
       status,
@@ -357,24 +384,27 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   return (
     <div className={styles.backdrop}>
       <div className={styles.panel}>
-        {/* HEADER */}
-        <header className={styles.header}>
-          <div>
-            {editMode ? (
-              <input
-                className={styles.titleInput}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            ) : (
-              <div className={styles.title}>{title}</div>
-            )}
-          </div>
-
-          <button className={styles.closeBtn} onClick={onClose}>
+        {/* HEADER – sadece X */}
+        <div className={styles.modalTop}>
+          <button
+            className={styles.closeBtn}
+            onClick={onClose}
+            aria-label="Close"
+            type="button"
+          >
             ×
           </button>
-        </header>
+        </div>
+
+        {/* TITLE INPUT – X’ten sonra */}
+        <div className={styles.titleSection}>
+          <input
+            className={styles.titleInput}
+            value={title}
+            placeholder="Job title (e.g. A1TT-28419a Test & Tag)"
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
         {/* CUSTOMER */}
         <div className={styles.section}>
@@ -421,21 +451,15 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
 
           <div className={styles.staffContainer}>
-            {assignedTo.map((id) => {
-              const emp = employees.find((e) => e.id === id);
+            {assignments.map((a) => {
+              const emp = employees.find((e) => e.id === a.employeeId);
               if (!emp) return null;
 
               return (
                 <div
-                  key={id}
+                  key={emp.id}
                   className={styles.staffChip}
-                  onClick={() => editMode && setEditingEmployeeId(id)}
-                  style={{
-                    outline:
-                      editMode && editingEmployeeId === id
-                        ? "2px solid #d4b84a"
-                        : "none",
-                  }}
+                  onClick={() => editMode && setEditingEmployeeId(emp.id)}
                 >
                   <div className={styles.staffAvatar2}>
                     {emp.name
@@ -452,7 +476,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                       className={styles.removeX}
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeAssignment(id);
+                        removeAssignment(emp.id);
                       }}
                     >
                       ×
@@ -485,6 +509,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                 top: pickerPos.top,
                 left: pickerPos.left,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               {employees.map((emp) => {
                 const isSelected = assignedTo.includes(emp.id);
@@ -495,25 +520,23 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                     className={`${styles.staffPickerItem} ${
                       isSelected ? styles.staffSelected : ""
                     }`}
-                    onClick={async () => {
-                      // ✅ 1) Job'ın bulunduğu günü referans al
+                    onClick={async (e) => {
+                      e.stopPropagation();
+
                       let baseDate: Date;
 
                       if (assignments.length > 0 && assignments[0].start) {
                         baseDate = new Date(assignments[0].start);
                       } else {
-                        // fallback (çok nadir)
                         baseDate = new Date();
                       }
 
-                      // ✅ 2) Default saatler
                       const start = new Date(baseDate);
                       start.setHours(9, 0, 0, 0);
 
                       const end = new Date(baseDate);
                       end.setHours(17, 0, 0, 0);
 
-                      // ✅ 3) Firestore'a ekle
                       await upsertAssignment(emp.id, start, end);
 
                       setEditingEmployeeId(emp.id);
@@ -665,7 +688,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           <div className={styles.relatedRow}>
             <button
               className={styles.viewAllBtn}
-              onClick={() => navigate(`/jobs/${job.id}`)}
+              onClick={() => navigate(`/jobs/${activeJob.id}`)}
             >
               View Job →
             </button>

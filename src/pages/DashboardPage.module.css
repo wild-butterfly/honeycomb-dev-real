@@ -18,7 +18,8 @@ body {
 }
 
 .dashboardBg {
-  background: repeating-linear-gradient(
+  background:
+    repeating-linear-gradient(
       90deg,
       /* 0 = dikey, 90 = yatay çizgiler */ #fff8d6,
       #fff8d6 8px,
@@ -35,6 +36,9 @@ nav,
 .navbar {
   margin-bottom: 0 !important;
   margin-top: 0 !important;
+  position: sticky;
+  top: 0;
+  z-index: 10000;
 }
 
 /* ----------- CHARTS ROW ----------- */
@@ -83,7 +87,10 @@ nav,
   border: 2px solid #b99a2a;
   background: #fffbe4;
   color: #b99a2a;
-  transition: background 0.13s, color 0.13s, border 0.13s;
+  transition:
+    background 0.13s,
+    color 0.13s,
+    border 0.13s;
   cursor: pointer;
 }
 .primaryBtn {
@@ -263,7 +270,10 @@ nav,
   font-weight: 700;
   font-size: 0.97rem;
   padding: 7px 16px;
-  transition: background 0.15s, color 0.13s, border 0.14s;
+  transition:
+    background 0.15s,
+    color 0.13s,
+    border 0.14s;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -323,7 +333,10 @@ nav,
   font-size: 1.03rem;
   padding: 9px 0;
   margin-bottom: 0;
-  transition: background 0.15s, color 0.13s, border 0.13s;
+  transition:
+    background 0.15s,
+    color 0.13s,
+    border 0.13s;
   cursor: pointer;
   box-shadow: 0 1px 8px #ffd60009;
 }
@@ -382,7 +395,10 @@ nav,
 
   padding: 8px 0;
   box-shadow: 0 1px 8px #ffe06610;
-  transition: background 0.16s, color 0.13s, border 0.13s;
+  transition:
+    background 0.16s,
+    color 0.13s,
+    border 0.13s;
 }
 
 /* spacing farkı: Add Task üstte, View All altta */
@@ -434,7 +450,9 @@ nav,
   font-size: 2.5em;
   margin: 0 auto 9px auto;
   opacity: 0.82;
-  text-shadow: 0 3px 16px #ffd6003a, 0 2px 8px #b99a2a11;
+  text-shadow:
+    0 3px 16px #ffd6003a,
+    0 2px 8px #b99a2a11;
 }
 
 /* ----------- TASK CARD (küçük kartlar) ----------- */
@@ -453,7 +471,9 @@ nav,
   margin-bottom: 14px;
   box-shadow: 0 2px 10px #ffd60015;
   font-size: 1.01rem;
-  transition: box-shadow 0.13s, border 0.13s;
+  transition:
+    box-shadow 0.13s,
+    border 0.13s;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -553,7 +573,10 @@ nav,
   font-size: 1.3rem;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.14s, color 0.14s, border 0.14s;
+  transition:
+    background 0.14s,
+    color 0.14s,
+    border 0.14s;
   box-shadow: 0 1px 3px 0 #ffebb13d;
   outline: none;
 }
@@ -572,7 +595,10 @@ nav,
   font-size: 1.07em;
   padding: 2px 11px;
   cursor: pointer;
-  transition: background 0.14s, color 0.13s, border 0.13s;
+  transition:
+    background 0.14s,
+    color 0.13s,
+    border 0.13s;
   box-shadow: 0 1px 8px #ffe06618;
 }
 
@@ -589,7 +615,10 @@ nav,
   opacity: 0.88;
   color: #97ad97 !important;
   box-shadow: 0 2px 8px #b7e9bc1c;
-  transition: background 0.2s, color 0.18s, border 0.18s;
+  transition:
+    background 0.2s,
+    color 0.18s,
+    border 0.18s;
 }
 .completed .taskTitleRow::after {
   content: " ✓";
@@ -692,7 +721,9 @@ nav,
   cursor: pointer;
   padding: 0 0 3px 0;
   font-size: 1.07em;
-  transition: color 0.15s, border-bottom 0.14s;
+  transition:
+    color 0.15s,
+    border-bottom 0.14s;
   border-bottom: 2px solid transparent;
   display: inline-block;
 }
@@ -717,7 +748,10 @@ nav,
   margin-left: auto;
   cursor: pointer;
   box-shadow: 0 1px 8px #ffe0661a;
-  transition: background 0.16s, color 0.13s, border 0.13s;
+  transition:
+    background 0.16s,
+    color 0.13s,
+    border 0.13s;
 }
 .addTaskGoldBtn:hover,
 .addTaskGoldBtn:focus {
@@ -747,7 +781,10 @@ nav,
   cursor: pointer;
   margin-bottom: -2px;
   border-bottom: 3px solid transparent;
-  transition: background 0.13s, color 0.13s, border 0.13s;
+  transition:
+    background 0.13s,
+    color 0.13s,
+    border 0.13s;
 }
 .tabBtnActive {
   background: #fff;
@@ -773,7 +810,9 @@ nav,
   padding: 16px 20px 12px 20px;
   margin-bottom: 17px;
   box-shadow: 0 3px 16px #ffe06630;
-  transition: box-shadow 0.13s, border 0.13s;
+  transition:
+    box-shadow 0.13s,
+    border 0.13s;
   position: relative;
   font-family: "Roboto", Arial, sans-serif;
 }
