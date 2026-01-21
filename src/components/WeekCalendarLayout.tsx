@@ -2,11 +2,7 @@
 import React, { useMemo, useState } from "react";
 import styles from "./WeekCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
-import {
-  getJobStart,
-  getJobEnd,
-  getAssignedEmployeeIds,
-} from "../utils/jobTime";
+import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
 
 /* ========================================================= */
 /* TYPES */
@@ -26,12 +22,6 @@ interface Props {
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
-type DragPayload = {
-  jobId: string;
-  fromEmployeeId: number;
-  fromDayKey: string; // toDateString()
-} | null;
-
 /* ========================================================= */
 /* MAIN COMPONENT */
 /* ========================================================= */
@@ -45,7 +35,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<DragPayload>(null);
+  const [draggingItem, setDraggingItem] = useState<CalendarItem | null>(null);
 
   /* ================= WEEK RANGE ================= */
 
@@ -59,23 +49,47 @@ const WeekCalendarLayout: React.FC<Props> = ({
       d.setDate(startOfWeek.getDate() + i);
       return d;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startOfWeek.getTime()]);
 
-  const findJobById = (id: string) => jobs.find((j) => j.id === id) || null;
+  /* ================= BUILD ASSIGNMENTS ================= */
 
-  /* ================= FILTER JOBS ================= */
+  const items = useMemo(() => buildCalendarItems(jobs), [jobs]);
 
-  const getJobsForDayAndEmployee = (day: Date, empId: number) =>
-    jobs.filter((job) => {
-      const start = getJobStart(job);
-      if (!start) return false;
+  const itemsByDayAndEmployee = useMemo(() => {
+    const map: Record<string, CalendarItem[]> = {};
 
-      return (
-        start.toDateString() === day.toDateString() &&
-        getAssignedEmployeeIds(job).includes(empId)
-      );
-    });
+    for (const item of items) {
+      const dayKey = item.start.toDateString();
+      const key = `${item.employeeId}__${dayKey}`;
+
+      if (!map[key]) map[key] = [];
+      map[key].push(item);
+    }
+
+    return map;
+  }, [items]);
+
+  /* ================= DROP HANDLER ================= */
+
+  const handleDropOnCell = (day: Date, employeeId: number) => {
+    if (!draggingItem) return;
+
+    const duration = draggingItem.end.getTime() - draggingItem.start.getTime();
+
+    const newStart = new Date(day);
+    newStart.setHours(
+      draggingItem.start.getHours(),
+      draggingItem.start.getMinutes(),
+      0,
+      0,
+    );
+
+    const newEnd = new Date(newStart.getTime() + duration);
+
+    onJobMove(draggingItem.jobId, employeeId, newStart, newEnd);
+
+    setDraggingItem(null);
+  };
 
   const getInitials = (name: string) =>
     name
@@ -83,64 +97,6 @@ const WeekCalendarLayout: React.FC<Props> = ({
       .map((n) => n[0])
       .join("")
       .toUpperCase();
-
-  /* ================= DROP HANDLER ================= */
-
-  const handleDropOnCell = (day: Date, employeeId: number) => {
-    if (!dragging) return;
-
-    const job = findJobById(dragging.jobId);
-    if (!job) {
-      setDragging(null);
-      return;
-    }
-
-    const oldStart = getJobStart(job);
-    const oldEnd = getJobEnd(job);
-    if (!oldStart || !oldEnd) {
-      setDragging(null);
-      return;
-    }
-
-    // Same slot → no-op
-    const targetDayKey = day.toDateString();
-    const sameDay = dragging.fromDayKey === targetDayKey;
-    const sameEmp = dragging.fromEmployeeId === employeeId;
-    if (sameDay && sameEmp) {
-      setDragging(null);
-      return;
-    }
-
-    const duration = oldEnd.getTime() - oldStart.getTime();
-
-    const newStart = new Date(day);
-    newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
-
-    const newEnd = new Date(newStart.getTime() + duration);
-
-    // Optional overlap protection (aynı anda aynı personele çakışma)
-    const conflict = jobs.some((j) => {
-      if (j.id === job.id) return false;
-      const s = getJobStart(j);
-      const e = getJobEnd(j);
-      if (!s || !e) return false;
-
-      return (
-        getAssignedEmployeeIds(j).includes(employeeId) &&
-        s < newEnd &&
-        e > newStart
-      );
-    });
-
-    if (conflict) {
-      alert("This employee already has a job at this time.");
-      setDragging(null);
-      return;
-    }
-
-    onJobMove(job.id, employeeId, newStart, newEnd);
-    setDragging(null);
-  };
 
   /* ================= RENDER ================= */
 
@@ -170,28 +126,79 @@ const WeekCalendarLayout: React.FC<Props> = ({
             <span className={styles.staffName}>{emp.name}</span>
           </div>
 
-          {daysOfWeek.map((day, i) => {
+          {daysOfWeek.map((day) => {
+            const dayKey = day.toDateString();
+            const mapKey = `${emp.id}__${dayKey}`;
+            const itemsInCell = itemsByDayAndEmployee[mapKey] || [];
+
             const cellId = `${emp.id}__${day.toISOString().slice(0, 10)}`;
-            const jobsInCell = getJobsForDayAndEmployee(day, emp.id);
 
             return (
-              <DroppableCell
+              <div
                 key={cellId}
-                id={cellId}
-                day={day}
-                employee={emp}
-                jobs={jobsInCell}
-                hoverSlot={hoverSlot}
-                setHoverSlot={setHoverSlot}
-                dragging={dragging}
-                onDropOnCell={handleDropOnCell}
-                onJobClick={onJobClick}
-                onAddJobAt={onAddJobAt}
-                onDragStartJob={(jobId, fromEmpId, fromDayKey) =>
-                  setDragging({ jobId, fromEmployeeId: fromEmpId, fromDayKey })
-                }
-                onDragEndJob={() => setDragging(null)}
-              />
+                className={`${styles.dayCell} ${
+                  itemsInCell.length > 0 ? styles.hasJob : ""
+                }`}
+                onMouseEnter={() => setHoverSlot(cellId)}
+                onMouseLeave={() => setHoverSlot(null)}
+                onDragOver={(e) => draggingItem && e.preventDefault()}
+                onDrop={() => handleDropOnCell(day, emp.id)}
+              >
+                {itemsInCell.map((item) => (
+                  <div
+                    key={item.assignmentId}
+                    className={styles.jobBox}
+                    draggable
+                    onDragStart={() => setDraggingItem(item)}
+                    onDragEnd={() => setDraggingItem(null)}
+                    onClick={() => onJobClick(item.jobId)}
+                    style={{
+                      backgroundColor: item.color || "#faf7dc",
+                    }}
+                  >
+                    <div className={styles.dragHandle} aria-hidden>
+                      ⋮⋮
+                    </div>
+
+                    {item.status === "quote" && (
+                      <div className={styles.badgeQuote}>QUOTE</div>
+                    )}
+                    {item.status === "completed" && (
+                      <div className={styles.badgeCompleted}>COMPLETED</div>
+                    )}
+                    {item.status === "return" && (
+                      <div className={styles.badgeReturn}>NEED TO RETURN</div>
+                    )}
+
+                    <div className={styles.jobTitle}>{item.title}</div>
+                    <div className={styles.jobCustomer}>{item.customer}</div>
+
+                    <div className={styles.jobTime}>
+                      {item.start.toLocaleTimeString("en-AU", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                ))}
+
+                {hoverSlot === cellId && itemsInCell.length === 0 && (
+                  <button
+                    className={styles.slotAddButton}
+                    onClick={() => {
+                      const start = new Date(day);
+                      start.setHours(9, 0, 0, 0);
+
+                      const end = new Date(start);
+                      end.setHours(start.getHours() + 1);
+
+                      onAddJobAt(emp.id, start, end);
+                    }}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
@@ -201,140 +208,3 @@ const WeekCalendarLayout: React.FC<Props> = ({
 };
 
 export default WeekCalendarLayout;
-
-/* ========================================================= */
-/* DROPPABLE CELL */
-/* ========================================================= */
-
-function DroppableCell({
-  id,
-  day,
-  employee,
-  jobs,
-  hoverSlot,
-  setHoverSlot,
-  dragging,
-  onDropOnCell,
-  onJobClick,
-  onAddJobAt,
-  onDragStartJob,
-  onDragEndJob,
-}: {
-  id: string;
-  day: Date;
-  employee: Employee;
-  jobs: CalendarJob[];
-  hoverSlot: string | null;
-  setHoverSlot: (x: string | null) => void;
-  dragging: DragPayload;
-  onDropOnCell: (day: Date, employeeId: number) => void;
-  onJobClick: (id: string) => void;
-  onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
-  onDragStartJob: (
-    jobId: string,
-    fromEmpId: number,
-    fromDayKey: string,
-  ) => void;
-  onDragEndJob: () => void;
-}) {
-  const handleAdd = () => {
-    const start = new Date(day);
-    start.setHours(9, 0, 0, 0);
-
-    const end = new Date(start);
-    end.setHours(start.getHours() + 1);
-
-    onAddJobAt(employee.id, start, end);
-  };
-
-  return (
-    <div
-      className={`${styles.dayCell} ${jobs.length > 0 ? styles.hasJob : ""}`}
-      onMouseEnter={() => setHoverSlot(id)}
-      onMouseLeave={() => setHoverSlot(null)}
-      onDragOver={(e) => {
-        if (dragging) e.preventDefault(); // drop'ı aktif eder
-      }}
-      onDrop={() => onDropOnCell(day, employee.id)}
-    >
-      {jobs.map((job) => (
-        <NativeDraggableJob
-          key={`${job.id}::${employee.id}`}
-          job={job}
-          employeeId={employee.id}
-          dayKey={day.toDateString()}
-          onDragStart={onDragStartJob}
-          onDragEnd={onDragEndJob}
-          onClick={() => onJobClick(job.id)}
-        />
-      ))}
-
-      {hoverSlot === id && jobs.length === 0 && (
-        <button className={styles.slotAddButton} onClick={handleAdd}>
-          +
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ========================================================= */
-/* NATIVE DRAGGABLE JOB */
-/* ========================================================= */
-
-function NativeDraggableJob({
-  job,
-  employeeId,
-  dayKey,
-  onDragStart,
-  onDragEnd,
-  onClick,
-}: {
-  job: CalendarJob;
-  employeeId: number;
-  dayKey: string;
-  onDragStart: (jobId: string, fromEmpId: number, fromDayKey: string) => void;
-  onDragEnd: () => void;
-  onClick: () => void;
-}) {
-  let badge = null;
-  if (job.status === "quote") {
-    badge = <div className={styles.badgeQuote}>QUOTE</div>;
-  } else if (job.status === "completed") {
-    badge = <div className={styles.badgeCompleted}>COMPLETED</div>;
-  } else if (job.status === "return") {
-    badge = <div className={styles.badgeReturn}>NEED TO RETURN</div>;
-  }
-
-  const start = getJobStart(job) ?? new Date();
-
-  return (
-    <div
-      className={styles.jobBox}
-      draggable
-      onDragStart={() => onDragStart(job.id, employeeId, dayKey)}
-      onDragEnd={onDragEnd}
-      onClick={onClick}
-      style={{
-        backgroundColor: job.color || "#faf7dc",
-      }}
-    >
-      {/* Month’taki gibi “handle” görünümü istersen sadece görsel */}
-      <div className={styles.dragHandle} aria-hidden>
-        ⋮⋮
-      </div>
-
-      {badge}
-
-      <div className={styles.jobTitle}>{job.title}</div>
-      <div className={styles.jobCustomer}>{job.customer}</div>
-
-      <div className={styles.jobTime}>
-        {start.toLocaleTimeString("en-AU", {
-          hour: "numeric",
-          minute: "2-digit",
-        })}
-      </div>
-    </div>
-  );
-}

@@ -21,25 +21,52 @@ const CustomerModal: React.FC<Props> = ({ show, onClose, onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ company, source, firstName, lastName, title, contactType, phone, address });
+    onSubmit({
+      company,
+      source,
+      firstName,
+      lastName,
+      title,
+      contactType,
+      phone,
+      address,
+    });
     onClose();
   };
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <form className={styles.modal} onClick={e => e.stopPropagation()} onSubmit={handleSubmit}>
+      <form
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
         <div className={styles.header}>
           <span>Customer Details</span>
-          <button type="button" className={styles.close} onClick={onClose}>×</button>
+          <button type="button" className={styles.close} onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className={styles.body}>
           <div className={styles.section}>
-            <label>Customer/Company name <b>*</b></label>
-            <input className={styles.input} value={company} onChange={e => setCompany(e.target.value)} required placeholder="Enter company or customer name" />
+            <label>
+              Customer/Company name <b>*</b>
+            </label>
+            <input
+              className={styles.input}
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              required
+              placeholder="Enter company or customer name"
+            />
 
             <label>Customer source</label>
-            <select className={styles.input} value={source} onChange={e => setSource(e.target.value)}>
+            <select
+              className={styles.input}
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            >
               <option value="">Select...</option>
               <option>Web</option>
               <option>Referral</option>
@@ -53,26 +80,54 @@ const CustomerModal: React.FC<Props> = ({ show, onClose, onSubmit }) => {
             <b>Default main contact</b>
             <div className={styles.row}>
               <div>
-                <label>First name <b>*</b></label>
-                <input className={styles.input} value={firstName} onChange={e => setFirstName(e.target.value)} required placeholder="Enter first name" />
+                <label>
+                  First name <b>*</b>
+                </label>
+                <input
+                  className={styles.input}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  placeholder="Enter first name"
+                />
               </div>
               <div>
                 <label>Last name</label>
-                <input className={styles.input} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter last name" />
+                <input
+                  className={styles.input}
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Enter last name"
+                />
               </div>
             </div>
             <label>Title/Position</label>
-            <input className={styles.input} value={title} onChange={e => setTitle(e.target.value)} placeholder="Enter title" />
+            <input
+              className={styles.input}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter title"
+            />
             <div className={styles.row}>
               <label style={{ flex: 1 }}>
                 Contact type
-                <select className={styles.input} value={contactType} onChange={e => setContactType(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={contactType}
+                  onChange={(e) => setContactType(e.target.value)}
+                >
                   <option>Mobile</option>
                   <option>Phone</option>
                   <option>Email</option>
                 </select>
               </label>
-              <input className={styles.input} style={{ flex: 2, marginLeft: 10 }} value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter phone number" />
+              <input
+                className={styles.input}
+                style={{ flex: 2, marginLeft: 10 }}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Enter phone number"
+              />
             </div>
           </div>
 
@@ -81,18 +136,30 @@ const CustomerModal: React.FC<Props> = ({ show, onClose, onSubmit }) => {
           <div className={styles.section}>
             <b>Physical Address</b>
             <label>Find address</label>
-            <input className={styles.input} value={address} onChange={e => setAddress(e.target.value)} placeholder="Search for address" />
-            <button type="button" className={styles.linkBtn}>Add address manually</button>
+            <input
+              className={styles.input}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Search for address"
+            />
+            <button type="button" className={styles.linkBtn}>
+              Add address manually
+            </button>
           </div>
 
           <button type="button" className={styles.extraBtn}>
-            + Add postal address, billing contact, other contacts, customer settings
+            + Add postal address, billing contact, other contacts, customer
+            settings
           </button>
         </div>
 
         <div className={styles.footer}>
-          <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-          <button type="submit" className={styles.saveBtn}>Save</button>
+          <button type="button" className={styles.cancelBtn} onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className={styles.saveBtn}>
+            Save
+          </button>
         </div>
       </form>
     </div>

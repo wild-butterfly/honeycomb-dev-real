@@ -1,160 +1,106 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap");
 
-/* ROOT NAV WRAPPER — birebir landing navbar baz alındı */
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 65px;
-  padding: 0 32px;
+  padding: 0 28px;
   background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
   border: 2px solid #ffcc00;
   box-shadow: 0 2px 16px #ffd6000a;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-/* ---------- LEFT SIDE (logo) ---------- */
+/* LEFT */
 .left {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  height: 100%;
 }
 
-/* logo landing navbarındaki gibi büyük ve yukarı taşıyor */
 .logo {
-  height: 120px;
-  margin-top: 60px; /* taşırma efekti */
-  flex-shrink: 0;
+  height: 110px;
+  margin-top: 54px;
 }
 
-/* ---------- HAMBURGER (MOBILE) ---------- */
+/* HAMBURGER */
 .hamburger {
   display: none;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   background: none;
   border: none;
   cursor: pointer;
-  height: 48px;
-  width: 48px;
-  z-index: 300;
-  margin-left: 6px;
-  margin-right: 10px;
-  padding: 0;
+  width: 44px;
+  height: 44px;
 }
 
 .bar {
-  display: block;
-  width: 28px;
-  height: 3.2px;
+  width: 26px;
+  height: 3px;
   background: #b99a2a;
-  border-radius: 2px;
   margin: 4px 0;
-  transition: all 0.23s;
+  transition: 0.25s;
 }
 .barOpen1 {
-  transform: rotate(45deg) translate(6px, 7px);
+  transform: rotate(45deg) translate(6px, 6px);
 }
 .barOpen2 {
   opacity: 0;
 }
 .barOpen3 {
-  transform: rotate(-45deg) translate(6px, -7px);
+  transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* ---------- MENU WRAPPER (CENTER + RIGHT) ---------- */
+/* MENU */
 .menu {
   display: flex;
   flex: 1;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
 }
 
-/* ---------- CENTER NAV LINKS (Home / Jobs / ...) ---------- */
+/* CENTER */
 .center {
-  flex: 1;
   display: flex;
-  gap: 16px;
+  gap: 14px;
   justify-content: center;
-  flex-wrap: wrap;
+  flex: 1;
 }
 
-/* aynı link stili: font, hover, underline animasyonu */
 .link {
+  font-weight: 600;
+  font-size: 1.05rem;
+  padding: 8px 14px;
+  border-radius: 7px;
   color: #232323;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 1.08rem;
-  padding: 8px 15px 7px 15px;
-  border-radius: 7px;
-  transition: color 0.19s, background 0.15s, box-shadow 0.17s;
-  position: relative;
-  overflow: hidden;
-  line-height: 1.2;
-}
-
-.link::after {
-  content: "";
-  display: block;
-  width: 0%;
-  height: 3px;
-  background: #b99a2a;
-  transition: width 0.19s;
-  position: absolute;
-  left: 16%;
-  bottom: 2px;
-  border-radius: 2px;
 }
 
 .link:hover,
-.link:focus {
-  color: #b99a2a;
+.link.active {
   background: #fffde4;
-}
-
-.link:hover::after,
-.link:focus::after,
-.link.active::after,
-.link[aria-current="page"]::after {
-  width: 65%;
-}
-
-.active,
-.link[aria-current="page"] {
   color: #b99a2a;
-  font-weight: 700;
-  background: #fffde4;
 }
 
-/* ---------- RIGHT SIDE (search + actions) ---------- */
+/* RIGHT */
 .right {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
-  flex: 0 0 auto;
-  width: auto;
-  flex-wrap: nowrap;
 }
 
-/* Search input dashboard'a özel ama görsel dil aynı: border 2px, radius 4px-ish */
 .searchBox {
   display: flex;
   align-items: center;
-  background: #fffef6;
   border: 2px solid #d3b84a;
+  background: #fffef6;
   border-radius: 4px;
-  padding: 0 10px;
-  height: 36px;
-  min-width: 180px;
-  position: relative;
-  box-shadow: 0 1px 4px rgba(226, 193, 88, 0.25);
+  padding: 0 8px;
+  height: 34px;
+  min-width: 170px;
 }
 
 .searchInput {
@@ -162,195 +108,95 @@
   background: transparent;
   outline: none;
   font-size: 0.95rem;
-  font-family: "Inter", system-ui, sans-serif;
-  font-weight: 500;
-  color: #5a4a00;
-  padding: 6px 28px 6px 0;
-  line-height: 1.2;
+  padding-right: 24px;
 }
 
-.searchInput::placeholder {
-  color: #b9a669;
-  font-weight: 500;
-}
-
-.searchIconInside {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.7;
-  display: flex;
-  align-items: center;
-}
-
-/* --- BUTTONS (reused landing styles) --- */
 .actionBtn,
 .actionBtnSecondary {
-  padding: 6px 18px;
+  padding: 6px 14px;
   border-radius: 4px;
   font-weight: 600;
-  font-size: 1.05rem;
-  text-decoration: none;
   border: 2px solid #050505;
-  transition: background 0.18s, color 0.18s, border 0.14s;
-  display: inline-block;
-  min-width: 80px;
-  width: auto;
-  text-align: center;
-  box-sizing: border-box;
-  line-height: 1.2;
-  cursor: pointer;
-  font-family: "Inter", system-ui, sans-serif;
-}
-
-/* + New Job = dolu sarı (landing: Log In / Get Started vibe) */
-.actionBtn {
   background: #ffcc00;
-  color: #222;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-.actionBtn:hover,
-.actionBtn:focus {
-  background: #fff;
-  color: #222;
-  border-color: #050505;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }
 
-/* Log Out = beyaz kenarlıklı (landing: Sign Up vibe) */
 .actionBtnSecondary {
   background: #fff;
-  color: #222;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-.actionBtnSecondary:hover,
-.actionBtnSecondary:focus {
-  background: #ffcc00;
-  color: #222;
-  border-color: #050505;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-/* ---------- RESPONSIVE / MOBILE ---------- */
+/* ================= MOBILE + iPad Air ================= */
 @media (max-width: 850px) {
   .hamburger {
     display: flex;
   }
-
-  /* desktop layout gizleniyor */
   .menu {
     display: none;
   }
 
-  /* açıkken slideDown mobil menu */
   .menu.open {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
     position: absolute;
     top: 65px;
     left: 0;
     width: 100vw;
     background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
-    z-index: 200;
-    box-shadow: 0 2px 24px #ffd60022;
-    padding-bottom: 18px;
-    animation: slideDown 0.23s cubic-bezier(0.5, 1.8, 0.6, 1);
+    padding-bottom: 16px;
   }
 
-  /* nav + search + buttons dikey sıralanır */
   .center,
   .right {
     flex-direction: column;
-    align-items: stretch;
-    width: 95vw;
-    max-width: 410px;
+    width: 100%;
+    max-width: 420px;
     margin: 0 auto;
   }
 
-  .center {
-    margin-bottom: 18px;
-  }
-
-  .link {
-    font-size: 1.09rem;
-    width: 100%;
-    text-align: left;
-    padding: 14px 28px;
-    border-bottom: 1px solid #ffe06644;
-    border-radius: 0;
-  }
-
-  .link::after {
-    display: none !important;
-    width: 0 !important;
-  }
-
-  .link.active,
-  .link[aria-current="page"] {
-    background: #fffde4;
-    font-weight: 700;
-  }
-
-  /* search full width */
-  .searchBox {
-    width: 92%;
-    min-width: 0;
-    margin: 6px auto 0 auto;
-  }
-
+  .searchBox,
   .actionBtn,
   .actionBtnSecondary {
     width: 92%;
-    margin: 8px auto 0 auto;
-    font-size: 1.13rem;
-    text-align: center;
   }
 
-  @keyframes slideDown {
-    0% {
-      opacity: 0;
-      transform: translateY(-24px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* overlay - dışarı tıklayınca kapansın */
   .menuOverlay {
     position: fixed;
-    z-index: 110;
     inset: 0;
-    background: rgba(0, 0, 0, 0.1);
-    cursor: pointer;
+    background: rgba(0, 0, 0, 0.12);
+    z-index: 90;
   }
 }
 
-/* Masaüstünde menü klasik görünür */
-@media (min-width: 851px) {
-  .menu {
-    display: flex !important;
-    flex: 1;
-    align-items: center;
-    justify-content: space-between;
-    position: static;
-    background: none;
-    box-shadow: none;
-    padding: 0;
-  }
-
+/* ================= iPad Pro / Surface Pro ================= */
+@media (min-width: 851px) and (max-width: 1200px) {
   .hamburger {
     display: none;
   }
 
   .center {
-    flex-direction: row;
+    gap: 10px;
   }
 
-  .right {
-    flex-direction: row;
+  .link {
+    font-size: 0.95rem;
+    padding: 6px 10px;
+  }
+
+  .searchBox {
+    min-width: 140px;
+  }
+
+  .actionBtn,
+  .actionBtnSecondary {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    white-space: nowrap;
+  }
+}
+
+/* ================= DESKTOP ================= */
+@media (min-width: 1201px) {
+  .menu {
+    display: flex;
   }
 }
