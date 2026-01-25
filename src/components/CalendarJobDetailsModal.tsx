@@ -20,10 +20,14 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { toLocalISOString } from "../utils/date";
 
 interface Props {
   job?: CalendarJob;
   mode: "view" | "new";
+
+  selectedDate: Date;
+
   draft?: {
     start: Date;
     end: Date;
@@ -34,6 +38,7 @@ interface Props {
   onDelete?: () => void;
   onSave: (job: CalendarJob) => void;
   onStartSchedule?: (jobId: string, employeeId: number) => void;
+  onAddEmployee?: (jobId: string, employeeId: number) => Promise<void>;
 }
 
 /* ================= CONTACT PARSER ================= */
@@ -102,7 +107,7 @@ const safeISO = (d?: Date | null) =>
 // ✅ Safe: convert any Firestore-ish date value to a valid ISO string (or "")
 function toISOFromAny(value: any): string {
   try {
-    if (!value) return "";
+    throw new Error("Invalid date passed to safeISO");
 
     if (value instanceof Date) return safeISO(value);
 
@@ -143,6 +148,7 @@ function toISOFromAny(value: any): string {
 const CalendarJobDetailsModal: React.FC<Props> = ({
   job,
   mode,
+  selectedDate,
   draft,
   employees,
   onClose,
@@ -196,6 +202,21 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     null,
   );
 
+  // ================= ASSIGNMENTS BY EMPLOYEE =================
+  // employeeId -> assignment[] map
+  const assignmentsByEmployee = useMemo(() => {
+    const map = new Map<number, Assignment[]>();
+
+    for (const a of assignments) {
+      if (!map.has(a.employeeId)) {
+        map.set(a.employeeId, []);
+      }
+      map.get(a.employeeId)!.push(a);
+    }
+
+    return map;
+  }, [assignments]);
+
   /* ================= CONTACT PARSE ================= */
 
   const [contactInfoName, setContactInfoName] = useState("");
@@ -244,7 +265,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   /* ================= FIRESTORE LIVE ASSIGNMENTS ================= */
 
   useEffect(() => {
-    if (!job?.id) return;
+    if (!activeJob?.id) {
+      console.warn("❌ Cannot assign staff: job has no id yet");
+      return;
+    }
 
     const ref = collection(db, "jobs", String(activeJob.id), "assignments");
 
@@ -260,20 +284,15 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         };
       });
 
-      // 🔹 source of truth
       setAssignments(list);
 
-      // 🔹 default selected employee
-      let activeEmployeeId = editingEmployeeId;
-
-      if (activeEmployeeId == null && list.length > 0) {
-        activeEmployeeId = list[0].employeeId;
-        setEditingEmployeeId(activeEmployeeId);
+      if (editingEmployeeId == null && list.length > 0) {
+        setEditingEmployeeId(list[0].employeeId);
       }
     });
 
     return () => unsub();
-  }, [job?.id, editingEmployeeId]);
+  }, [activeJob.id]);
 
   /* ================= JOB CHANGE RESET ================= */
 
@@ -288,9 +307,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setNotes(activeJob.notes || "");
     setJobColor(activeJob.color || "#fff9e6");
     setStatus(activeJob.status || "active");
-
-    // ❗ assignments BURADA SET EDİLMİYOR
-    // çünkü Firestore snapshot source of truth
   }, [job]);
 
   // Helpers
@@ -313,33 +329,31 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     start: Date,
     end: Date,
   ) => {
+    if (!activeJob?.id || activeJob.id === "new") return;
+
+    // 🔒 DAY-SAFE assignment id (timezone kaymaz)
+    const dayKey = toLocalISOString(start).slice(0, 10);
+    const assignmentId = `${employeeId}_${dayKey}`;
+
     const aRef = doc(
       db,
       "jobs",
       String(activeJob.id),
       "assignments",
-      String(employeeId),
+      assignmentId,
     );
+
     await setDoc(
       aRef,
       {
         employeeId,
-        start: safeISO(start),
-        end: safeISO(end),
+        start: toLocalISOString(start),
+        end: toLocalISOString(end),
+        scheduled: true,
+        createdAt: new Date().toISOString(),
       },
       { merge: true },
     );
-  };
-
-  const removeAssignment = async (employeeId: number) => {
-    const aRef = doc(
-      db,
-      "jobs",
-      String(activeJob.id),
-      "assignments",
-      String(employeeId),
-    );
-    await deleteDoc(aRef);
   };
 
   const handleSaveClick = async () => {
@@ -451,48 +465,76 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           <div className={styles.sectionLabel}>ASSIGNED STAFF</div>
 
           <div className={styles.staffContainer}>
-            {assignments.map((a) => {
-              const emp = employees.find((e) => e.id === a.employeeId);
-              if (!emp) return null;
+            {Array.from(assignmentsByEmployee.entries()).map(
+              ([employeeId, empAssignments]) => {
+                const emp = employees.find((e) => e.id === employeeId);
+                if (!emp) return null;
 
-              return (
-                <div
-                  key={emp.id}
-                  className={styles.staffChip}
-                  onClick={() => editMode && setEditingEmployeeId(emp.id)}
-                >
-                  <div className={styles.staffAvatar2}>
-                    {emp.name
-                      .split(" ")
-                      .map((p) => p[0])
-                      .join("")
-                      .slice(0, 2)}
+                return (
+                  <div
+                    key={`staff-${employeeId}`}
+                    className={styles.staffChip}
+                    onClick={() => {
+                      if (!editMode) return;
+                      setEditingEmployeeId(employeeId);
+                    }}
+                  >
+                    <div className={styles.staffAvatar2}>
+                      {emp.name
+                        .split(" ")
+                        .map((p) => p[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </div>
+
+                    <span className={styles.staffName}>{emp.name}</span>
+
+                    {editMode && (
+                      <button
+                        type="button"
+                        className={styles.removeX}
+                        aria-label={`Remove ${emp.name}`}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+
+                          // 🔥 Bu employee'ye ait TÜM assignment'ları sil
+                          await Promise.all(
+                            empAssignments.map((a: Assignment) =>
+                              deleteDoc(
+                                doc(
+                                  db,
+                                  "jobs",
+                                  String(activeJob.id),
+                                  "assignments",
+                                  String(a.id),
+                                ),
+                              ),
+                            ),
+                          );
+
+                          // UI state cleanup
+                          if (editingEmployeeId === employeeId) {
+                            setEditingEmployeeId(null);
+                          }
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
+                );
+              },
+            )}
 
-                  <span className={styles.staffName}>{emp.name}</span>
-
-                  {editMode && (
-                    <span
-                      className={styles.removeX}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeAssignment(emp.id);
-                      }}
-                    >
-                      ×
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* ADD BUTTON (only in edit mode) */}
+            {/* ADD BUTTON */}
             {editMode && (
               <button
                 ref={addBtnRef}
                 className={styles.staffAddChip}
                 onClick={openStaffPicker}
                 type="button"
+                aria-label="Add staff"
               >
                 +
               </button>
@@ -512,24 +554,21 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               onClick={(e) => e.stopPropagation()}
             >
               {employees.map((emp) => {
-                const isSelected = assignedTo.includes(emp.id);
+                const isSelected = assignmentsByEmployee.has(emp.id);
 
                 return (
                   <div
-                    key={emp.id}
+                    key={`picker-${emp.id}`}
                     className={`${styles.staffPickerItem} ${
                       isSelected ? styles.staffSelected : ""
                     }`}
                     onClick={async (e) => {
                       e.stopPropagation();
 
-                      let baseDate: Date;
+                      if (isSelected) return;
 
-                      if (assignments.length > 0 && assignments[0].start) {
-                        baseDate = new Date(assignments[0].start);
-                      } else {
-                        baseDate = new Date();
-                      }
+                      const baseDate = new Date(selectedDate);
+                      baseDate.setHours(0, 0, 0, 0);
 
                       const start = new Date(baseDate);
                       start.setHours(9, 0, 0, 0);

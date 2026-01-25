@@ -30,6 +30,7 @@ import MobileWeekList from "../components/MobileWeekList";
 import MobileDayList from "../components/MobileDayList";
 
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
+import { toLocalISOString } from "../utils/date";
 
 import {
   saveJobToFirestore,
@@ -130,6 +131,22 @@ function jobHasAssignmentOnDay(job: CalendarJob, day: Date) {
   });
 }
 
+function assignmentsForDay(job: CalendarJob, employeeId: number, day: Date) {
+  return job.assignments.filter((a) => {
+    if (!a.start) return false;
+    if (a.employeeId !== employeeId) return false;
+
+    const d = new Date(a.start);
+    if (isNaN(d.getTime())) return false;
+
+    return (
+      d.getFullYear() === day.getFullYear() &&
+      d.getMonth() === day.getMonth() &&
+      d.getDate() === day.getDate()
+    );
+  });
+}
+
 function isSameWeek(job: CalendarJob, ref: Date) {
   const monday = new Date(ref);
   monday.setDate(ref.getDate() - ((ref.getDay() + 6) % 7));
@@ -166,6 +183,18 @@ const CalendarPage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [jobs, setJobs] = useState<CalendarJob[]>(jobsSeed);
 
+  const addEmployeeFromModal = async (jobId: string, employeeId: number) => {
+    const base = new Date(selectedDate);
+    base.setHours(0, 0, 0, 0);
+
+    const start = new Date(base);
+    start.setHours(9, 0, 0, 0);
+
+    const end = new Date(base);
+    end.setHours(17, 0, 0, 0);
+
+    await addAssignmentToExistingJob(jobId, employeeId, start, end);
+  };
   // SCHEDULE MODE
   const [scheduleMode, setScheduleMode] = useState<{
     jobId: string;
@@ -256,43 +285,77 @@ const CalendarPage: React.FC = () => {
 
   /* LIVE LOAD JOBS + ASSIGNMENTS (SINGLE SOURCE OF TRUTH) */
   useEffect(() => {
-    const assignmentUnsubs: (() => void)[] = [];
+    const assignmentUnsubs = new Map<string, () => void>();
 
     const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
+      const jobIds = jobsSnap.docs.map((d) => d.id);
+
+      // 1) Silinen job'ları state'ten kaldır
+      setJobs((prev) => prev.filter((j) => jobIds.includes(j.id)));
+
+      // 2) Job doc değişikliklerini HER SNAPSHOT'TA state'e yaz
       jobsSnap.docs.forEach((jobDoc) => {
         const jobId = jobDoc.id;
+        const jobData = jobDoc.data() as any;
 
-        const unsubAssignments = onSnapshot(
-          collection(db, "jobs", jobId, "assignments"),
-          (assignSnap) => {
-            const assignments = assignSnap.docs.map((a) => ({
-              id: a.id,
-              ...(a.data() as any),
-            }));
+        // ✅ job alanlarını güncelle (assignments'i koru)
+        setJobs((prev) => {
+          const existing = prev.find((j) => j.id === jobId);
+          const existingAssignments = existing?.assignments ?? [];
 
-            setJobs((prev) => {
-              const exists = prev.find((j) => j.id === jobId);
+          const nextJob: CalendarJob = {
+            id: jobId,
+            title: jobData.title ?? "",
+            customer: jobData.customer ?? "",
+            status: jobData.status,
+            color: jobData.color,
+            location: jobData.location,
+            siteContact: jobData.siteContact,
+            contactInfo: jobData.contactInfo,
+            notes: jobData.notes,
+            deleted: jobData.deleted,
+            deletedAt: jobData.deletedAt,
+            assignments: existingAssignments, // 👈 assignments korunuyor
+          };
 
-              const nextJob = {
-                id: jobId,
-                ...(jobDoc.data() as any),
-                assignments,
-              };
+          if (!existing) return [...prev, nextJob];
+          return prev.map((j) => (j.id === jobId ? nextJob : j));
+        });
 
-              if (!exists) return [...prev, nextJob];
+        // 3) assignments listener yoksa aç
+        if (!assignmentUnsubs.has(jobId)) {
+          const unsubAssignments = onSnapshot(
+            collection(db, "jobs", jobId, "assignments"),
+            (assignSnap) => {
+              const assignments: Assignment[] = assignSnap.docs.map((a) => ({
+                id: a.id,
+                ...(a.data() as any),
+              }));
 
-              return prev.map((j) => (j.id === jobId ? nextJob : j));
-            });
-          },
-        );
+              // ✅ sadece assignments güncelle, job alanlarına dokunma
+              setJobs((prev) =>
+                prev.map((j) => (j.id === jobId ? { ...j, assignments } : j)),
+              );
+            },
+          );
 
-        assignmentUnsubs.push(unsubAssignments);
+          assignmentUnsubs.set(jobId, unsubAssignments);
+        }
+      });
+
+      // 4) silinen job’ların assignment listener’ını kapat
+      assignmentUnsubs.forEach((unsub, jobId) => {
+        if (!jobIds.includes(jobId)) {
+          unsub();
+          assignmentUnsubs.delete(jobId);
+        }
       });
     });
 
     return () => {
       unsubJobs();
       assignmentUnsubs.forEach((u) => u());
+      assignmentUnsubs.clear();
     };
   }, []);
 
@@ -306,6 +369,11 @@ const CalendarPage: React.FC = () => {
       setScheduleMode(null);
     }
   }, [openJobId]);
+
+  // 🔍 DEBUG – jobs state değişimlerini izle
+  useEffect(() => {
+    console.log("🧪 jobs", jobs);
+  }, [jobs]);
   /* ========================================================= */
   /* 🔑 ASSIGNMENT MOVE ADAPTERS                               */
   /* ========================================================= */
@@ -325,8 +393,8 @@ const CalendarPage: React.FC = () => {
       doc(db, "jobs", jobId, "assignments", assignmentId),
       {
         employeeId: targetEmployeeId ?? fromEmployeeId,
-        start: newStart.toISOString(),
-        end: newEnd.toISOString(),
+        start: toLocalISOString(newStart),
+        end: toLocalISOString(newEnd),
         scheduled: true,
         updatedAt: serverTimestamp(),
       },
@@ -483,8 +551,8 @@ const CalendarPage: React.FC = () => {
   ) => {
     await addDoc(collection(db, "jobs", jobId, "assignments"), {
       employeeId,
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: toLocalISOString(start),
+      end: toLocalISOString(end),
       scheduled: true,
       createdAt: serverTimestamp(),
     });
@@ -498,8 +566,8 @@ const CalendarPage: React.FC = () => {
   ) => {
     await addDoc(collection(db, "jobs", jobId, "assignments"), {
       employeeId,
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: toLocalISOString(start),
+      end: toLocalISOString(end),
       scheduled: true,
       createdAt: serverTimestamp(),
     });
@@ -511,7 +579,7 @@ const CalendarPage: React.FC = () => {
   } | null>(null);
 
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    // 🔥 SCHEDULE MODE → mevcut job’a assignment ekle
+    // 🔥 SCHEDULE MODE
     if (scheduleMode) {
       await addAssignmentToExistingJob(
         scheduleMode.jobId,
@@ -520,6 +588,7 @@ const CalendarPage: React.FC = () => {
         end,
       );
 
+      setSelectedStaff([]);
       setScheduleMode(null);
       return;
     }
@@ -535,8 +604,8 @@ const CalendarPage: React.FC = () => {
 
     await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
       employeeId,
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: toLocalISOString(start),
+      end: toLocalISOString(end),
       scheduled: true,
       createdAt: serverTimestamp(),
     });
@@ -634,8 +703,8 @@ const CalendarPage: React.FC = () => {
 
           await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
             employeeId: null,
-            start: start.toISOString(),
-            end: end.toISOString(),
+            start: toLocalISOString(start),
+            end: toLocalISOString(end),
             scheduled: true,
             createdAt: serverTimestamp(),
           });
@@ -826,6 +895,7 @@ const CalendarPage: React.FC = () => {
             mode="view"
             job={openJob}
             employees={employees}
+            selectedDate={selectedDate}
             onClose={() => setOpenJobId(null)}
             onSave={async (updatedJob) => {
               await saveJobToFirestore(updatedJob);
@@ -838,18 +908,18 @@ const CalendarPage: React.FC = () => {
               setRangeMode("day");
               setOpenJobId(null);
             }}
+            onAddEmployee={addEmployeeFromModal}
           />
         )}
 
         {draftJob && (
           <CalendarJobDetailsModal
             mode="new"
+            selectedDate={selectedDate}
             draft={draftJob}
             employees={employees}
             onClose={() => setDraftJob(null)}
-            onSave={() => {
-              setDraftJob(null);
-            }}
+            onSave={() => setDraftJob(null)}
           />
         )}
       </div>

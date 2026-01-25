@@ -210,9 +210,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         if (a.scheduled === false) continue;
         if (!a.start || !a.end) continue;
 
-        const start = new Date(a.start);
-        const end = new Date(a.end);
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
+        const start = toJsDate(a.start);
+        const end = toJsDate(a.end);
+        if (!start || !end) continue;
 
         // 🔑 SADECE seçili gün
         const dayStart = new Date(date);
@@ -751,22 +751,23 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                   {/* JOB BLOCKS */}
                   {empAssignments.map(({ job, assignment }) => {
-                    const key = `${job.id}-${emp.id}`;
-
                     const fallbackStart = new Date(date);
                     fallbackStart.setHours(9, 0, 0, 0);
+
                     const fallbackEnd = new Date(date);
                     fallbackEnd.setHours(10, 0, 0, 0);
 
                     const rawStart =
                       toJsDate(assignment.start) ?? fallbackStart;
-
                     const rawEnd = toJsDate(assignment.end) ?? fallbackEnd;
 
                     const clamped = clampToDay(rawStart, rawEnd, date);
                     const start = clamped.start;
                     const end = clamped.end;
                     if (end <= start) return null;
+
+                    const key =
+                      assignment.id ?? `${job.id}-${emp.id}-${start.getTime()}`;
 
                     const startMinutes =
                       start.getHours() * 60 + start.getMinutes();
