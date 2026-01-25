@@ -398,7 +398,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   return (
     <div className={styles.backdrop}>
       <div className={styles.panel}>
-        {/* HEADER – sadece X */}
+        {/* HEADER – only X */}
         <div className={styles.modalTop}>
           <button
             className={styles.closeBtn}
@@ -410,7 +410,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* TITLE INPUT – X’ten sonra */}
+        {/* TITLE INPUT – After X */}
         <div className={styles.titleSection}>
           <input
             className={styles.titleInput}
@@ -498,7 +498,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                         onClick={async (e) => {
                           e.stopPropagation();
 
-                          // 🔥 Bu employee'ye ait TÜM assignment'ları sil
                           await Promise.all(
                             empAssignments.map((a: Assignment) =>
                               deleteDoc(
