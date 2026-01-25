@@ -7,10 +7,10 @@ import {
   query,
   where,
   onSnapshot,
-  setDoc,
   deleteDoc,
   Timestamp,
 } from "firebase/firestore";
+import { addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
 import styles from "./AssignmentSchedulingSection.module.css";
@@ -25,7 +25,7 @@ interface Props {
 }
 
 interface EmployeeDoc {
-  id: string; // Firestore ID (STRING)
+  id: string;
   name?: string;
   fullName?: string;
   displayName?: string;
@@ -36,9 +36,6 @@ const ENABLED_TABS: TabType[] = ["scheduling", "labour"];
 
 /* ================= HELPERS ================= */
 
-/**
- * Safely convert Firestore / ISO / Date → Date
- */
 function toDateSafe(v: any): Date | null {
   if (!v) return null;
 
@@ -61,20 +58,11 @@ function toDateSafe(v: any): Date | null {
   return null;
 }
 
-/**
- * Safely convert to ISO string
- */
 function toIsoSafe(v: any): string | undefined {
   const d = toDateSafe(v);
   return d ? d.toISOString() : undefined;
 }
 
-/**
- * 🔥 SAFE HOUR CALCULATION
- * - blocks negatives
- * - blocks invalid dates
- * - 15 min precision
- */
 function calcHours(startIso?: string, endIso?: string): number {
   if (!startIso || !endIso) return 0;
 
@@ -84,15 +72,9 @@ function calcHours(startIso?: string, endIso?: string): number {
   if (!Number.isFinite(s) || !Number.isFinite(e)) return 0;
   if (e <= s) return 0;
 
-  const hours = (e - s) / (1000 * 60 * 60);
-
-  // 0.25h precision (15 mins)
-  return Math.round(hours * 4) / 4;
+  return Math.round(((e - s) / 36e5) * 4) / 4;
 }
 
-/**
- * Prevent duplicate schedules
- */
 function uniqueScheduleKey(start?: string, end?: string) {
   return `${start || "x"}__${end || "y"}`;
 }
@@ -102,8 +84,6 @@ function uniqueScheduleKey(start?: string, end?: string) {
 const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const navigate = useNavigate();
   const safeJobId = String(jobId);
-
-  /* ================= STATE ================= */
 
   const [activeTab, setActiveTab] = useState<TabType>("scheduling");
   const [employees, setEmployees] = useState<EmployeeDoc[]>([]);
@@ -129,7 +109,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
         snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as any),
-        }))
+        })),
       );
     })();
   }, []);
@@ -138,12 +118,12 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
   const employeeNameById = useMemo(() => {
     const map = new Map<string, string>();
-
     employees.forEach((e) => {
-      const name = e.name || e.fullName || e.displayName || `Employee ${e.id}`;
-      map.set(String(e.id), name);
+      map.set(
+        String(e.id),
+        e.name || e.fullName || e.displayName || `Employee ${e.id}`,
+      );
     });
-
     return map;
   }, [employees]);
 
@@ -159,10 +139,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
         for (const d of snap.docs) {
           const data = d.data() as any;
-
-          const empId = String(
-            data.employeeId ?? data.empId ?? data.employee ?? d.id
-          );
+          const empId = String(data.employeeId);
 
           if (!grouped.has(empId)) {
             grouped.set(empId, {
@@ -177,35 +154,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           const target = grouped.get(empId);
           if (!target) continue;
 
-          target.name =
-            employeeNameById.get(empId) || target.name || `Employee ${empId}`;
-
-          /* ---------- NEW FORMAT (MULTI-SCHEDULE) ---------- */
-          if (Array.isArray(data.schedules)) {
-            for (const s of data.schedules) {
-              const startIso = toIsoSafe(s?.start);
-              const endIso = toIsoSafe(s?.end);
-              if (!startIso || !endIso) continue;
-
-              const key = uniqueScheduleKey(startIso, endIso);
-              if (
-                target.schedules.some(
-                  (x) => uniqueScheduleKey(x.start, x.end) === key
-                )
-              )
-                continue;
-
-              target.schedules.push({
-                start: startIso,
-                end: endIso,
-                hours: calcHours(startIso, endIso),
-              });
-            }
-            continue;
-          }
-
-          /* ---------- LEGACY FORMAT ---------- */
-          // 🚫 Assign-only records must NOT count as schedule
+          /* ---------- LEGACY GUARD ---------- */
           if (data.scheduled === false) continue;
 
           const startIso = toIsoSafe(data.start);
@@ -214,51 +163,27 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
           const key = uniqueScheduleKey(startIso, endIso);
           if (
-            !target.schedules.some(
-              (x) => uniqueScheduleKey(x.start, x.end) === key
+            target.schedules.some(
+              (x) => uniqueScheduleKey(x.start, x.end) === key,
             )
-          ) {
-            target.schedules.push({
-              start: startIso,
-              end: endIso,
-              hours: calcHours(startIso, endIso),
-            });
-          }
-        }
-
-        /* ---------- SORT SCHEDULES ---------- */
-        grouped.forEach((v) =>
-          v.schedules.sort(
-            (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
           )
-        );
+            continue;
 
-        /* ---------- FIX MISSING NAMES ---------- */
-        const missing = Array.from(grouped.values())
-          .filter((x) => !x.name || x.name === "Loading...")
-          .map((x) => String(x.employeeId));
-
-        if (missing.length > 0) {
-          const empSnap = await getDocs(
-            query(
-              collection(db, "employees"),
-              where("__name__", "in", missing.slice(0, 10))
-            )
-          );
-
-          empSnap.docs.forEach((e) => {
-            const emp = e.data() as any;
-            const id = String(e.id);
-            const target = grouped.get(id);
-            if (target) {
-              target.name =
-                emp.name || emp.fullName || emp.displayName || `Employee ${id}`;
-            }
+          target.schedules.push({
+            start: startIso,
+            end: endIso,
+            hours: calcHours(startIso, endIso),
           });
         }
 
+        grouped.forEach((v) =>
+          v.schedules.sort(
+            (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+          ),
+        );
+
         setAssignedEmployees(Array.from(grouped.values()));
-      }
+      },
     );
 
     return () => unsub();
@@ -269,18 +194,18 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
-    await setDoc(
-      doc(db, "jobs", safeJobId, "assignments", selectedEmployee),
-      {
-        employeeId: selectedEmployee,
-        scheduled: false,
-        start: null,
-        end: null,
-        role: "technician",
-        createdAt: new Date(),
-      },
-      { merge: true }
-    );
+    // prevent duplicate "assign-only"
+    if (assignedEmployees.some((e) => e.employeeId === selectedEmployee)) {
+      setSelectedEmployee("");
+      return;
+    }
+
+    await addDoc(collection(db, "jobs", safeJobId, "assignments"), {
+      employeeId: selectedEmployee,
+      scheduled: false,
+      createdAt: serverTimestamp(),
+      role: "technician",
+    });
 
     setSelectedEmployee("");
   };
@@ -337,7 +262,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             onClick={() =>
               selectedEmployee &&
               navigate(
-                `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}`
+                `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}`,
               )
             }
           >

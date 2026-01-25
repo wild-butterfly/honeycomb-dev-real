@@ -1,4 +1,5 @@
 // Created by Clevermode © 2025. All rights reserved.
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useMemo, useEffect } from "react";
 import {
   collection,
@@ -15,6 +16,7 @@ import { useLocation } from "react-router-dom";
 
 import styles from "./CalendarPage.module.css";
 import { fetchEmployees } from "../services/employees";
+import { isSameDay as isSameDayDate } from "date-fns";
 
 import DashboardNavbar from "../components/DashboardNavbar";
 import CalendarControlsBar from "../components/CalendarControlsBar";
@@ -35,7 +37,6 @@ import {
 } from "../utils/saveJobToFirestore";
 
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
-import { Timestamp } from "firebase/firestore";
 
 /* TYPES */
 export type Employee = {
@@ -62,6 +63,9 @@ export type CalendarJob = {
   siteContact?: string;
   contactInfo?: string;
   notes?: string;
+
+  deleted?: boolean;
+  deletedAt?: any;
 
   assignments: Assignment[];
 };
@@ -110,12 +114,9 @@ function getWeekRange(ref: Date) {
   return { monday, sunday };
 }
 
-function isSameDay(job: CalendarJob, day: Date) {
+function jobHasAssignmentOnDay(job: CalendarJob, day: Date) {
   return job.assignments.some((a) => {
-    // 🔑 scheduled true OLANLAR
-    // 🔑 VEYA eski kayıtlar (scheduled yok ama start/end var)
     if (a.scheduled === false) return false;
-
     if (!a.start) return false;
 
     const d = new Date(a.start);
@@ -183,6 +184,11 @@ const CalendarPage: React.FC = () => {
     [jobs, openJobId],
   );
 
+  useEffect(() => {
+    console.log("🧪 openJobId:", openJobId);
+    console.log("🧪 openJob:", openJob);
+  }, [openJobId, openJob]);
+
   const location = useLocation();
 
   useEffect(() => {
@@ -211,6 +217,9 @@ const CalendarPage: React.FC = () => {
         jobId,
         employeeId: Number(employeeId),
       });
+
+      setOpenJobId(null);
+
       setRangeMode("day");
     }
   }, [location.search]);
@@ -250,8 +259,6 @@ const CalendarPage: React.FC = () => {
     const assignmentUnsubs: (() => void)[] = [];
 
     const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
-      setJobs([]); // 🔥 ÖNEMLİ: günü değiştirince state temizlenir
-
       jobsSnap.docs.forEach((jobDoc) => {
         const jobId = jobDoc.id;
 
@@ -273,6 +280,7 @@ const CalendarPage: React.FC = () => {
               };
 
               if (!exists) return [...prev, nextJob];
+
               return prev.map((j) => (j.id === jobId ? nextJob : j));
             });
           },
@@ -289,70 +297,213 @@ const CalendarPage: React.FC = () => {
   }, []);
 
   const handleOpenJob = (jobId: string) => {
-    setScheduleMode(null); // 🔥 en kritik satır
+    setScheduleMode(null);
     setOpenJobId(jobId);
+  };
+
+  useEffect(() => {
+    if (openJobId) {
+      setScheduleMode(null);
+    }
+  }, [openJobId]);
+  /* ========================================================= */
+  /* 🔑 ASSIGNMENT MOVE ADAPTERS                               */
+  /* ========================================================= */
+
+  /**
+   * CORE move logic (assignment-aware)
+   */
+  const moveAssignmentCore = async (
+    jobId: string,
+    assignmentId: string,
+    fromEmployeeId: number,
+    newStart: Date,
+    newEnd: Date,
+    targetEmployeeId?: number,
+  ) => {
+    await setDoc(
+      doc(db, "jobs", jobId, "assignments", assignmentId),
+      {
+        employeeId: targetEmployeeId ?? fromEmployeeId,
+        start: newStart.toISOString(),
+        end: newEnd.toISOString(),
+        scheduled: true,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  };
+  /* ========================================================= */
+  /* 🗑 ASSIGNMENT DELETE                                      */
+  /* ========================================================= */
+
+  const deleteAssignment = async (jobId: string, assignmentId: string) => {
+    await deleteDoc(doc(db, "jobs", jobId, "assignments", assignmentId));
+  };
+
+  /**
+   * 🔄 DAY VIEW ADAPTER (DesktopCalendarLayout → Assignment)
+   * Legacy signature → assignment-aware logic
+   */
+  const handleDayMoveAdapter = (
+    jobId: string,
+    employeeId: number,
+    start: Date,
+    end: Date,
+    targetEmployeeId?: number,
+  ) => {
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return;
+
+    // 🔑 Aynı employee + aynı gün için assignment bul
+    const assignment = job.assignments.find((a) => {
+      if (a.employeeId !== employeeId) return false;
+      if (!a.start) return false;
+
+      const d = new Date(a.start);
+      if (isNaN(d.getTime())) return false;
+
+      return (
+        d.getFullYear() === start.getFullYear() &&
+        d.getMonth() === start.getMonth() &&
+        d.getDate() === start.getDate()
+      );
+    });
+
+    if (!assignment) {
+      console.warn("⚠️ Day adapter: assignment not found", {
+        jobId,
+        employeeId,
+      });
+      return;
+    }
+
+    moveAssignmentCore(
+      jobId,
+      assignment.id,
+      employeeId,
+      start,
+      end,
+      targetEmployeeId,
+    );
+  };
+
+  /**
+   * DAY view (DesktopCalendarLayout)
+   */
+  const handleDayMove = (
+    jobId: string,
+    fromEmployeeId: number,
+    toEmployeeId: number,
+    start: Date,
+    end: Date,
+    assignmentId: string,
+  ) => {
+    if (!assignmentId) {
+      console.warn("⚠️ Day move without assignmentId");
+      return;
+    }
+
+    moveAssignmentCore(
+      jobId,
+      assignmentId,
+      fromEmployeeId,
+      start,
+      end,
+      toEmployeeId,
+    );
+  };
+
+  /**
+   * WEEK view (WeekCalendarLayout)
+   */
+  const handleWeekMove = (
+    jobId: string,
+    fromEmployeeId: number,
+    start: Date,
+    end: Date,
+    targetEmployeeId?: number,
+    assignmentId?: string,
+  ) => {
+    if (!assignmentId) return;
+    moveAssignmentCore(
+      jobId,
+      assignmentId,
+      fromEmployeeId,
+      start,
+      end,
+      targetEmployeeId,
+    );
+  };
+
+  /**
+   * MONTH view (MonthCalendarLayout)
+   */
+  const handleMonthMove = (
+    jobId: string,
+    employeeId: number,
+    start: Date,
+    end: Date,
+    assignmentId?: string,
+  ) => {
+    if (!assignmentId) return;
+    moveAssignmentCore(jobId, assignmentId, employeeId, start, end);
   };
 
   /* ✅ MOVE ASSIGNMENT (time + optional employee change) */
   const handleJobMove = async (
     jobId: string,
-    employeeId: number, // dragged assignment owner
+    assignmentId: string,
+    fromEmployeeId: number,
     newStart: Date,
     newEnd: Date,
     targetEmployeeId?: number,
   ) => {
-    if (!jobId || typeof jobId !== "string") return;
-    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) return;
-
     const startISO = newStart.toISOString();
     const endISO = newEnd.toISOString();
 
-    const finalEmployeeId = targetEmployeeId ?? employeeId;
-
-    /* 🔹 Optimistic UI */
-    setJobs((prev) =>
-      prev.map((job) => {
-        if (String(job.id) !== String(jobId)) return job;
-
-        const filtered = job.assignments.filter(
-          (a) => Number(a.employeeId) !== employeeId,
-        );
-
-        return {
-          ...job,
-          assignments: [
-            ...filtered,
-            {
-              id: `${jobId}-${finalEmployeeId}`,
-              employeeId: finalEmployeeId,
-              start: startISO,
-              end: endISO,
-            },
-          ],
-        };
-      }),
-    );
-
-    /* 🔥 Firestore */
-    if (finalEmployeeId !== employeeId) {
-      await deleteDoc(
-        doc(db, "jobs", String(jobId), "assignments", String(employeeId)),
-      );
-    }
-
     await setDoc(
-      doc(db, "jobs", String(jobId), "assignments", String(finalEmployeeId)),
+      doc(db, "jobs", jobId, "assignments", assignmentId),
       {
-        employeeId: finalEmployeeId,
+        employeeId: targetEmployeeId ?? fromEmployeeId,
         start: startISO,
         end: endISO,
         scheduled: true,
-        updatedAt: new Date(),
+        updatedAt: serverTimestamp(),
       },
       { merge: true },
     );
   };
   /* ➕ ADD JOB (create job doc + first assignment) */
+  const addAssignmentToJob = async (
+    jobId: string,
+    employeeId: number,
+    start: Date,
+    end: Date,
+  ) => {
+    await addDoc(collection(db, "jobs", jobId, "assignments"), {
+      employeeId,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      scheduled: true,
+      createdAt: serverTimestamp(),
+    });
+  };
+
+  const addAssignmentToExistingJob = async (
+    jobId: string,
+    employeeId: number,
+    start: Date,
+    end: Date,
+  ) => {
+    await addDoc(collection(db, "jobs", jobId, "assignments"), {
+      employeeId,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      scheduled: true,
+      createdAt: serverTimestamp(),
+    });
+  };
 
   const [draftJob, setDraftJob] = useState<{
     start: Date;
@@ -360,49 +511,47 @@ const CalendarPage: React.FC = () => {
   } | null>(null);
 
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    if (
-      !(start instanceof Date) ||
-      isNaN(start.getTime()) ||
-      !(end instanceof Date) ||
-      isNaN(end.getTime())
-    ) {
-      console.error("Invalid dates in handleAddJobAt", { start, end });
+    // 🔥 SCHEDULE MODE → mevcut job’a assignment ekle
+    if (scheduleMode) {
+      await addAssignmentToExistingJob(
+        scheduleMode.jobId,
+        employeeId,
+        start,
+        end,
+      );
+
+      setScheduleMode(null);
       return;
     }
 
-    const startISO = start.toISOString();
-    const endISO = end.toISOString();
-
+    // 🔥 NORMAL MODE
     const jobRef = await addDoc(collection(db, "jobs"), {
       title: "New Job",
       customer: "New Customer",
       status: "active",
       color: "#faf7dc",
-      notes: "",
-      location: "",
-      siteContact: "",
-      contactInfo: "",
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
     });
 
-    await setDoc(
-      doc(db, "jobs", jobRef.id, "assignments", String(employeeId)),
-      {
-        employeeId,
-        start: startISO,
-        end: endISO,
-        scheduled: true,
-        createdAt: new Date(),
-      },
-    );
+    await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
+      employeeId,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      scheduled: true,
+      createdAt: serverTimestamp(),
+    });
   };
 
   /* FILTERS */
+
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
+      if (job.deleted) return false;
+
       if (jobFilter === "all") return true;
       if (jobFilter === "unassigned")
         return getAssignedEmployeeIds(job).length === 0;
+
       return job.status === jobFilter;
     });
   }, [jobFilter, jobs]);
@@ -413,6 +562,13 @@ const CalendarPage: React.FC = () => {
       getAssignedEmployeeIds(job).some((id) => selectedStaff.includes(id)),
     );
   }, [filteredJobs, selectedStaff]);
+
+  // 🔑 DAY VIEW – sadece seçili güne ait assignment’ı olan işler
+  const jobsForSelectedDay = useMemo(() => {
+    return staffFilteredJobs.filter((job) =>
+      jobHasAssignmentOnDay(job, selectedDate),
+    );
+  }, [staffFilteredJobs, selectedDate]);
 
   /* MONTH GROUP */
   const jobsThisMonth = staffFilteredJobs.filter((j) => {
@@ -476,13 +632,12 @@ const CalendarPage: React.FC = () => {
             createdAt: serverTimestamp(),
           });
 
-          // 🔥 2) İlk assignment (calendar’da görünmesi için)
-          await setDoc(doc(db, "jobs", jobRef.id, "assignments", "initial"), {
-            employeeId: null, // 👈 employee sonra seçilecek
+          await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
+            employeeId: null,
             start: start.toISOString(),
             end: end.toISOString(),
             scheduled: true,
-            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
           });
 
           // 🔥 3) Modal + calendar senkron
@@ -537,7 +692,7 @@ const CalendarPage: React.FC = () => {
                   selectedStaff={selectedStaff}
                   onStaffChange={setSelectedStaff}
                   onJobClick={handleOpenJob}
-                  onJobMove={handleJobMove}
+                  onJobMove={handleMonthMove}
                   onAddJobAt={handleAddJobAt}
                 />
 
@@ -589,7 +744,7 @@ const CalendarPage: React.FC = () => {
                     )}
                     employees={employees}
                     onJobClick={handleOpenJob}
-                    onJobMove={handleJobMove}
+                    onJobMove={handleWeekMove}
                     onAddJobAt={handleAddJobAt}
                   />
                 </div>
@@ -614,9 +769,7 @@ const CalendarPage: React.FC = () => {
           <>
             <div className={styles.onlyMobile}>
               <MobileDayList
-                jobs={staffFilteredJobs.filter((j) =>
-                  isSameDay(j, selectedDate),
-                )}
+                jobs={jobsForSelectedDay}
                 employees={employees}
                 selectedDate={selectedDate}
                 onJobClick={handleOpenJob}
@@ -624,9 +777,7 @@ const CalendarPage: React.FC = () => {
 
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
-                  jobs={staffFilteredJobs.filter((j) =>
-                    isSameDay(j, selectedDate),
-                  )}
+                  jobs={jobsForSelectedDay}
                   onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
@@ -640,15 +791,17 @@ const CalendarPage: React.FC = () => {
                   <DesktopCalendarLayout
                     date={selectedDate}
                     employees={employees}
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameDay(j, selectedDate),
-                    )}
+                    jobs={jobsForSelectedDay}
                     onJobClick={handleOpenJob}
                     selectedEmployeeId={
                       selectedStaff.length === 1 ? selectedStaff[0] : undefined
                     }
                     onAddJobAt={handleAddJobAt}
-                    onMoveJob={handleJobMove}
+                    onCloneJobAt={async (jobId, employeeId, start, end) => {
+                      await addAssignmentToJob(jobId, employeeId, start, end);
+                      setScheduleMode(null);
+                    }}
+                    onMoveJob={handleDayMoveAdapter}
                     scheduleMode={scheduleMode}
                     clearScheduleMode={() => setScheduleMode(null)}
                   />
@@ -656,9 +809,7 @@ const CalendarPage: React.FC = () => {
 
                 <aside className={styles.sidebarWrapper}>
                   <SidebarJobs
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameDay(j, selectedDate),
-                    )}
+                    jobs={jobsForSelectedDay}
                     onJobClick={handleOpenJob}
                     jobFilter={jobFilter}
                     onJobFilterChange={setJobFilter}
@@ -680,7 +831,6 @@ const CalendarPage: React.FC = () => {
               await saveJobToFirestore(updatedJob);
             }}
             onDelete={async () => {
-              setJobs((prev) => prev.filter((j) => j.id !== openJob.id));
               await deleteJobFromFirestore(openJob.id);
             }}
             onStartSchedule={(jobId, employeeId) => {

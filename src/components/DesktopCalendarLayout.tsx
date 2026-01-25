@@ -14,8 +14,17 @@ interface Props {
   employees: Employee[];
   jobs: CalendarJob[];
 
+  selectedEmployeeId?: number;
+
   onJobClick: (jobId: string) => void;
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
+
+  onCloneJobAt?: (
+    sourceJobId: string,
+    employeeId: number,
+    start: Date,
+    end: Date,
+  ) => void;
 
   onMoveJob?: (
     jobId: string,
@@ -24,8 +33,6 @@ interface Props {
     end: Date,
     targetEmployeeId?: number,
   ) => void;
-
-  selectedEmployeeId?: number;
 
   scheduleMode?: { jobId: string; employeeId: number } | null;
   clearScheduleMode?: () => void;
@@ -132,6 +139,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   onJobClick,
   selectedEmployeeId,
   onAddJobAt,
+  onCloneJobAt,
   onMoveJob,
   scheduleMode,
   clearScheduleMode,
@@ -190,38 +198,35 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   );
 
   /* ================= MAP JOBS BY EMPLOYEE (ASSIGNMENTS) ================= */
-  const jobsByEmployee: Record<number, CalendarJob[]> = useMemo(() => {
-    const map: Record<number, CalendarJob[]> = {};
+  const assignmentsByEmployee: Record<
+    number,
+    { job: CalendarJob; assignment: any }[]
+  > = useMemo(() => {
+    const map: Record<number, { job: CalendarJob; assignment: any }[]> = {};
     for (const e of employees) map[e.id] = [];
 
     for (const job of jobs) {
       for (const a of (job as any).assignments ?? []) {
-        const scheduledFlag = (a as any).scheduled;
-        if (scheduledFlag === false) continue;
-
+        if (a.scheduled === false) continue;
         if (!a.start || !a.end) continue;
 
-        const startDate = new Date(a.start);
-        const endDate = new Date(a.end);
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) continue;
+        const start = new Date(a.start);
+        const end = new Date(a.end);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) continue;
 
-        // show if overlaps selected day
-        const s = new Date(date);
-        s.setHours(0, 0, 0, 0);
-        const e = new Date(date);
-        e.setHours(23, 59, 59, 999);
+        // 🔑 SADECE seçili gün
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
 
-        const overlaps = startDate <= e && endDate >= s;
-        if (!overlaps) continue;
+        if (end < dayStart || start > dayEnd) continue;
 
         const empId = Number(a.employeeId);
-        if (!Number.isFinite(empId)) continue;
         if (!map[empId]) continue;
 
         if (!selectedEmployeeId || empId === selectedEmployeeId) {
-          if (!map[empId].some((j) => j.id === job.id)) {
-            map[empId].push(job);
-          }
+          map[empId].push({ job, assignment: a });
         }
       }
     }
@@ -691,10 +696,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
           </div>
 
           {employees.map((emp) => {
-            const empJobs =
+            const empAssignments =
               selectedEmployeeId && emp.id !== selectedEmployeeId
                 ? []
-                : jobsByEmployee[emp.id] || [];
+                : assignmentsByEmployee[emp.id] || [];
 
             return (
               <div
@@ -712,74 +717,40 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       const slotEnd = new Date(slotStart);
                       slotEnd.setHours(slotEnd.getHours() + 1);
 
-                      const isScheduleTargetRow =
-                        !scheduleMode || emp.id === scheduleMode.employeeId;
-
                       return (
-                        <div
-                          key={h}
-                          className={styles.timeSlotCell}
-                          onMouseDown={(ev) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
+                        <div key={h} className={styles.timeSlotCell}>
+                          <button
+                            type="button"
+                            className={styles.slotAddButton}
+                            onMouseDown={(ev: React.MouseEvent) => {
+                              ev.preventDefault();
+                              ev.stopPropagation();
 
-                            // 🔁 MOVE EXISTING JOB
-                            if (scheduleMode) {
-                              if (!isScheduleTargetRow) return;
+                              // 🧬 ASSIGN / CLONE MODE
+                              if (scheduleMode) {
+                                onCloneJobAt?.(
+                                  scheduleMode.jobId,
+                                  emp.id,
+                                  slotStart,
+                                  slotEnd,
+                                );
+                                clearScheduleMode?.();
+                                return;
+                              }
 
-                              onMoveJob?.(
-                                scheduleMode.jobId,
-                                scheduleMode.employeeId,
-                                slotStart,
-                                slotEnd,
-                              );
-
-                              clearScheduleMode?.();
-                              return;
-                            }
-
-                            // ➕ ADD NEW JOB
-                            onAddJobAt(emp.id, slotStart, slotEnd);
-                          }}
-                        >
-                          {/* ➕ HOVER BUTTON */}
-                          {(scheduleMode || true) && (
-                            <button
-                              type="button"
-                              className={styles.slotAddButton}
-                              onMouseDown={(ev) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-
-                                // 🔁 MOVE EXISTING JOB
-                                if (scheduleMode) {
-                                  if (!isScheduleTargetRow) return;
-
-                                  onMoveJob?.(
-                                    scheduleMode.jobId,
-                                    scheduleMode.employeeId,
-                                    slotStart,
-                                    slotEnd,
-                                  );
-
-                                  clearScheduleMode?.();
-                                  return;
-                                }
-
-                                // ➕ ADD NEW JOB
-                                onAddJobAt(emp.id, slotStart, slotEnd);
-                              }}
-                            >
-                              +
-                            </button>
-                          )}
+                              // 🆕 NORMAL MODE
+                              onAddJobAt(emp.id, slotStart, slotEnd);
+                            }}
+                          >
+                            +
+                          </button>
                         </div>
                       );
                     })}
                   </div>
 
                   {/* JOB BLOCKS */}
-                  {empJobs.map((job) => {
+                  {empAssignments.map(({ job, assignment }) => {
                     const key = `${job.id}-${emp.id}`;
 
                     const fallbackStart = new Date(date);
@@ -787,12 +758,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                     const fallbackEnd = new Date(date);
                     fallbackEnd.setHours(10, 0, 0, 0);
 
-                    const rawStart = getStartForEmployee(
-                      job,
-                      emp.id,
-                      fallbackStart,
-                    );
-                    const rawEnd = getEndForEmployee(job, emp.id, fallbackEnd);
+                    const rawStart =
+                      toJsDate(assignment.start) ?? fallbackStart;
+
+                    const rawEnd = toJsDate(assignment.end) ?? fallbackEnd;
 
                     const clamped = clampToDay(rawStart, rawEnd, date);
                     const start = clamped.start;
@@ -826,7 +795,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                         }}
                         onPointerDown={(ev) => {
                           if ((ev.target as HTMLElement).dataset.resize) return;
-                          // ✅ pass blockLeftPx to compute grabOffset correctly
                           startMoveDrag(
                             ev,
                             job,
