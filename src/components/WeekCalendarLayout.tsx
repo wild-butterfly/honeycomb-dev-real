@@ -13,12 +13,16 @@ interface Props {
   jobs: CalendarJob[];
   employees: Employee[];
   onJobClick: (id: string) => void;
+
   onJobMove: (
-    id: string,
-    employeeId: number,
+    jobId: string,
+    fromEmployeeId: number,
     newStart: Date,
     newEnd: Date,
+    targetEmployeeId?: number,
+    assignmentId?: string,
   ) => void;
+
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
@@ -86,7 +90,14 @@ const WeekCalendarLayout: React.FC<Props> = ({
 
     const newEnd = new Date(newStart.getTime() + duration);
 
-    onJobMove(draggingItem.jobId, employeeId, newStart, newEnd);
+    onJobMove(
+      draggingItem.jobId,
+      draggingItem.employeeId,
+      newStart,
+      newEnd,
+      employeeId,
+      draggingItem.assignmentId,
+    );
 
     setDraggingItem(null);
   };
