@@ -117,13 +117,13 @@
 /* JOB BOX */
 
 .jobBox {
-  background: #fffef9; /* sidebar ile aynı fallback */
-  border: 1px solid #ffe066; /* 🔑 AYNI FRAME */
+  background: #fffef9;
+  border: 1px solid #ffe066;
   border-radius: 8px;
   padding: 26px 10px 10px;
   margin-bottom: 6px;
 
-  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12); /* 🔑 AYNI SHADOW */
+  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12);
 
   cursor: grab;
   position: relative;
@@ -133,6 +133,10 @@
   transition:
     filter 0.15s ease,
     box-shadow 0.15s ease;
+
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .jobBox:hover {

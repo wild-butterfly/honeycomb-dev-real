@@ -1,5 +1,5 @@
 // Created by Clevermode © 2025. All rights reserved.
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import styles from "./MonthCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
@@ -21,6 +21,17 @@ interface Props {
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
 
+/* ========================================================= */
+/* DRAG STATE */
+/* ========================================================= */
+
+type MonthDrag = {
+  item: CalendarItem;
+  startX: number;
+  startY: number;
+  moved: boolean;
+};
+
 const MonthCalendarLayout: React.FC<Props> = ({
   date,
   jobs,
@@ -32,7 +43,9 @@ const MonthCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverDay, setHoverDay] = useState<number | null>(null);
-  const [draggingItem, setDraggingItem] = useState<CalendarItem | null>(null);
+
+  const dragRef = useRef<MonthDrag | null>(null);
+  const suppressClickRef = useRef(false);
 
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -69,34 +82,66 @@ const MonthCalendarLayout: React.FC<Props> = ({
     return map;
   }, [jobs, days, selectedStaff]);
 
-  /* ================= DRAG & DROP ================= */
+  /* ================= POINTER EVENTS ================= */
 
-  const handleDropOnDay = (day: Date, e: React.DragEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragRef.current) return;
 
-    const raw = e.dataTransfer.getData("application/json");
-    if (!raw) return;
+      const dx = Math.abs(e.clientX - dragRef.current.startX);
+      const dy = Math.abs(e.clientY - dragRef.current.startY);
 
-    const parsed = JSON.parse(raw);
-
-    const item: CalendarItem = {
-      ...parsed,
-      start: new Date(parsed.start),
-      end: new Date(parsed.end),
+      if (dx > 4 || dy > 4) {
+        dragRef.current.moved = true;
+        suppressClickRef.current = true;
+      }
     };
 
-    const duration = item.end.getTime() - item.start.getTime();
+    const onPointerUp = (e: PointerEvent) => {
+      const ctx = dragRef.current;
+      if (!ctx) return;
 
-    const newStart = new Date(day);
-    newStart.setHours(item.start.getHours(), item.start.getMinutes(), 0, 0);
+      if (ctx.moved) {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const cell = el?.closest("[data-date]") as HTMLElement | null;
 
-    const newEnd = new Date(newStart.getTime() + duration);
+        if (cell) {
+          const dateISO = cell.dataset.date!;
+          const day = new Date(dateISO);
 
-    onJobMove(item.jobId, item.employeeId, newStart, newEnd, item.assignmentId);
+          const duration = ctx.item.end.getTime() - ctx.item.start.getTime();
 
-    setDraggingItem(null);
-    setHoverDay(null);
-  };
+          const newStart = new Date(day);
+          newStart.setHours(
+            ctx.item.start.getHours(),
+            ctx.item.start.getMinutes(),
+            0,
+            0,
+          );
+
+          const newEnd = new Date(newStart.getTime() + duration);
+
+          onJobMove(
+            ctx.item.jobId,
+            ctx.item.employeeId,
+            newStart,
+            newEnd,
+            ctx.item.assignmentId,
+          );
+        }
+      }
+
+      dragRef.current = null;
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [onJobMove]);
 
   /* ================= RENDER ================= */
 
@@ -158,10 +203,9 @@ const MonthCalendarLayout: React.FC<Props> = ({
               <div
                 key={key}
                 className={styles.dayCell}
+                data-date={day.toISOString()}
                 onMouseEnter={() => setHoverDay(dayNum)}
                 onMouseLeave={() => setHoverDay(null)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => handleDropOnDay(day, e)}
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
@@ -169,23 +213,36 @@ const MonthCalendarLayout: React.FC<Props> = ({
                   {itemsToday.map((item) => (
                     <div
                       key={item.assignmentId}
-                      draggable
                       className={styles.jobBox}
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        suppressClickRef.current = false;
+
+                        dragRef.current = {
+                          item,
+                          startX: e.clientX,
+                          startY: e.clientY,
+                          moved: false,
+                        };
+
+                        (e.currentTarget as HTMLElement).setPointerCapture(
+                          e.pointerId,
+                        );
+                      }}
+                      onClick={(e) => {
+                        if (suppressClickRef.current) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          suppressClickRef.current = false;
+                          return;
+                        }
+
+                        onJobClick(item.jobId);
+                      }}
                       style={{
                         backgroundColor: item.color || "#faf7dc",
-                      }}
-                      onDragStart={(e) => {
-                        setDraggingItem(item);
-                        setHoverDay(null);
-                        e.dataTransfer.setData(
-                          "application/json",
-                          JSON.stringify(item),
-                        );
-                        e.dataTransfer.effectAllowed = "move";
-                      }}
-                      onDragEnd={() => setDraggingItem(null)}
-                      onClick={() => {
-                        if (!draggingItem) onJobClick(item.jobId);
                       }}
                     >
                       {item.status === "quote" && (
@@ -204,13 +261,10 @@ const MonthCalendarLayout: React.FC<Props> = ({
                   ))}
                 </div>
 
-                {/* ADD BUTTON — HER ZAMAN DOM’DA */}
                 <button
                   className={styles.slotAddButton}
                   style={{
-                    opacity: hoverDay === dayNum && !draggingItem ? 1 : 0,
-                    pointerEvents:
-                      hoverDay === dayNum && !draggingItem ? "auto" : "none",
+                    opacity: hoverDay === dayNum ? 1 : 0,
                   }}
                   onClick={() => {
                     const start = new Date(day);

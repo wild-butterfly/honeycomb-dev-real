@@ -110,6 +110,10 @@
   transition:
     filter 0.15s ease,
     box-shadow 0.15s ease;
+
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .jobBox:hover {

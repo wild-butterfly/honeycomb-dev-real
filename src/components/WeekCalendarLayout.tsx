@@ -1,5 +1,5 @@
 // Created by Clevermode © 2025. All rights reserved.
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import styles from "./WeekCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
@@ -27,6 +27,17 @@ interface Props {
 }
 
 /* ========================================================= */
+/* DRAG STATE */
+/* ========================================================= */
+
+type WeekDrag = {
+  item: CalendarItem;
+  startX: number;
+  startY: number;
+  moved: boolean;
+};
+
+/* ========================================================= */
 /* MAIN COMPONENT */
 /* ========================================================= */
 
@@ -39,13 +50,15 @@ const WeekCalendarLayout: React.FC<Props> = ({
   onAddJobAt,
 }) => {
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
-  const [draggingItem, setDraggingItem] = useState<CalendarItem | null>(null);
+
+  const dragRef = useRef<WeekDrag | null>(null);
+  const suppressClickRef = useRef(false);
 
   /* ================= WEEK RANGE ================= */
 
   const startOfWeek = new Date(date);
   startOfWeek.setHours(0, 0, 0, 0);
-  startOfWeek.setDate(date.getDate() - ((date.getDay() + 6) % 7)); // Monday
+  startOfWeek.setDate(date.getDate() - ((date.getDay() + 6) % 7));
 
   const daysOfWeek = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
@@ -63,9 +76,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
     const map: Record<string, CalendarItem[]> = {};
 
     for (const item of items) {
-      const dayKey = item.start.toDateString();
-      const key = `${item.employeeId}__${dayKey}`;
-
+      const key = `${item.employeeId}__${item.start.toDateString()}`;
       if (!map[key]) map[key] = [];
       map[key].push(item);
     }
@@ -73,34 +84,68 @@ const WeekCalendarLayout: React.FC<Props> = ({
     return map;
   }, [items]);
 
-  /* ================= DROP HANDLER ================= */
+  /* ================= POINTER EVENTS ================= */
 
-  const handleDropOnCell = (day: Date, employeeId: number) => {
-    if (!draggingItem) return;
+  useEffect(() => {
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragRef.current) return;
 
-    const duration = draggingItem.end.getTime() - draggingItem.start.getTime();
+      const dx = Math.abs(e.clientX - dragRef.current.startX);
+      const dy = Math.abs(e.clientY - dragRef.current.startY);
 
-    const newStart = new Date(day);
-    newStart.setHours(
-      draggingItem.start.getHours(),
-      draggingItem.start.getMinutes(),
-      0,
-      0,
-    );
+      if (dx > 4 || dy > 4) {
+        dragRef.current.moved = true;
+        suppressClickRef.current = true;
+      }
+    };
 
-    const newEnd = new Date(newStart.getTime() + duration);
+    const onPointerUp = (e: PointerEvent) => {
+      const ctx = dragRef.current;
+      if (!ctx) return;
 
-    onJobMove(
-      draggingItem.jobId,
-      draggingItem.employeeId,
-      newStart,
-      newEnd,
-      employeeId,
-      draggingItem.assignmentId,
-    );
+      if (ctx.moved) {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const cell = el?.closest("[data-date]") as HTMLElement | null;
 
-    setDraggingItem(null);
-  };
+        if (cell) {
+          const dateISO = cell.dataset.date!;
+          const targetEmployeeId = Number(cell.dataset.employeeId);
+
+          const day = new Date(dateISO);
+          const duration = ctx.item.end.getTime() - ctx.item.start.getTime();
+
+          const newStart = new Date(day);
+          newStart.setHours(
+            ctx.item.start.getHours(),
+            ctx.item.start.getMinutes(),
+            0,
+            0,
+          );
+
+          const newEnd = new Date(newStart.getTime() + duration);
+
+          onJobMove(
+            ctx.item.jobId,
+            ctx.item.employeeId,
+            newStart,
+            newEnd,
+            targetEmployeeId,
+            ctx.item.assignmentId,
+          );
+        }
+      }
+
+      dragRef.current = null;
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [onJobMove]);
 
   const getInitials = (name: string) =>
     name
@@ -138,31 +183,50 @@ const WeekCalendarLayout: React.FC<Props> = ({
           </div>
 
           {daysOfWeek.map((day) => {
-            const dayKey = day.toDateString();
-            const mapKey = `${emp.id}__${dayKey}`;
-            const itemsInCell = itemsByDayAndEmployee[mapKey] || [];
-
+            const key = `${emp.id}__${day.toDateString()}`;
+            const itemsInCell = itemsByDayAndEmployee[key] || [];
             const cellId = `${emp.id}__${day.toISOString().slice(0, 10)}`;
 
             return (
               <div
                 key={cellId}
-                className={`${styles.dayCell} ${
-                  itemsInCell.length > 0 ? styles.hasJob : ""
-                }`}
+                className={styles.dayCell}
+                data-date={day.toISOString()}
+                data-employee-id={emp.id}
                 onMouseEnter={() => setHoverSlot(cellId)}
                 onMouseLeave={() => setHoverSlot(null)}
-                onDragOver={(e) => draggingItem && e.preventDefault()}
-                onDrop={() => handleDropOnCell(day, emp.id)}
               >
                 {itemsInCell.map((item) => (
                   <div
                     key={item.assignmentId}
                     className={styles.jobBox}
-                    draggable
-                    onDragStart={() => setDraggingItem(item)}
-                    onDragEnd={() => setDraggingItem(null)}
-                    onClick={() => onJobClick(item.jobId)}
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      suppressClickRef.current = false;
+
+                      dragRef.current = {
+                        item,
+                        startX: e.clientX,
+                        startY: e.clientY,
+                        moved: false,
+                      };
+
+                      (e.currentTarget as HTMLElement).setPointerCapture(
+                        e.pointerId,
+                      );
+                    }}
+                    onClick={(e) => {
+                      if (suppressClickRef.current) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        suppressClickRef.current = false;
+                        return;
+                      }
+
+                      onJobClick(item.jobId);
+                    }}
                     style={{
                       backgroundColor: item.color || "#faf7dc",
                     }}
@@ -170,16 +234,6 @@ const WeekCalendarLayout: React.FC<Props> = ({
                     <div className={styles.dragHandle} aria-hidden>
                       ⋮⋮
                     </div>
-
-                    {item.status === "quote" && (
-                      <div className={styles.badgeQuote}>QUOTE</div>
-                    )}
-                    {item.status === "completed" && (
-                      <div className={styles.badgeCompleted}>COMPLETED</div>
-                    )}
-                    {item.status === "return" && (
-                      <div className={styles.badgeReturn}>NEED TO RETURN</div>
-                    )}
 
                     <div className={styles.jobTitle}>{item.title}</div>
                     <div className={styles.jobCustomer}>{item.customer}</div>
