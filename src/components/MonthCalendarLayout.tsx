@@ -12,10 +12,11 @@ interface Props {
   onStaffChange: (list: number[]) => void;
   onJobClick: (id: string) => void;
   onJobMove: (
-    id: string,
+    jobId: string,
     employeeId: number,
     newStart: Date,
     newEnd: Date,
+    assignmentId: string,
   ) => void;
   onAddJobAt: (employeeId: number, start: Date, end: Date) => void;
 }
@@ -70,24 +71,31 @@ const MonthCalendarLayout: React.FC<Props> = ({
 
   /* ================= DRAG & DROP ================= */
 
-  const handleDropOnDay = (day: Date) => {
-    if (!draggingItem) return;
+  const handleDropOnDay = (day: Date, e: React.DragEvent) => {
+    e.preventDefault();
 
-    const duration = draggingItem.end.getTime() - draggingItem.start.getTime();
+    const raw = e.dataTransfer.getData("application/json");
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw);
+
+    const item: CalendarItem = {
+      ...parsed,
+      start: new Date(parsed.start),
+      end: new Date(parsed.end),
+    };
+
+    const duration = item.end.getTime() - item.start.getTime();
 
     const newStart = new Date(day);
-    newStart.setHours(
-      draggingItem.start.getHours(),
-      draggingItem.start.getMinutes(),
-      0,
-      0,
-    );
+    newStart.setHours(item.start.getHours(), item.start.getMinutes(), 0, 0);
 
     const newEnd = new Date(newStart.getTime() + duration);
 
-    onJobMove(draggingItem.jobId, draggingItem.employeeId, newStart, newEnd);
+    onJobMove(item.jobId, item.employeeId, newStart, newEnd, item.assignmentId);
 
     setDraggingItem(null);
+    setHoverDay(null);
   };
 
   /* ================= RENDER ================= */
@@ -112,7 +120,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       : onStaffChange([...selectedStaff, emp.id])
                   }
                 />
-
                 <div className={styles.staffAvatar}>
                   {emp.name
                     .split(" ")
@@ -120,7 +127,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
                     .join("")
                     .toUpperCase()}
                 </div>
-
                 <div className={styles.staffName}>{emp.name}</div>
               </label>
             );
@@ -139,7 +145,6 @@ const MonthCalendarLayout: React.FC<Props> = ({
         </div>
 
         <div className={styles.daysGrid}>
-          {/* OFFSET */}
           {Array.from({ length: offset }).map((_, i) => (
             <div key={i} className={styles.emptyCell} />
           ))}
@@ -155,8 +160,8 @@ const MonthCalendarLayout: React.FC<Props> = ({
                 className={styles.dayCell}
                 onMouseEnter={() => setHoverDay(dayNum)}
                 onMouseLeave={() => setHoverDay(null)}
-                onDragOver={(e) => draggingItem && e.preventDefault()}
-                onDrop={() => handleDropOnDay(day)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDropOnDay(day, e)}
               >
                 <div className={styles.dayNumber}>{dayNum}</div>
 
@@ -165,12 +170,23 @@ const MonthCalendarLayout: React.FC<Props> = ({
                     <div
                       key={item.assignmentId}
                       draggable
-                      onDragStart={() => setDraggingItem(item)}
-                      onDragEnd={() => setDraggingItem(null)}
-                      onClick={() => onJobClick(item.jobId)}
                       className={styles.jobBox}
-                      style={{
-                        backgroundColor: item.color || "#faf7dc",
+                      onDragStart={(e) => {
+                        console.log("🟢 DRAG START", item.jobId);
+                        setDraggingItem(item);
+                        setHoverDay(null);
+
+                        e.dataTransfer.setData(
+                          "application/json",
+                          JSON.stringify(item),
+                        );
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragEnd={() => setDraggingItem(null)}
+                      onClick={() => {
+                        if (!draggingItem) {
+                          onJobClick(item.jobId);
+                        }
                       }}
                     >
                       {item.status === "quote" && (
@@ -189,23 +205,27 @@ const MonthCalendarLayout: React.FC<Props> = ({
                   ))}
                 </div>
 
-                {hoverDay === dayNum && (
-                  <button
-                    className={styles.slotAddButton}
-                    onClick={() => {
-                      const start = new Date(day);
-                      start.setHours(9, 0, 0, 0);
+                {/* ADD BUTTON — HER ZAMAN DOM’DA */}
+                <button
+                  className={styles.slotAddButton}
+                  style={{
+                    opacity: hoverDay === dayNum && !draggingItem ? 1 : 0,
+                    pointerEvents:
+                      hoverDay === dayNum && !draggingItem ? "auto" : "none",
+                  }}
+                  onClick={() => {
+                    const start = new Date(day);
+                    start.setHours(9, 0, 0, 0);
 
-                      const end = new Date(start);
-                      end.setHours(start.getHours() + 1);
+                    const end = new Date(start);
+                    end.setHours(start.getHours() + 1);
 
-                      const emp = selectedStaff[0] ?? employees[0]?.id;
-                      if (emp) onAddJobAt(emp, start, end);
-                    }}
-                  >
-                    +
-                  </button>
-                )}
+                    const emp = selectedStaff[0] ?? employees[0]?.id;
+                    if (emp) onAddJobAt(emp, start, end);
+                  }}
+                >
+                  +
+                </button>
               </div>
             );
           })}

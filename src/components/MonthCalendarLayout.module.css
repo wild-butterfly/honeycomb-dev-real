@@ -94,10 +94,20 @@
   padding: 6px;
   min-height: 150px;
   position: relative;
+  overflow: visible;
 }
 
 .dayCell:hover {
   background: #fff9de;
+}
+
+.jobBox {
+  cursor: grab;
+  user-select: none;
+}
+
+.jobBox:active {
+  cursor: grabbing;
 }
 
 .dayNumber {
@@ -110,6 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow: visible;
 }
 
 /* JOB BOX (Week görünümü ile aynı) */
