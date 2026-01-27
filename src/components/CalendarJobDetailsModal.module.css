@@ -176,8 +176,40 @@
 
 .removeX {
   margin-left: 6px;
-  font-size: 16px;
-  color: #b30000;
+
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffe28a;
+  border: 1px solid #f0c559;
+
+  color: #6d5300;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+
+  cursor: pointer;
+
+  /* 🔒 layout sabit */
+  box-sizing: border-box;
+
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.removeX:hover {
+  background: #ffedb5;
+  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.35);
+}
+
+.removeX:active {
+  background: #ffd86d;
 }
 
 /* STAFF ADD BUTTON */

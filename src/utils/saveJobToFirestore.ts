@@ -55,7 +55,7 @@ export async function saveJobToFirestore(
         notes: notes ?? "",
         updatedAt: serverTimestamp(),
       },
-      { merge: true }, // 🔑 ASLA KALDIRILMAYACAK
+      { merge: true },
     );
 
     console.log("🔥 Job metadata saved:", id);

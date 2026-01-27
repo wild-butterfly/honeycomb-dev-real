@@ -76,7 +76,6 @@
   padding: 4px;
   border-right: 1px dashed #f2e2a3;
 
-  /* Native drag-drop güvenliği */
   pointer-events: auto;
 }
 
@@ -207,7 +206,6 @@
   opacity: 0;
   transition: opacity 0.15s ease;
 
-  /* 🔥 DROP BLOKAJI ÖNLENİR */
   pointer-events: none;
 }
 
