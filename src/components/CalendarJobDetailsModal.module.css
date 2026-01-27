@@ -389,14 +389,14 @@
 }
 
 .contactLink {
-  color: #715600; /* Temaya uyumlu */
+  color: #715600;
   text-decoration: none;
   transition: color 0.15s ease;
   font-size: 0.9rem;
 }
 
 .contactLink:hover {
-  color: #ffb300; /* Hover rengi */
+  color: #ffb300;
 }
 
 /* CONTACT INPUTS */
@@ -438,7 +438,7 @@
   min-width: 18px;
   min-height: 18px;
   display: inline-block;
-  color: #715600; /* Temaya uygun */
+  color: #715600;
 }
 
 /* SITE CONTACT */
@@ -462,7 +462,7 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  color: #715600; /* theme color */
+  color: #715600;
   transition: color 0.15s ease;
   text-decoration: none;
   font-size: 0.9rem;
@@ -474,8 +474,8 @@
 
 /* Map Pin Icon */
 .siteAddressLink .icon {
-  width: 18px; /* smaller size */
-  height: 18px; /* smaller size */
+  width: 18px;
+  height: 18px;
   min-width: 18px;
   min-height: 18px;
   color: #715600;

@@ -214,7 +214,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         const end = toJsDate(a.end);
         if (!start || !end) continue;
 
-        // 🔑 SADECE seçili gün
         const dayStart = new Date(date);
         dayStart.setHours(0, 0, 0, 0);
         const dayEnd = new Date(date);
@@ -605,7 +604,6 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         clamped.end.getTime() - clamped.start.getTime(),
       );
 
-      // ✅ SAĞ KENAR HESABI (DOĞRU YER)
       const startMinutes =
         clamped.start.getHours() * 60 + clamped.start.getMinutes();
 

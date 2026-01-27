@@ -21,14 +21,14 @@ body {
   background:
     repeating-linear-gradient(
       90deg,
-      /* 0 = dikey, 90 = yatay çizgiler */ #fff8d6,
+      #fff8d6,
       #fff8d6 8px,
       #fffbe9 9px,
       #fffbe9 20px
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
   min-height: 100vh;
-  padding: 0 0 46px 0; /* üst padding sıfırlandı */
+  padding: 0 0 46px 0;
   font-family: "Roboto", Arial, sans-serif;
 }
 
@@ -231,7 +231,7 @@ nav,
   border: 4px solid #bca652;
   background: #fffef6;
   box-shadow: 0 1px 2px rgba(188, 166, 82, 0.15);
-  border-radius: 6px; /* 🔹 eskisinden daha az radius */
+  border-radius: 6px;
   letter-spacing: 0.3px;
   min-width: 70px;
   text-align: center;
@@ -259,7 +259,7 @@ nav,
 .statusComplete,
 .statusPending {
   font-family: "Inter", sans-serif;
-  box-shadow: 0 0 0 1px rgba(255, 215, 128, 0.25); /* yumuşak altın dokunuş */
+  box-shadow: 0 0 0 1px rgba(255, 215, 128, 0.25);
 }
 
 .detailsBtn {
@@ -360,7 +360,6 @@ nav,
   align-items: center;
 }
 
-/* Tasks card header (sadece başlık için) */
 .tasksHeaderRow {
   width: 100%;
   display: flex;
@@ -378,7 +377,6 @@ nav,
   margin: 0;
 }
 
-/* Add Task butonu — View All ile eş stil */
 .addTaskBtn,
 .viewAllBtn {
   width: 100%;
@@ -386,7 +384,7 @@ nav,
 
   border-radius: 8px;
   border: 2px solid #b99a2a;
-  background: #fffbe4; /* View All ile aynı ton */
+  background: #fffbe4;
   color: #b99a2a;
   font-weight: 700;
   font-size: 1.09rem;
@@ -401,7 +399,6 @@ nav,
     border 0.13s;
 }
 
-/* spacing farkı: Add Task üstte, View All altta */
 .addTaskBtn {
   margin-bottom: 16px;
 }
@@ -455,7 +452,6 @@ nav,
     0 2px 8px #b99a2a11;
 }
 
-/* ----------- TASK CARD (küçük kartlar) ----------- */
 .taskListUl {
   list-style: none;
   margin: 0;
@@ -525,7 +521,6 @@ nav,
   font-size: 0.97em;
 }
 
-/* buttons inside task cards */
 .toggleBtn {
   background: none;
   border: none;
@@ -641,7 +636,7 @@ nav,
   font-weight: 600;
 }
 
-/* ----------- TASK PANEL (View All açınca sağdan çıkan) ----------- */
+/* ----------- TASK PANEL ----------- */
 .taskPanelOverlay {
   position: fixed;
   inset: 0;
@@ -839,7 +834,7 @@ nav,
   gap: 2px;
 }
 
-/* Completed row info (panel içi) */
+/* Completed row info  */
 .completedByRow {
   font-size: 0.98em;
   color: #45b86a;
@@ -912,7 +907,6 @@ nav,
     display: none;
   }
 
-  /* tbody artık kart listesi */
   .jobsTable tbody {
     display: flex;
     flex-direction: column;

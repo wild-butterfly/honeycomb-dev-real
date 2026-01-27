@@ -101,15 +101,6 @@
   background: #fff9de;
 }
 
-.jobBox {
-  cursor: grab;
-  user-select: none;
-}
-
-.jobBox:active {
-  cursor: grabbing;
-}
-
 .dayNumber {
   font-weight: 700;
   margin-bottom: 6px;
@@ -123,18 +114,34 @@
   overflow: visible;
 }
 
-/* JOB BOX (Week görünümü ile aynı) */
+/* JOB BOX */
 
 .jobBox {
-  background: #fff4c5;
-  border: 1px solid #e2c76b;
-  border-radius: 10px;
+  background: #fffef9; /* sidebar ile aynı fallback */
+  border: 1px solid #ffe066; /* 🔑 AYNI FRAME */
+  border-radius: 8px;
   padding: 26px 10px 10px;
-  box-shadow: 0 2px 4px rgba(200, 170, 50, 0.25);
-  cursor: pointer;
+  margin-bottom: 6px;
+
+  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.12); /* 🔑 AYNI SHADOW */
+
+  cursor: grab;
   position: relative;
+
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
+.jobBox:hover {
+  filter: brightness(1.03);
+}
+
+.jobBox:active {
+  cursor: grabbing;
+}
 .jobTitle {
   font-weight: 700;
   font-size: 13px;

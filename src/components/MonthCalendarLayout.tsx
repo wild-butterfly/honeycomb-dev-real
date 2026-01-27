@@ -171,11 +171,12 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       key={item.assignmentId}
                       draggable
                       className={styles.jobBox}
+                      style={{
+                        backgroundColor: item.color || "#faf7dc",
+                      }}
                       onDragStart={(e) => {
-                        console.log("🟢 DRAG START", item.jobId);
                         setDraggingItem(item);
                         setHoverDay(null);
-
                         e.dataTransfer.setData(
                           "application/json",
                           JSON.stringify(item),
@@ -184,9 +185,7 @@ const MonthCalendarLayout: React.FC<Props> = ({
                       }}
                       onDragEnd={() => setDraggingItem(null)}
                       onClick={() => {
-                        if (!draggingItem) {
-                          onJobClick(item.jobId);
-                        }
+                        if (!draggingItem) onJobClick(item.jobId);
                       }}
                     >
                       {item.status === "quote" && (

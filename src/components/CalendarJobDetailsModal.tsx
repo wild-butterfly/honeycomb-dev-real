@@ -331,7 +331,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   ) => {
     if (!activeJob?.id || activeJob.id === "new") return;
 
-    // 🔒 DAY-SAFE assignment id (timezone kaymaz)
+    // 🔒 DAY-SAFE assignment id
     const dayKey = toLocalISOString(start).slice(0, 10);
     const assignmentId = `${employeeId}_${dayKey}`;
 
