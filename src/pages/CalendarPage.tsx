@@ -32,10 +32,8 @@ import MobileDayList from "../components/MobileDayList";
 import CalendarJobDetailsModal from "../components/CalendarJobDetailsModal";
 import { toLocalISOString } from "../utils/date";
 
-import {
-  saveJobToFirestore,
-  deleteJobFromFirestore,
-} from "../utils/saveJobToFirestore";
+import { saveJobToFirestore } from "../utils/saveJobToFirestore";
+import { deleteJobFromFirestore } from "../services/calendarJobs";
 
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
 

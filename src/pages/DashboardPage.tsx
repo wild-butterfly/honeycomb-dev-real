@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import StatusBoardChart from "../components/StatusBoardChart";
 import PaymentsPieChart from "../components/PaymentsPieChart";
 import JobsOverTimeChart from "../components/JobsOverTimeChart";
@@ -6,14 +6,23 @@ import AddTask from "../components/AddTask";
 import NewJobModal from "../components/NewJobModal";
 import DashboardNavbar from "../components/DashboardNavbar";
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
-import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar"; // 🔸 YENİ
+import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import styles from "./DashboardPage.module.css";
+import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
+
 import {
-  Briefcase,
-  UserPlus,
-  FileText,
-  PencilLine,
-} from "phosphor-react";
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "../firebase";
 
 /* ───────── Types ───────── */
 
@@ -33,13 +42,13 @@ type EmployeeType = {
 };
 
 type JobType = {
-  id: number;
+  id: string; // Firestore doc id
   title: string;
   jobType: "CHARGE UP" | "ESTIMATE";
   status: "Pending" | "Active" | "Complete";
   customer: string;
-  date: string; // dd/mm/yyyy
-  assignedTo: number; // employee id
+  date: string; // dd/mm/yyyy (derived)
+  assignedEmployeeIds: number[]; // from assignments subcollection
 };
 
 export type TaskType = {
@@ -50,44 +59,6 @@ export type TaskType = {
   completed?: boolean;
   completedByName?: string;
 };
-
-/* ───────── Seed data ───────── */
-
-const employees: EmployeeType[] = [
-  { id: 1, name: "Daniel Fear", avatar: "/avatar1.png" },
-  { id: 2, name: "Aşkın Fear", avatar: "/avatar2.png" },
-  { id: 3, name: "Beril Köse" },
-];
-
-const initialJobs: JobType[] = [
-  {
-    id: 1,
-    title: "Test & Tag",
-    jobType: "CHARGE UP",
-    status: "Complete",
-    customer: "ABC Pty Ltd",
-    date: "12/07/2024",
-    assignedTo: 2, // Aşkın
-  },
-  {
-    id: 2,
-    title: "Test & Tag",
-    jobType: "CHARGE UP",
-    status: "Active",
-    customer: "ABC Pty Ltd",
-    date: "12/07/2025",
-    assignedTo: 1, // Daniel
-  },
-  {
-    id: 3,
-    title: "Install Lights",
-    jobType: "ESTIMATE",
-    status: "Pending",
-    customer: "XYZ Ltd",
-    date: "13/07/2025",
-    assignedTo: 1, // Daniel
-  },
-];
 
 /* ───────── Small UI bits ───────── */
 
@@ -135,6 +106,36 @@ const ChevronDown: React.FC<{ className?: string }> = ({ className }) => (
   </svg>
 );
 
+/* ───────── Helpers ───────── */
+
+const toDDMMYYYY = (d: Date) =>
+  d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+const safeNumber = (v: unknown, fallback = 0) => {
+  const n = typeof v === "string" ? Number(v) : (v as number);
+  return Number.isFinite(n) ? Number(n) : fallback;
+};
+
+const tsToDate = (v: any): Date | null => {
+  try {
+    if (!v) return null;
+    if (v instanceof Timestamp) return v.toDate();
+    if (typeof v?.toDate === "function") return v.toDate();
+    if (typeof v === "number") return new Date(v);
+    if (typeof v === "string") {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 /* ───────── Component ───────── */
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -143,10 +144,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   customers,
   onAddCustomer,
 }) => {
-  // Jobs
-  const [jobs, setJobs] = useState<JobType[]>(initialJobs);
+  // Employees (Firestore)
+  const [employees, setEmployees] = useState<EmployeeType[]>([]);
 
-  // Tasks
+  // Jobs (Firestore)
+  const [jobs, setJobs] = useState<JobType[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  // Tasks (local for now)
   const [tasks, setTasks] = useState<TaskType[]>([]);
   const [openTasks, setOpenTasks] = useState<{ [id: number]: boolean }>({});
 
@@ -159,96 +164,236 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   // Assignee filter for jobs
   const [selectedAssignee, setSelectedAssignee] = useState<number | "all">(
-    "all"
+    "all",
   );
 
-  // 🔸 Assignee filter for tasks
-  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<
-    number | "all"
-  >("all");
+  // Assignee filter for tasks
+  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<number | "all">(
+    "all",
+  );
+
+  /* ───────── Firestore: Employees ───────── */
+
+  useEffect(() => {
+    const q = query(collection(db, "employees"), orderBy("name", "asc"));
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list: EmployeeType[] = snap.docs.map((d) => {
+          const data = d.data() as any;
+
+          // support either doc id numeric OR stored id field
+          const id =
+            Number.isFinite(Number(d.id)) && d.id !== ""
+              ? Number(d.id)
+              : safeNumber(data.id, 0);
+
+          return {
+            id,
+            name: String(data.name ?? "Unknown"),
+            avatar: data.avatar ? String(data.avatar) : undefined,
+          };
+        });
+
+        // filter out invalid employee ids (0) if you don't want them
+        setEmployees(list.filter((e) => e.id !== 0));
+      },
+      (err) => {
+        console.error("employees snapshot error:", err);
+        setEmployees([]);
+      },
+    );
+
+    return () => unsub();
+  }, []);
+
+  /* ───────── Firestore: Jobs + Assignments ───────── */
+
+  useEffect(() => {
+    setJobsLoading(true);
+
+    const q = query(collection(db, "jobs"), orderBy("createdAt", "desc"));
+
+    const unsub = onSnapshot(
+      q,
+      async (snap) => {
+        try {
+          const jobDocs = snap.docs;
+
+          const jobsData: JobType[] = await Promise.all(
+            jobDocs.map(async (jobDoc) => {
+              const job = jobDoc.data() as any;
+
+              // assignments subcollection
+              const assignmentsSnap = await getDocs(
+                collection(db, "jobs", jobDoc.id, "assignments"),
+              );
+
+              const assignedEmployeeIds = assignmentsSnap.docs
+                .map((a) => safeNumber((a.data() as any).employeeId, 0))
+                .filter((n) => n !== 0);
+
+              // pick a “display date”:
+              // 1) earliest assignment start
+              // 2) job.date / job.start
+              // 3) job.createdAt
+              const assignmentDates = assignmentsSnap.docs
+                .map((a) => tsToDate((a.data() as any).start))
+                .filter(Boolean) as Date[];
+
+              const earliestAssign =
+                assignmentDates.length > 0
+                  ? new Date(
+                      Math.min(...assignmentDates.map((d) => d.getTime())),
+                    )
+                  : null;
+
+              const jobDate =
+                tsToDate(job.date) ??
+                tsToDate(job.start) ??
+                tsToDate(job.createdAt);
+
+              const displayDate = earliestAssign ?? jobDate ?? new Date();
+
+              const rawJobType = String(job.jobType ?? "").toUpperCase();
+              const jobType: JobType["jobType"] =
+                rawJobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE UP";
+
+              const rawStatus = String(job.status ?? "");
+              const status: JobType["status"] =
+                rawStatus === "Pending" || rawStatus === "Active"
+                  ? rawStatus
+                  : rawStatus === "Complete"
+                    ? "Complete"
+                    : "Pending";
+
+              return {
+                id: jobDoc.id,
+                title: String(job.title ?? "Untitled"),
+                jobType,
+                status,
+                customer: String(job.customer ?? job.customerName ?? "Unknown"),
+                date: toDDMMYYYY(displayDate),
+                assignedEmployeeIds,
+              };
+            }),
+          );
+
+          setJobs(jobsData);
+        } catch (err) {
+          console.error("jobs snapshot mapping error:", err);
+          setJobs([]);
+        } finally {
+          setJobsLoading(false);
+        }
+      },
+      (err) => {
+        console.error("jobs snapshot error:", err);
+        setJobs([]);
+        setJobsLoading(false);
+      },
+    );
+
+    return () => unsub();
+  }, []);
 
   /* ───────── Job logic ───────── */
 
-  const handleAddJob = (
-    job: Omit<JobType, "id" | "status" | "date" | "assignedTo">
+  const handleAddJob = async (
+    job: Omit<JobType, "id" | "status" | "date" | "assignedEmployeeIds">,
   ) => {
-    setJobs((prev) => [
-      ...prev,
-      {
-        ...job,
-        id: Date.now(),
+    try {
+      // Create job doc
+      const jobRef = await addDoc(collection(db, "jobs"), {
+        title: job.title,
+        jobType: job.jobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE_UP",
         status: "Pending",
-        date: new Date().toLocaleDateString(),
-        assignedTo: 1, // TODO: pick from modal later
-      },
-    ]);
-    setShowNewJobModal(false);
+        customerName: job.customer,
+        customer: job.customer, // keep both if your app is mid-migration
+        createdAt: serverTimestamp(),
+      });
+
+      // Add a default assignment (optional)
+      // If you have current user employee id, replace this with real value.
+      const defaultEmployeeId = 1;
+
+      await setDoc(
+        doc(db, "jobs", jobRef.id, "assignments", String(Date.now())),
+        {
+          employeeId: defaultEmployeeId,
+          start: Timestamp.fromDate(new Date()),
+          end: Timestamp.fromDate(new Date()),
+          createdAt: serverTimestamp(),
+        },
+      );
+
+      setShowNewJobModal(false);
+    } catch (err) {
+      console.error("add job error:", err);
+      // optionally show toast UI here
+    }
   };
 
   // Visible jobs = search AND assignee filter
-  const visibleJobs = jobs.filter((job) => {
+  const visibleJobs = useMemo(() => {
     const q = search.toLowerCase();
-    const matchesSearch =
-      job.title.toLowerCase().includes(q) ||
-      job.customer.toLowerCase().includes(q);
 
-    const matchesAssignee =
-      selectedAssignee === "all" || job.assignedTo === selectedAssignee;
+    return jobs.filter((job) => {
+      const matchesSearch =
+        job.title.toLowerCase().includes(q) ||
+        job.customer.toLowerCase().includes(q);
 
-    return matchesSearch && matchesAssignee;
-  });
+      const matchesAssignee =
+        selectedAssignee === "all" ||
+        job.assignedEmployeeIds.includes(selectedAssignee);
+
+      return matchesSearch && matchesAssignee;
+    });
+  }, [jobs, search, selectedAssignee]);
 
   // Data for StatusBoardChart
   const statusBuckets = ["Pending", "Active", "Complete"] as const;
 
-  const statusBoardData = statusBuckets.map((statusName) => {
-    const jobsInThisStatus = visibleJobs.filter(
-      (j) => j.status === statusName
-    );
+  const statusBoardData = useMemo(() => {
+    return statusBuckets.map((statusName) => {
+      const jobsInThisStatus = visibleJobs.filter(
+        (j) => j.status === statusName,
+      );
 
-    return {
-      name: statusName,
-      jobs: jobsInThisStatus.length,
-      value: 0, // placeholder for money/revenue/etc
-    };
-  });
+      return {
+        name: statusName,
+        jobs: jobsInThisStatus.length,
+        value: 0, // placeholder for money/revenue/etc
+      };
+    });
+  }, [visibleJobs]);
 
   /* ───────── Task logic ───────── */
 
-  // Helper: task bu assignee filtresine uyuyor mu?
-  const taskMatchesAssignee = (
-    task: TaskType,
-    assignee: number | "all"
-  ) => {
+  const taskMatchesAssignee = (task: TaskType, assignee: number | "all") => {
     if (assignee === "all") return true;
     return task.assigned.includes(assignee);
   };
 
   const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
 
-  // önce ham listeleri ayır
-  const overdueTasksRaw = tasks.filter(
-    (t) => !t.completed && t.due < today
-  );
-  const upcomingTasksRaw = tasks.filter(
-    (t) => !t.completed && t.due >= today
-  );
+  const overdueTasksRaw = tasks.filter((t) => !t.completed && t.due < today);
+  const upcomingTasksRaw = tasks.filter((t) => !t.completed && t.due >= today);
   const completedTasksRaw = tasks.filter((t) => t.completed);
 
-  // sonra aktif filtreyi uygula
   const overdueTasks = overdueTasksRaw.filter((t) =>
-    taskMatchesAssignee(t, taskAssigneeFilter)
+    taskMatchesAssignee(t, taskAssigneeFilter),
   );
   const upcomingTasks = upcomingTasksRaw.filter((t) =>
-    taskMatchesAssignee(t, taskAssigneeFilter)
+    taskMatchesAssignee(t, taskAssigneeFilter),
   );
   const completedTasks = completedTasksRaw.filter((t) =>
-    taskMatchesAssignee(t, taskAssigneeFilter)
+    taskMatchesAssignee(t, taskAssigneeFilter),
   );
 
-  // sağdaki küçük kart için gösterilecek aktif (tamamlanmamış) tasklar
   const visibleOpenTasksForSmallCard = tasks.filter(
-    (t) => !t.completed && taskMatchesAssignee(t, taskAssigneeFilter)
+    (t) => !t.completed && taskMatchesAssignee(t, taskAssigneeFilter),
   );
 
   const handleCompleteTask = (id: number) => {
@@ -256,8 +401,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       prev.map((t) =>
         t.id === id
           ? { ...t, completed: true, completedByName: "Daniel Fear" }
-          : t
-      )
+          : t,
+      ),
     );
   };
 
@@ -285,18 +430,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       setOpenTasks((prev) => ({ ...prev, [task.id]: !open }));
 
     const assignedNames = task.assigned
-      .map(
-        (empId) =>
-          employees.find((e) => e.id === empId)?.name || "Unknown"
-      )
+      .map((empId) => employees.find((e) => e.id === empId)?.name || "Unknown")
       .join(", ");
 
     return (
       <div
         key={task.id}
-        className={`${styles.taskCardLi} ${
-          task.completed ? styles.completed : ""
-        }`}
+        className={`${styles.taskCardLi} ${task.completed ? styles.completed : ""}`}
       >
         <div className={styles.taskTitleRow}>
           <BeeIcon />
@@ -326,9 +466,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {task.completed && task.completedByName && (
           <div className={styles.completedByRow}>
-            <span className={styles.completedByLabel}>
-              Completed by:
-            </span>
+            <span className={styles.completedByLabel}>Completed by:</span>
             <span className={styles.completedByValue}>
               {task.completedByName}
             </span>
@@ -388,10 +526,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <StatusBoardChart data={statusBoardData} />
             </div>
             <div className={styles.chartCard}>
-              <PaymentsPieChart data={visibleJobs} />
+              <PaymentsPieChart data={visibleJobs as any} />
             </div>
             <div className={styles.chartCard}>
-              <JobsOverTimeChart data={visibleJobs} />
+              <JobsOverTimeChart data={visibleJobs as any} />
             </div>
           </div>
         </div>
@@ -418,77 +556,97 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </thead>
 
               <tbody>
-                {visibleJobs.map((job) => {
-                  const emp = employees.find(
-                    (e) => e.id === job.assignedTo
-                  );
+                {jobsLoading ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: 18 }}>
+                      Loading jobs…
+                    </td>
+                  </tr>
+                ) : visibleJobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: 18 }}>
+                      No jobs found.
+                    </td>
+                  </tr>
+                ) : (
+                  visibleJobs.map((job) => {
+                    const assignedNames =
+                      job.assignedEmployeeIds.length === 0
+                        ? "—"
+                        : job.assignedEmployeeIds
+                            .map(
+                              (id) => employees.find((e) => e.id === id)?.name,
+                            )
+                            .filter(Boolean)
+                            .join(", ");
 
-                  const jobTypeChip =
-                    job.jobType === "CHARGE UP" ? (
-                      <span className={styles.jobTypeChip}>
-                        <FileText
-                          size={11}
-                          weight="regular"
-                          className={styles.jobTypeChipIcon}
-                        />
-                        Charge Up
-                      </span>
-                    ) : (
-                      <span className={styles.jobTypeChip}>
-                        <PencilLine
-                          size={11}
-                          weight="regular"
-                          className={styles.jobTypeChipIcon}
-                        />
-                        Estimate
-                      </span>
-                    );
-
-                  return (
-                    <tr key={job.id}>
-                      {/* JOB TYPE */}
-                      <td>{jobTypeChip}</td>
-
-                      {/* STATUS */}
-                      <td>
-                        <span
-                          className={
-                            job.status === "Active"
-                              ? styles.statusActive
-                              : job.status === "Complete"
-                              ? styles.statusComplete
-                              : styles.statusPending
-                          }
-                        >
-                          {job.status}
+                    const jobTypeChip =
+                      job.jobType === "CHARGE UP" ? (
+                        <span className={styles.jobTypeChip}>
+                          <FileText
+                            size={11}
+                            weight="regular"
+                            className={styles.jobTypeChipIcon}
+                          />
+                          Charge Up
                         </span>
-                      </td>
+                      ) : (
+                        <span className={styles.jobTypeChip}>
+                          <PencilLine
+                            size={11}
+                            weight="regular"
+                            className={styles.jobTypeChipIcon}
+                          />
+                          Estimate
+                        </span>
+                      );
 
-                      {/* JOB TITLE */}
-                      <td>{job.title}</td>
+                    return (
+                      <tr key={job.id}>
+                        {/* JOB TYPE */}
+                        <td>{jobTypeChip}</td>
 
-                      {/* CUSTOMER */}
-                      <td>{job.customer}</td>
+                        {/* STATUS */}
+                        <td>
+                          <span
+                            className={
+                              job.status === "Active"
+                                ? styles.statusActive
+                                : job.status === "Complete"
+                                  ? styles.statusComplete
+                                  : styles.statusPending
+                            }
+                          >
+                            {job.status}
+                          </span>
+                        </td>
 
-                      {/* DATE */}
-                      <td>{job.date}</td>
+                        {/* JOB TITLE */}
+                        <td>{job.title}</td>
 
-                      {/* ASSIGNED TO */}
-                      <td>{emp ? emp.name : "—"}</td>
+                        {/* CUSTOMER */}
+                        <td>{job.customer}</td>
 
-                      {/* ACTIONS */}
-                      <td>
-                        <button
-                          className={styles.detailsBtn}
-                          type="button"
-                          aria-label={`View job ${job.title}`}
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        {/* DATE */}
+                        <td>{job.date}</td>
+
+                        {/* ASSIGNED TO */}
+                        <td>{assignedNames}</td>
+
+                        {/* ACTIONS */}
+                        <td>
+                          <button
+                            className={styles.detailsBtn}
+                            type="button"
+                            aria-label={`View job ${job.title}`}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -538,7 +696,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 <h4 className={styles.tasksTitle}>Tasks</h4>
               </div>
 
-              {/* 🔸 Task filtresi (küçük kartta) */}
+              {/* Task filter (small card) */}
               <TaskAssigneeFilterBar
                 employees={employees}
                 value={taskAssigneeFilter}
@@ -557,9 +715,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 {visibleOpenTasksForSmallCard.length === 0 ? (
                   <div className={styles.emptyState}>
                     <BeeIcon />
-                    <div className={styles.emptyTitle}>
-                      There are no tasks
-                    </div>
+                    <div className={styles.emptyTitle}>There are no tasks</div>
                     <div className={styles.emptyText}>
                       Add more tasks to be on top of your work every day.
                     </div>
@@ -567,7 +723,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 ) : (
                   <div className={styles.taskListUl}>
                     {visibleOpenTasksForSmallCard.map((task) =>
-                      renderTaskCard(task, true)
+                      renderTaskCard(task, true),
                     )}
                   </div>
                 )}
@@ -596,11 +752,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         {/* PANEL: View All Tasks */}
         {showTaskPanel && (
           <div className={styles.taskPanelOverlay}>
-            <div
-              className={styles.taskPanel}
-              role="dialog"
-              aria-modal="true"
-            >
+            <div className={styles.taskPanel} role="dialog" aria-modal="true">
               <div className={styles.taskPanelHeader}>
                 <span className={styles.tasksTitle}>Tasks</span>
                 <button
@@ -613,7 +765,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </button>
               </div>
 
-              {/* 🔸 Task filtresi (panelde) */}
+              {/* Task filter (panel) */}
               <div style={{ padding: "16px 26px 0 26px" }}>
                 <TaskAssigneeFilterBar
                   employees={employees}
@@ -685,19 +837,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                       </div>
                     </div>
                   ) : (
-                    completedTasks.map((task) =>
-                      renderTaskCard(task, false)
-                    )
+                    completedTasks.map((task) => renderTaskCard(task, false))
                   )
-                ) : (taskTab === "upcoming"
-                    ? upcomingTasks
-                    : overdueTasks
-                  ).length === 0 ? (
+                ) : (taskTab === "upcoming" ? upcomingTasks : overdueTasks)
+                    .length === 0 ? (
                   <div className={styles.emptyState}>
                     <BeeIcon />
-                    <div className={styles.emptyTitle}>
-                      There are no tasks
-                    </div>
+                    <div className={styles.emptyTitle}>There are no tasks</div>
                     <div className={styles.emptyText}>
                       {taskTab === "upcoming"
                         ? "Add more tasks to be on top of your work every day."
@@ -705,10 +851,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     </div>
                   </div>
                 ) : (
-                  (taskTab === "upcoming"
-                    ? upcomingTasks
-                    : overdueTasks
-                  ).map((task) => renderTaskCard(task, true))
+                  (taskTab === "upcoming" ? upcomingTasks : overdueTasks).map(
+                    (task) => renderTaskCard(task, true),
+                  )
                 )}
               </div>
             </div>
@@ -719,7 +864,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <NewJobModal
           show={showNewJobModal}
           onClose={() => setShowNewJobModal(false)}
-          onSubmit={handleAddJob}
+          onSubmit={handleAddJob as any}
           customersList={customers}
           onAddCustomer={onAddCustomer}
         />

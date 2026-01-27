@@ -1,65 +1,47 @@
-// Created by Honeycomb © 2026
-// 🔥 FINAL cleanup: remove legacy assignedTo/start/end from jobs
+import admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
+import serviceAccount from "./serviceAccountKey.json" assert { type: "json" };
 
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteField,
-} from "firebase/firestore";
+admin.initializeApp({
+  credential: admin.credential.cert(
+    serviceAccount as admin.ServiceAccount
+  ),
+});
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBzCyZj58fS2U0_CGPEk6p1dNmXLJwkF9o",
-  authDomain: "honeycomb-au.firebaseapp.com",
-  projectId: "honeycomb-au",
-};
+const db = getFirestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+async function cleanupDeletedJobs() {
+  console.log("🧹 Starting ADMIN cleanup...");
 
-async function cleanupLegacyJobs() {
-  const jobsSnap = await getDocs(collection(db, "jobs"));
+  const snap = await db
+    .collection("jobs")
+    .where("deleted", "==", true)
+    .get();
 
-  let cleaned = 0;
-  let skipped = 0;
-
-  for (const jobDoc of jobsSnap.docs) {
-    const jobId = jobDoc.id;
-
-    const assignmentsRef = collection(db, "jobs", jobId, "assignments");
-    const assignmentsSnap = await getDocs(assignmentsRef);
-
-    // 🟡 Assignment yoksa dokunma
-    if (assignmentsSnap.empty) {
-      skipped++;
-      continue;
-    }
-
-    const data = jobDoc.data();
-    const updates: any = {};
-
-    if ("assignedTo" in data) updates.assignedTo = deleteField();
-    if ("start" in data) updates.start = deleteField();
-    if ("end" in data) updates.end = deleteField();
-
-    if (Object.keys(updates).length === 0) {
-      skipped++;
-      continue;
-    }
-
-    await updateDoc(doc(db, "jobs", jobId), updates);
-    cleaned++;
-
-    console.log(`✅ Cleaned legacy fields for job ${jobId}`);
+  if (snap.empty) {
+    console.log("✅ No deleted jobs found");
+    return;
   }
 
-  console.log("──────────────────────────");
-  console.log(`✅ Jobs cleaned: ${cleaned}`);
-  console.log(`⏭️ Jobs skipped: ${skipped}`);
-  console.log("🔥 Migration COMPLETE");
+  console.log(`⚠️ Found ${snap.size} deleted jobs`);
+
+  for (const doc of snap.docs) {
+    console.log(`🧨 Deleting job ${doc.id}`);
+
+    // delete assignments
+    const assignmentsSnap = await doc.ref
+      .collection("assignments")
+      .get();
+
+    for (const a of assignmentsSnap.docs) {
+      await a.ref.delete();
+    }
+
+    await doc.ref.delete();
+    console.log(`✅ Job ${doc.id} removed`);
+  }
+
+  console.log("🎉 Cleanup complete");
 }
 
-cleanupLegacyJobs().catch(console.error);
+cleanupDeletedJobs().catch(console.error);

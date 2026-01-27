@@ -64,25 +64,3 @@ export async function saveJobToFirestore(
   }
 }
 
-/**
- * SOFT delete ONLY.
- * NEVER hard-delete jobs (assignments are live listeners)
- */
-export async function deleteJobFromFirestore(jobId: string) {
-  try {
-    if (!jobId) return;
-
-    await setDoc(
-      doc(db, "jobs", jobId),
-      {
-        deleted: true,
-        deletedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
-
-    console.log("🗑 Job soft-deleted:", jobId);
-  } catch (err) {
-    console.error("❌ Error deleting job:", err);
-  }
-}
