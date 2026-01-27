@@ -11,6 +11,14 @@ import styles from "./DashboardPage.module.css";
 import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
 
 import {
+  createTask,
+  subscribeToTasks,
+  deleteTask,
+  completeTask,
+  Task,
+} from "../services/tasks";
+
+import {
   addDoc,
   collection,
   doc,
@@ -49,15 +57,6 @@ type JobType = {
   customer: string;
   date: string; // dd/mm/yyyy (derived)
   assignedEmployeeIds: number[]; // from assignments subcollection
-};
-
-export type TaskType = {
-  desc: string;
-  assigned: number[];
-  due: string; // yyyy-mm-dd
-  id: number;
-  completed?: boolean;
-  completedByName?: string;
 };
 
 /* ───────── Small UI bits ───────── */
@@ -151,9 +150,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [jobs, setJobs] = useState<JobType[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
 
-  // Tasks (local for now)
-  const [tasks, setTasks] = useState<TaskType[]>([]);
-  const [openTasks, setOpenTasks] = useState<{ [id: number]: boolean }>({});
+  // Tasks (Firestore)
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [openTasks, setOpenTasks] = useState<{ [id: string]: boolean }>({});
 
   // UI state
   const [showAddTask, setShowAddTask] = useState(false);
@@ -171,6 +170,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<number | "all">(
     "all",
   );
+
+  // 🔥 STEP 4: TASKS (Firestore)
+  // --------------------
+  useEffect(() => {
+    const unsubscribe = subscribeToTasks((firestoreTasks) => {
+      setTasks(firestoreTasks);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   /* ───────── Firestore: Employees ───────── */
 
@@ -371,16 +380,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   /* ───────── Task logic ───────── */
 
-  const taskMatchesAssignee = (task: TaskType, assignee: number | "all") => {
+  const taskMatchesAssignee = (task: Task, assignee: number | "all") => {
     if (assignee === "all") return true;
     return task.assigned.includes(assignee);
   };
 
   const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
 
-  const overdueTasksRaw = tasks.filter((t) => !t.completed && t.due < today);
-  const upcomingTasksRaw = tasks.filter((t) => !t.completed && t.due >= today);
-  const completedTasksRaw = tasks.filter((t) => t.completed);
+  const overdueTasksRaw = tasks.filter(
+    (t) => t.status === "pending" && t.due < today,
+  );
+  const upcomingTasksRaw = tasks.filter(
+    (t) => t.status === "pending" && t.due >= today,
+  );
+  const completedTasksRaw = tasks.filter((t) => t.status === "completed");
 
   const overdueTasks = overdueTasksRaw.filter((t) =>
     taskMatchesAssignee(t, taskAssigneeFilter),
@@ -393,37 +406,49 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   );
 
   const visibleOpenTasksForSmallCard = tasks.filter(
-    (t) => !t.completed && taskMatchesAssignee(t, taskAssigneeFilter),
+    (t) => t.status === "pending" && taskMatchesAssignee(t, taskAssigneeFilter),
   );
 
-  const handleCompleteTask = (id: number) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, completed: true, completedByName: "Daniel Fear" }
-          : t,
-      ),
-    );
-  };
-
-  const handleDeleteTask = (id: number) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const handleSaveTask = (task: {
+  const handleSaveTask = async (task: {
     desc: string;
     assigned: number[];
     due: string;
   }) => {
-    setTasks((prev) => [
-      ...prev,
-      { ...task, id: Date.now(), completed: false },
-    ]);
+    try {
+      await createTask({
+        desc: task.desc,
+        assigned: task.assigned,
+        due: task.due,
+      });
+
+      setShowAddTask(false);
+    } catch (err) {
+      console.error("Failed to create task:", err);
+    }
   };
 
+  // ✅ COMPLETE TASK (Firestore)
+  const currentEmployeeId = employees[0]?.id ?? 0;
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await completeTask(taskId, currentEmployeeId);
+    } catch (err) {
+      console.error("Failed to complete task:", err);
+    }
+  };
+
+  // ✅ DELETE TASK (Firestore)
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteTask(id);
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
+  };
   /* ───────── Render helpers ───────── */
 
-  const renderTaskCard = (task: TaskType, showButtons = false) => {
+  const renderTaskCard = (task: Task, showButtons = false) => {
     const open = openTasks[task.id] || false;
 
     const handleToggle = () =>
@@ -433,20 +458,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       .map((empId) => employees.find((e) => e.id === empId)?.name || "Unknown")
       .join(", ");
 
+    const isCompleted = task.status === "completed";
+
     return (
       <div
         key={task.id}
-        className={`${styles.taskCardLi} ${task.completed ? styles.completed : ""}`}
+        className={`${styles.taskCardLi} ${isCompleted ? styles.completed : ""}`}
       >
         <div className={styles.taskTitleRow}>
           <BeeIcon />
           <span>{task.desc}</span>
 
-          {showButtons && !task.completed && (
+          {showButtons && !isCompleted && (
             <button
               className={styles.toggleBtn}
               onClick={handleToggle}
-              aria-label={open ? "Hide actions" : "Show actions"}
               type="button"
             >
               {open ? <ChevronUp /> : <ChevronDown />}
@@ -464,22 +490,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           <span>{task.due}</span>
         </div>
 
-        {task.completed && task.completedByName && (
-          <div className={styles.completedByRow}>
-            <span className={styles.completedByLabel}>Completed by:</span>
-            <span className={styles.completedByValue}>
-              {task.completedByName}
-            </span>
-          </div>
-        )}
-
-        {showButtons && !task.completed && open && (
+        {showButtons && !isCompleted && open && (
           <div className={styles.taskBtnRow}>
             <button
               className={styles.taskDoneBtn}
               onClick={() => handleCompleteTask(task.id)}
-              title="Complete"
-              aria-label="Mark complete"
               type="button"
             >
               ✓
@@ -487,8 +502,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <button
               className={styles.taskDeleteBtn}
               onClick={() => handleDeleteTask(task.id)}
-              title="Delete"
-              aria-label="Delete task"
               type="button"
             >
               ✗
