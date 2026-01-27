@@ -4,8 +4,6 @@ import {
   collection,
   doc,
   getDocs,
-  query,
-  where,
   onSnapshot,
   deleteDoc,
   Timestamp,
@@ -38,23 +36,13 @@ const ENABLED_TABS: TabType[] = ["scheduling", "labour"];
 
 function toDateSafe(v: any): Date | null {
   if (!v) return null;
-
   if (v instanceof Timestamp) return v.toDate();
-
-  if (typeof v === "object" && typeof v.toDate === "function") {
-    const d = v.toDate();
-    return d instanceof Date && !isNaN(d.getTime()) ? d : null;
-  }
-
+  if (typeof v?.toDate === "function") return v.toDate();
   if (typeof v === "string") {
     const d = new Date(v);
-    return !isNaN(d.getTime()) ? d : null;
+    return isNaN(d.getTime()) ? null : d;
   }
-
-  if (v instanceof Date) {
-    return !isNaN(v.getTime()) ? v : null;
-  }
-
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
   return null;
 }
 
@@ -65,18 +53,10 @@ function toIsoSafe(v: any): string | undefined {
 
 function calcHours(startIso?: string, endIso?: string): number {
   if (!startIso || !endIso) return 0;
-
   const s = Date.parse(startIso);
   const e = Date.parse(endIso);
-
-  if (!Number.isFinite(s) || !Number.isFinite(e)) return 0;
-  if (e <= s) return 0;
-
+  if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) return 0;
   return Math.round(((e - s) / 36e5) * 4) / 4;
-}
-
-function uniqueScheduleKey(start?: string, end?: string) {
-  return `${start || "x"}__${end || "y"}`;
 }
 
 /* ================= COMPONENT ================= */
@@ -134,16 +114,17 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
 
     const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
-      async (snap) => {
+      (snap) => {
         const grouped = new Map<string, AssignedEmployee>();
 
-        for (const d of snap.docs) {
+        snap.docs.forEach((d) => {
           const data = d.data() as any;
           const empId = String(data.employeeId);
 
+          if (!empId) return;
+
           if (!grouped.has(empId)) {
             grouped.set(empId, {
-              assignmentId: d.id,
               employeeId: empId,
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
@@ -151,30 +132,22 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             });
           }
 
-          const target = grouped.get(empId);
-          if (!target) continue;
-
-          /* ---------- LEGACY GUARD ---------- */
-          if (data.scheduled === false) continue;
+          if (data.scheduled === false) return;
 
           const startIso = toIsoSafe(data.start);
           const endIso = toIsoSafe(data.end);
-          if (!startIso || !endIso) continue;
+          if (!startIso || !endIso) return;
 
-          const key = uniqueScheduleKey(startIso, endIso);
-          if (
-            target.schedules.some(
-              (x) => uniqueScheduleKey(x.start, x.end) === key,
-            )
-          )
-            continue;
+          const target = grouped.get(empId);
+          if (!target) return;
 
           target.schedules.push({
+            assignmentId: d.id, // 🔑 TEKİL GÜN
             start: startIso,
             end: endIso,
             hours: calcHours(startIso, endIso),
           });
-        }
+        });
 
         grouped.forEach((v) =>
           v.schedules.sort(
@@ -194,7 +167,6 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
-    // prevent duplicate "assign-only"
     if (assignedEmployees.some((e) => e.employeeId === selectedEmployee)) {
       setSelectedEmployee("");
       return;
@@ -210,9 +182,9 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     setSelectedEmployee("");
   };
 
-  /* ================= UNASSIGN ================= */
+  /* ================= UNASSIGN (SINGLE DAY) ================= */
 
-  const handleUnassignEmployee = async (assignmentId: string) => {
+  const handleUnassignAssignment = async (assignmentId: string) => {
     await deleteDoc(doc(db, "jobs", safeJobId, "assignments", assignmentId));
   };
 
@@ -273,7 +245,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
         {activeTab === "scheduling" && (
           <AssignedEmployees
             employees={assignedEmployees}
-            onUnassign={handleUnassignEmployee}
+            onUnassign={handleUnassignAssignment}
           />
         )}
 
@@ -282,7 +254,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
             jobId={safeJobId}
             employees={assignedEmployees.map((emp) => ({
               id: emp.employeeId,
-              name: emp.name ?? "Unnamed employee",
+              name: emp.name,
               role: "Technician",
               rate: 95,
             }))}

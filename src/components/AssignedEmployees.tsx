@@ -1,17 +1,16 @@
 // Created by Honeycomb © 2025
 import React from "react";
 import styles from "./AssignedEmployees.module.css";
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CalendarDaysIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 /* ================= TYPES ================= */
 
 export interface AssignedEmployee {
-  assignmentId: string; // 🔥 FIRESTORE DOC ID
-  employeeId: string; // 🔹 employee reference
+  employeeId: string;
   name: string;
 
   schedules: {
+    assignmentId: string; // 🔥 FIRESTORE ASSIGNMENT DOC ID
     start: string;
     end: string;
     hours: number;
@@ -48,15 +47,17 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
         {employees.map((emp) => {
           const totalScheduled = emp.schedules.reduce(
             (sum, s) => sum + s.hours,
-            0
+            0,
           );
 
           return (
-            <div key={emp.assignmentId} className={styles.employeeCard}>
+            <div key={emp.employeeId} className={styles.employeeCard}>
               {/* ================= HEADER ================= */}
               <div className={styles.employeeTop}>
                 <div className={styles.left}>
-                  <div className={styles.avatar}>{emp.name.charAt(0)}</div>
+                  <div className={styles.avatar}>
+                    {emp.name.charAt(0).toUpperCase()}
+                  </div>
 
                   <strong>{emp.name}</strong>
 
@@ -79,29 +80,30 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                       Mark labour as completed
                     </button>
                   )}
-
-                  {onUnassign && (
-                    <button
-                      className={styles.removeBtn}
-                      title="Remove from job"
-                      onClick={() => onUnassign(emp.assignmentId)} // ✅ DOĞRU
-                    >
-                      ×
-                    </button>
-                  )}
                 </div>
               </div>
 
               {/* ================= BODY ================= */}
               <div className={styles.employeeBody}>
                 {emp.schedules.length > 0 ? (
-                  emp.schedules.map((s, i) => (
-                    <div key={i} className={styles.scheduleRow}>
+                  emp.schedules.map((s) => (
+                    <div key={s.assignmentId} className={styles.scheduleRow}>
                       <CalendarDaysIcon className={styles.icon} />
+
                       <span>
                         Scheduled: {new Date(s.start).toLocaleString()} –{" "}
                         {new Date(s.end).toLocaleTimeString()} ({s.hours} hours)
                       </span>
+
+                      {onUnassign && (
+                        <button
+                          className={styles.removeBtn}
+                          title="Remove this day only"
+                          onClick={() => onUnassign(s.assignmentId)}
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
