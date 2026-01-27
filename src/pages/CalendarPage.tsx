@@ -235,21 +235,22 @@ const CalendarPage: React.FC = () => {
 
     if (date) setSelectedDate(new Date(date));
 
-    // ✅ openJobId SADECE ilk load’da set edilsin
-    if (jobId && openJobId == null) {
+    if (jobId && openJobId == null && mode !== "schedule") {
       setOpenJobId(String(jobId));
     }
 
-    // ✅ schedule mode SADECE modal kapalıyken aktif olsun
-    if (mode === "schedule" && jobId && employeeId && openJobId == null) {
+    if (mode === "schedule" && jobId && employeeId) {
       setScheduleMode({
         jobId,
         employeeId: Number(employeeId),
       });
 
-      setOpenJobId(null);
-
       setRangeMode("day");
+      setOpenJobId(null);
+    }
+
+    if (mode !== "schedule" && scheduleMode !== null) {
+      setScheduleMode(null);
     }
   }, [location.search]);
 
@@ -290,15 +291,12 @@ const CalendarPage: React.FC = () => {
     const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
       const jobIds = jobsSnap.docs.map((d) => d.id);
 
-      // 1) Silinen job'ları state'ten kaldır
       setJobs((prev) => prev.filter((j) => jobIds.includes(j.id)));
 
-      // 2) Job doc değişikliklerini HER SNAPSHOT'TA state'e yaz
       jobsSnap.docs.forEach((jobDoc) => {
         const jobId = jobDoc.id;
         const jobData = jobDoc.data() as any;
 
-        // ✅ job alanlarını güncelle (assignments'i koru)
         setJobs((prev) => {
           const existing = prev.find((j) => j.id === jobId);
           const existingAssignments = existing?.assignments ?? [];
@@ -315,14 +313,13 @@ const CalendarPage: React.FC = () => {
             notes: jobData.notes,
             deleted: jobData.deleted,
             deletedAt: jobData.deletedAt,
-            assignments: existingAssignments, // 👈 assignments korunuyor
+            assignments: existingAssignments,
           };
 
           if (!existing) return [...prev, nextJob];
           return prev.map((j) => (j.id === jobId ? nextJob : j));
         });
 
-        // 3) assignments listener yoksa aç
         if (!assignmentUnsubs.has(jobId)) {
           const unsubAssignments = onSnapshot(
             collection(db, "jobs", jobId, "assignments"),
@@ -332,7 +329,6 @@ const CalendarPage: React.FC = () => {
                 ...(a.data() as any),
               }));
 
-              // ✅ sadece assignments güncelle, job alanlarına dokunma
               setJobs((prev) =>
                 prev.map((j) => (j.id === jobId ? { ...j, assignments } : j)),
               );
@@ -343,7 +339,6 @@ const CalendarPage: React.FC = () => {
         }
       });
 
-      // 4) silinen job’ların assignment listener’ını kapat
       assignmentUnsubs.forEach((unsub, jobId) => {
         if (!jobIds.includes(jobId)) {
           unsub();
@@ -370,7 +365,7 @@ const CalendarPage: React.FC = () => {
     }
   }, [openJobId]);
 
-  // 🔍 DEBUG – jobs state değişimlerini izle
+  // 🔍 DEBUG
   useEffect(() => {
     console.log("🧪 jobs", jobs);
   }, [jobs]);
@@ -423,7 +418,6 @@ const CalendarPage: React.FC = () => {
     const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    // 🔑 Aynı employee + aynı gün için assignment bul
     const assignment = job.assignments.find((a) => {
       if (a.employeeId !== employeeId) return false;
       if (!a.start) return false;
@@ -589,7 +583,6 @@ const CalendarPage: React.FC = () => {
       );
 
       setSelectedStaff([]);
-      setScheduleMode(null);
       return;
     }
 
@@ -632,7 +625,7 @@ const CalendarPage: React.FC = () => {
     );
   }, [filteredJobs, selectedStaff]);
 
-  // 🔑 DAY VIEW – sadece seçili güne ait assignment’ı olan işler
+  // 🔑 DAY VIEW –
   const jobsForSelectedDay = useMemo(() => {
     return staffFilteredJobs.filter((job) =>
       jobHasAssignmentOnDay(job, selectedDate),
@@ -686,9 +679,9 @@ const CalendarPage: React.FC = () => {
           start.setHours(9, 0, 0, 0);
 
           const end = new Date(base);
-          end.setHours(10, 0, 0, 0); // ✅ 1 saat default
+          end.setHours(10, 0, 0, 0);
 
-          // 🔥 1) Firestore'da GERÇEK job oluştur
+          // 🔥 1) Firestore
           const jobRef = await addDoc(collection(db, "jobs"), {
             title: "",
             customer: "",
@@ -868,7 +861,6 @@ const CalendarPage: React.FC = () => {
                     onAddJobAt={handleAddJobAt}
                     onCloneJobAt={async (jobId, employeeId, start, end) => {
                       await addAssignmentToJob(jobId, employeeId, start, end);
-                      setScheduleMode(null);
                     }}
                     onMoveJob={handleDayMoveAdapter}
                     scheduleMode={scheduleMode}

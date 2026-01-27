@@ -725,14 +725,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                               ev.stopPropagation();
 
                               // 🧬 ASSIGN / CLONE MODE
-                              if (scheduleMode) {
-                                onCloneJobAt?.(
-                                  scheduleMode.jobId,
-                                  emp.id,
-                                  slotStart,
-                                  slotEnd,
-                                );
-                                clearScheduleMode?.();
+                              if (scheduleMode?.jobId) {
+                                onAddJobAt(emp.id, slotStart, slotEnd);
                                 return;
                               }
 
