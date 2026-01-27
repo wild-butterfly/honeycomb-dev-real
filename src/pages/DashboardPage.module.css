@@ -834,6 +834,186 @@ nav,
   gap: 2px;
 }
 
+/* subtle container */
+.completedActionsRow {
+  padding: 6px 26px 10px 26px;
+}
+
+.completedActionsRow {
+  margin-top: 10px; /* Show completed ile yapışmasın */
+}
+
+.cleanCompletedBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  color: #b07a00;
+  background: transparent;
+
+  border: 1px dashed #f0c24b;
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.cleanCompletedBtn:hover {
+  background: #fff4d6;
+}
+
+.cleanIcon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* ===== Confirm Overlay ===== */
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Modal ===== */
+.confirmModal {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+
+  background: #ffffff;
+  border-radius: 14px;
+
+  padding: 28px 28px 24px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.25),
+    0 8px 16px rgba(0, 0, 0, 0.15);
+
+  animation: confirmPop 0.18s ease-out;
+}
+
+/* subtle scale-in */
+@keyframes confirmPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== Icon ===== */
+.confirmIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* ===== Text ===== */
+.confirmTitle {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.confirmText {
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+  margin-bottom: 22px;
+}
+
+/* ===== Actions ===== */
+.confirmIcon {
+  background: #fff4d6;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.confirmIcon svg {
+  stroke: #e08e00; /* 🔥 ÖNEMLİ */
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.confirmCancel {
+  background: #fffdf6;
+  border: 2px solid #e3b341;
+  color: #7a6200;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.18s ease;
+}
+
+.confirmCancel:hover {
+  background: #fff4d6;
+  box-shadow: 0 3px 10px rgba(227, 179, 65, 0.25);
+}
+
+.confirmDanger {
+  background: linear-gradient(180deg, #f2c94c, #e6b800);
+  color: #4a3a00;
+  border: 2px solid #d1a900;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+
+  box-shadow:
+    0 4px 10px rgba(209, 169, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.confirmDanger:hover {
+  background: linear-gradient(180deg, #f5d15f, #edc12a);
+  box-shadow:
+    0 6px 16px rgba(209, 169, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.confirmDanger:active {
+  background: linear-gradient(180deg, #e6b800, #d4a100);
+  box-shadow:
+    0 2px 6px rgba(209, 169, 0, 0.25),
+    inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(0);
+}
+
 /* Completed row info  */
 .completedByRow {
   font-size: 0.98em;

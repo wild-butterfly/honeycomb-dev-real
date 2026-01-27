@@ -10,6 +10,8 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -83,4 +85,21 @@ export async function completeTask(
     status: "completed",
     completedBy,
   });
+}
+
+/* ───────── DELETE ALL COMPLETED TASKS ───────── */
+
+export async function deleteAllCompletedTasks() {
+  const q = query(
+    collection(db, "tasks"),
+    where("status", "==", "completed"),
+  );
+
+  const snap = await getDocs(q);
+
+  const deletions = snap.docs.map((d) =>
+    deleteDoc(doc(db, "tasks", d.id)),
+  );
+
+  await Promise.all(deletions);
 }

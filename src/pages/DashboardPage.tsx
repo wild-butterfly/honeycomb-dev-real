@@ -9,12 +9,17 @@ import AssigneeFilterBar from "../components/AssigneeFilterBar";
 import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import styles from "./DashboardPage.module.css";
 import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
+import {
+  TrashIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 import {
   createTask,
   subscribeToTasks,
   deleteTask,
   completeTask,
+  deleteAllCompletedTasks,
   Task,
 } from "../services/tasks";
 
@@ -160,6 +165,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [taskTab, setTaskTab] = useState<"upcoming" | "overdue">("upcoming");
   const [showCompleted, setShowCompleted] = useState(false);
   const [showNewJobModal, setShowNewJobModal] = useState(false);
+  const [showCleanConfirm, setShowCleanConfirm] = useState(false);
 
   // Assignee filter for jobs
   const [selectedAssignee, setSelectedAssignee] = useState<number | "all">(
@@ -446,6 +452,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       console.error("Failed to delete task:", err);
     }
   };
+
   /* ───────── Render helpers ───────── */
 
   const renderTaskCard = (task: Task, showButtons = false) => {
@@ -799,18 +806,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 >
                   Show completed tasks
                 </button>
-
-                <button
-                  className={styles.addTaskGoldBtn}
-                  type="button"
-                  onClick={() => {
-                    setShowAddTask(true);
-                    setShowTaskPanel(false);
-                  }}
-                >
-                  Add Task
-                </button>
               </div>
+
+              {showCompleted && completedTasks.length > 0 && (
+                <div className={styles.completedActionsRow}>
+                  <button
+                    className={styles.cleanCompletedBtn}
+                    type="button"
+                    onClick={() => setShowCleanConfirm(true)}
+                  >
+                    <TrashIcon className={styles.cleanIcon} />
+                    <span>Clean completed ({completedTasks.length})</span>
+                  </button>
+                </div>
+              )}
 
               {!showCompleted && (
                 <div className={styles.taskPanelTabsRow}>
@@ -881,6 +890,44 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           customersList={customers}
           onAddCustomer={onAddCustomer}
         />
+
+        {/* 🔥 MODAL: Clean Completed Tasks Confirm (TOP LEVEL) */}
+        {showCleanConfirm && (
+          <div className={styles.confirmOverlay}>
+            <div className={styles.confirmModal}>
+              <div className={styles.confirmIcon}>
+                <ExclamationTriangleIcon width={26} height={26} />
+              </div>
+
+              <h4 className={styles.confirmTitle}>Clean completed tasks?</h4>
+
+              <p className={styles.confirmText}>
+                This will permanently delete all completed tasks.
+                <br />
+                This action cannot be undone.
+              </p>
+
+              <div className={styles.confirmActions}>
+                <button
+                  className={styles.confirmCancel}
+                  onClick={() => setShowCleanConfirm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className={styles.confirmDanger}
+                  onClick={async () => {
+                    await deleteAllCompletedTasks();
+                    setShowCleanConfirm(false);
+                  }}
+                >
+                  Clean tasks
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
