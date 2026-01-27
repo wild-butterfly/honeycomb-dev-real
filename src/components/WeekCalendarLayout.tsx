@@ -231,10 +231,6 @@ const WeekCalendarLayout: React.FC<Props> = ({
                       backgroundColor: item.color || "#faf7dc",
                     }}
                   >
-                    <div className={styles.dragHandle} aria-hidden>
-                      ⋮⋮
-                    </div>
-
                     <div className={styles.jobTitle}>{item.title}</div>
                     <div className={styles.jobCustomer}>{item.customer}</div>
 

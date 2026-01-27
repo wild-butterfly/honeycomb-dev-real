@@ -114,7 +114,9 @@
   -webkit-user-select: none;
   touch-action: none;
 }
-
+.jobBox:active {
+  cursor: grabbing;
+}
 .jobBox:hover {
   filter: brightness(1.03);
 }
