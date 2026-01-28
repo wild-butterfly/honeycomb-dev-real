@@ -47,7 +47,7 @@ nav,
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 24px;
   margin: 0 auto 28px auto;
-  max-width: 1120px;
+  max-width: 1280px;
   align-items: stretch;
   padding-top: 30px;
 }
@@ -71,7 +71,7 @@ nav,
 
 /* ----------- ACTIONS ----------- */
 .actionsRow {
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto 18px auto;
   display: flex;
   justify-content: flex-end;
@@ -113,7 +113,7 @@ nav,
 
 /* ----------- GRID ROWS ----------- */
 .bottomGrid {
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto;
   display: flex;
   gap: 34px;

@@ -1,6 +1,10 @@
 // utils/calendarItems.ts
 import type { CalendarJob } from "../pages/CalendarPage";
 
+/* ========================================================= */
+/* TYPES */
+/* ========================================================= */
+
 export type CalendarItem = {
   jobId: string;
   assignmentId: string;
@@ -13,31 +17,51 @@ export type CalendarItem = {
   status?: string;
 };
 
+/* ========================================================= */
+/* HELPERS */
+/* ========================================================= */
+
 function toDate(v: any): Date | null {
   if (!v) return null;
-  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+
+  if (v instanceof Date) {
+    return isNaN(v.getTime()) ? null : v;
+  }
+
   if (typeof v?.toDate === "function") {
     const d = v.toDate();
     return d instanceof Date && !isNaN(d.getTime()) ? d : null;
   }
+
   if (typeof v === "string") {
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
+
   return null;
 }
+
+/* ========================================================= */
+/* BUILDER */
+/* ========================================================= */
 
 export function buildCalendarItems(jobs: CalendarJob[]): CalendarItem[] {
   const items: CalendarItem[] = [];
 
   for (const job of jobs) {
     const assignments = (job as any).assignments ?? [];
+
     for (const a of assignments) {
       if (a?.scheduled === false) continue;
 
       const start = toDate(a.start);
       const end = toDate(a.end);
-      const employeeId = Number(a.employeeId);
+
+      const rawEmployeeId = a.employeeId;
+      const employeeId =
+        typeof rawEmployeeId === "number"
+          ? rawEmployeeId
+          : Number(rawEmployeeId);
 
       if (!start || !end) continue;
       if (!Number.isFinite(employeeId)) continue;

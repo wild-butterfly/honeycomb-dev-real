@@ -68,15 +68,21 @@ const MonthCalendarLayout: React.FC<Props> = ({
     const items = buildCalendarItems(jobs);
 
     for (const item of items) {
-      if (
-        selectedStaff.length > 0 &&
-        !selectedStaff.includes(item.employeeId)
-      ) {
+      const empId = Number(item.employeeId);
+
+      if (selectedStaff.length > 0 && !selectedStaff.includes(empId)) {
         continue;
       }
 
-      const key = item.start.toDateString();
-      if (map[key]) map[key].push(item);
+      const dayKey = new Date(
+        item.start.getFullYear(),
+        item.start.getMonth(),
+        item.start.getDate(),
+      ).toDateString();
+
+      if (map[dayKey]) {
+        map[dayKey].push(item);
+      }
     }
 
     return map;

@@ -3,19 +3,16 @@ import React from "react";
 import styles from "./AssignedEmployees.module.css";
 import { CalendarDaysIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
-/* ================= TYPES ================= */
-
 export interface AssignedEmployee {
   employeeId: string;
   name: string;
-
   schedules: {
-    assignmentId: string; // 🔥 FIRESTORE ASSIGNMENT DOC ID
+    assignmentId: string;
     start: string;
     end: string;
     hours: number;
+    completed: boolean;
   }[];
-
   labour: {
     enteredHours: number;
     completed: boolean;
@@ -23,106 +20,110 @@ export interface AssignedEmployee {
 }
 
 interface Props {
-  employees?: AssignedEmployee[];
+  employees: AssignedEmployee[];
   onUnassign?: (assignmentId: string, employeeName: string) => void;
+  onMarkAssignmentCompleted?: (assignmentId: string) => void;
 }
 
-/* ================= COMPONENT ================= */
-
-const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
-  if (!employees || employees.length === 0) {
-    return (
-      <div className={styles.wrapper}>
-        <h3 className={styles.subTitle}>Assigned Employees</h3>
-        <div className={styles.muted}>No employees assigned</div>
-      </div>
-    );
+const AssignedEmployees: React.FC<Props> = ({
+  employees,
+  onUnassign,
+  onMarkAssignmentCompleted,
+}) => {
+  if (!employees.length) {
+    return <div className={styles.muted}>No employees assigned</div>;
   }
 
   return (
-    <div className={styles.wrapper}>
-      <h3 className={styles.subTitle}>Assigned Employees</h3>
+    <div className={styles.list}>
+      {employees.map((emp) => {
+        const totalHours = emp.schedules.reduce((sum, s) => sum + s.hours, 0);
 
-      <div className={styles.list}>
-        {employees.map((emp) => {
-          const totalScheduled = emp.schedules.reduce(
-            (sum, s) => sum + s.hours,
-            0,
-          );
-
-          return (
-            <div key={emp.employeeId} className={styles.employeeCard}>
-              {/* ================= HEADER ================= */}
-              <div className={styles.employeeTop}>
-                <div className={styles.left}>
-                  <div className={styles.avatar}>
-                    {emp.name.charAt(0).toUpperCase()}
-                  </div>
-
-                  <strong>{emp.name}</strong>
-
-                  <span className={styles.status}>
-                    {emp.labour.completed
-                      ? "LABOUR COMPLETED"
-                      : "LABOUR NOT COMPLETED"}
-                  </span>
+        return (
+          <div key={emp.employeeId} className={styles.employeeCard}>
+            {/* ===== HEADER ===== */}
+            <div className={styles.employeeTop}>
+              <div className={styles.left}>
+                <div className={styles.avatar}>
+                  {emp.name.charAt(0).toUpperCase()}
                 </div>
 
-                <div className={styles.right}>
-                  <span className={styles.totals}>
-                    Total Scheduled: {totalScheduled} hours | Total Time
-                    Entered: {emp.labour.enteredHours} hours
+                <strong className={styles.employeeName}>{emp.name}</strong>
+
+                <span
+                  className={
+                    emp.labour.completed
+                      ? styles.statusCompleted
+                      : styles.statusIncomplete
+                  }
+                >
+                  {emp.labour.completed
+                    ? "LABOUR COMPLETED"
+                    : "LABOUR NOT COMPLETED"}
+                </span>
+              </div>
+
+              <div className={styles.right}>
+                <span className={styles.totals}>
+                  Total Scheduled: {totalHours} hours
+                </span>
+              </div>
+            </div>
+
+            {/* ===== BODY ===== */}
+            <div className={styles.employeeBody}>
+              {emp.schedules.map((s) => (
+                <div key={s.assignmentId} className={styles.scheduleRow}>
+                  <CalendarDaysIcon className={styles.icon} />
+
+                  <span className={styles.scheduleText}>
+                    {new Date(s.start).toLocaleDateString()}{" "}
+                    {new Date(s.start).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    –{" "}
+                    {new Date(s.end).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    ({s.hours}h)
                   </span>
 
-                  {!emp.labour.completed && (
-                    <button className={styles.completeBtn}>
+                  {!s.completed && onMarkAssignmentCompleted && (
+                    <button
+                      className={styles.completeBtn}
+                      onClick={() => onMarkAssignmentCompleted(s.assignmentId)}
+                    >
                       <CheckCircleIcon className={styles.btnIcon} />
-                      Mark labour as completed
+                      Mark completed
+                    </button>
+                  )}
+
+                  {onUnassign && (
+                    <button
+                      className={styles.removeBtn}
+                      title="Remove assignment"
+                      onClick={() => onUnassign(s.assignmentId, emp.name)}
+                    >
+                      ×
                     </button>
                   )}
                 </div>
-              </div>
+              ))}
 
-              {/* ================= BODY ================= */}
-              <div className={styles.employeeBody}>
-                {emp.schedules.length > 0 ? (
-                  emp.schedules.map((s) => (
-                    <div key={s.assignmentId} className={styles.scheduleRow}>
-                      <CalendarDaysIcon className={styles.icon} />
-
-                      <span>
-                        Scheduled: {new Date(s.start).toLocaleString()} –{" "}
-                        {new Date(s.end).toLocaleTimeString()} ({s.hours} hours)
-                      </span>
-
-                      {onUnassign && (
-                        <button
-                          className={styles.removeBtn}
-                          title="Remove this day only"
-                          onClick={() => onUnassign(s.assignmentId, emp.name)}
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <div className={styles.muted}>No schedules assigned</div>
-                )}
-
-                <div className={styles.timeEntry}>
-                  Time Entry:{" "}
-                  <span className={styles.muted}>
-                    {emp.labour.enteredHours > 0
-                      ? "Entered"
-                      : "Labour not entered"}
-                  </span>
-                </div>
+              <div className={styles.timeEntry}>
+                Time Entry:{" "}
+                <span className={styles.muted}>
+                  {emp.labour.enteredHours > 0
+                    ? `${emp.labour.enteredHours} hours entered`
+                    : "Labour not entered"}
+                </span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

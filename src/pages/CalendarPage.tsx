@@ -631,24 +631,30 @@ const CalendarPage: React.FC = () => {
   }, [staffFilteredJobs, selectedDate]);
 
   /* MONTH GROUP */
-  const jobsThisMonth = staffFilteredJobs.filter((j) => {
-    const d = getJobStart(j);
-    return (
-      d.getMonth() === selectedDate.getMonth() &&
-      d.getFullYear() === selectedDate.getFullYear()
-    );
-  });
-
-  const groupedMonthJobs = jobsThisMonth.reduce(
+  const groupedMonthJobs = staffFilteredJobs.reduce(
     (acc, job) => {
-      const day = getJobStart(job).getDate();
-      if (!acc[day]) acc[day] = [];
-      acc[day].push(job);
+      job.assignments.forEach((a) => {
+        if (a.scheduled === false) return;
+        if (!a.start) return;
+
+        const d = new Date(a.start);
+        if (isNaN(d.getTime())) return;
+
+        if (
+          d.getMonth() !== selectedDate.getMonth() ||
+          d.getFullYear() !== selectedDate.getFullYear()
+        )
+          return;
+
+        const day = d.getDate();
+        if (!acc[day]) acc[day] = [];
+        acc[day].push(job);
+      });
+
       return acc;
     },
     {} as Record<number, CalendarJob[]>,
   );
-
   /* NAVIGATION */
   const goPrev = () => {
     const d = new Date(selectedDate);
@@ -735,7 +741,7 @@ const CalendarPage: React.FC = () => {
 
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
-                  jobs={jobsThisMonth}
+                  jobs={staffFilteredJobs}
                   onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
@@ -747,7 +753,7 @@ const CalendarPage: React.FC = () => {
               <div className={styles.monthLayoutWide}>
                 <MonthCalendarLayout
                   date={selectedDate}
-                  jobs={jobsThisMonth}
+                  jobs={staffFilteredJobs}
                   employees={employees}
                   selectedStaff={selectedStaff}
                   onStaffChange={setSelectedStaff}
@@ -758,7 +764,7 @@ const CalendarPage: React.FC = () => {
 
                 <aside className={styles.sidebarWrapper}>
                   <SidebarJobs
-                    jobs={jobsThisMonth}
+                    jobs={staffFilteredJobs}
                     onJobClick={handleOpenJob}
                     jobFilter={jobFilter}
                     onJobFilterChange={setJobFilter}
