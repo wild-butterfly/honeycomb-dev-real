@@ -131,6 +131,7 @@ function jobHasAssignmentOnDay(job: CalendarJob, day: Date) {
 
 function assignmentsForDay(job: CalendarJob, employeeId: number, day: Date) {
   return job.assignments.filter((a) => {
+    if (a.scheduled === false) return false; // 🔥 KRİTİK
     if (!a.start) return false;
     if (a.employeeId !== employeeId) return false;
 
@@ -583,6 +584,7 @@ const CalendarPage: React.FC = () => {
       setSelectedStaff([]);
       return;
     }
+    setDraftJob({ start, end });
 
     // 🔥 NORMAL MODE
     const jobRef = await addDoc(collection(db, "jobs"), {
@@ -915,7 +917,28 @@ const CalendarPage: React.FC = () => {
             draft={draftJob}
             employees={employees}
             onClose={() => setDraftJob(null)}
-            onSave={() => setDraftJob(null)}
+            onSave={async (jobData) => {
+              // 1️⃣ Create the job document
+              const jobRef = await addDoc(collection(db, "jobs"), {
+                ...jobData,
+                status: "active",
+                createdAt: serverTimestamp(),
+              });
+
+              // 2️⃣ Create the first assignment using the calendar-selected employee
+              // (employeeId comes from handleAddJobAt, not from jobData)
+              await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
+                employeeId:
+                  selectedStaff.length === 1 ? selectedStaff[0] : null,
+                start: toLocalISOString(draftJob.start),
+                end: toLocalISOString(draftJob.end),
+                scheduled: true,
+                createdAt: serverTimestamp(),
+              });
+
+              // 3️⃣ Close modal
+              setDraftJob(null);
+            }}
           />
         )}
       </div>
