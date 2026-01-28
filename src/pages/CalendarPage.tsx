@@ -569,10 +569,12 @@ const CalendarPage: React.FC = () => {
   const [draftJob, setDraftJob] = useState<{
     start: Date;
     end: Date;
+    employeeId: number;
   } | null>(null);
 
+  // ✅ Timeline "+" : job + first assignment create, then open modal with correct staff
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    // 🔥 SCHEDULE MODE
+    // 🔥 SCHEDULE MODE: mevcut job'a yeni assignment ekle, modal açma
     if (scheduleMode) {
       await addAssignmentToExistingJob(
         scheduleMode.jobId,
@@ -580,13 +582,11 @@ const CalendarPage: React.FC = () => {
         start,
         end,
       );
-
       setSelectedStaff([]);
       return;
     }
-    setDraftJob({ start, end });
 
-    // 🔥 NORMAL MODE
+    // 1) JOB oluştur
     const jobRef = await addDoc(collection(db, "jobs"), {
       title: "New Job",
       customer: "New Customer",
@@ -595,13 +595,48 @@ const CalendarPage: React.FC = () => {
       createdAt: serverTimestamp(),
     });
 
-    await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
-      employeeId,
-      start: toLocalISOString(start),
-      end: toLocalISOString(end),
-      scheduled: true,
-      createdAt: serverTimestamp(),
+    // 2) İlk ASSIGNMENT oluştur
+    const assignmentRef = await addDoc(
+      collection(db, "jobs", jobRef.id, "assignments"),
+      {
+        employeeId,
+        start: toLocalISOString(start),
+        end: toLocalISOString(end),
+        scheduled: true,
+        createdAt: serverTimestamp(),
+      },
+    );
+
+    // 3) ✅ OPTIMISTIC UI: snapshot gelmeden modalda staff görünsün
+    setJobs((prev) => {
+      const already = prev.some((j) => j.id === jobRef.id);
+      if (already) return prev;
+
+      return [
+        ...prev,
+        {
+          id: jobRef.id,
+          title: "New Job",
+          customer: "New Customer",
+          status: "active",
+          color: "#faf7dc",
+          assignments: [
+            {
+              id: assignmentRef.id,
+              employeeId,
+              start: toLocalISOString(start),
+              end: toLocalISOString(end),
+              scheduled: true,
+            },
+          ],
+        },
+      ];
     });
+
+    // 4) ✅ MODAL'ı bu job ile aç (ASSIGNED STAFF dolu gelir)
+    setDraftJob(null); // artık draft'a gerek yok (kalsın dursun ama açık olmasın)
+    setOpenJobId(jobRef.id);
+    setRangeMode("day");
   };
 
   /* FILTERS */
@@ -697,14 +732,6 @@ const CalendarPage: React.FC = () => {
             notes: "",
             status: "active",
             color: "#fff9e6",
-            createdAt: serverTimestamp(),
-          });
-
-          await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
-            employeeId: null,
-            start: toLocalISOString(start),
-            end: toLocalISOString(end),
-            scheduled: true,
             createdAt: serverTimestamp(),
           });
 
@@ -917,28 +944,7 @@ const CalendarPage: React.FC = () => {
             draft={draftJob}
             employees={employees}
             onClose={() => setDraftJob(null)}
-            onSave={async (jobData) => {
-              // 1️⃣ Create the job document
-              const jobRef = await addDoc(collection(db, "jobs"), {
-                ...jobData,
-                status: "active",
-                createdAt: serverTimestamp(),
-              });
-
-              // 2️⃣ Create the first assignment using the calendar-selected employee
-              // (employeeId comes from handleAddJobAt, not from jobData)
-              await addDoc(collection(db, "jobs", jobRef.id, "assignments"), {
-                employeeId:
-                  selectedStaff.length === 1 ? selectedStaff[0] : null,
-                start: toLocalISOString(draftJob.start),
-                end: toLocalISOString(draftJob.end),
-                scheduled: true,
-                createdAt: serverTimestamp(),
-              });
-
-              // 3️⃣ Close modal
-              setDraftJob(null);
-            }}
+            onSave={() => setDraftJob(null)}
           />
         )}
       </div>
