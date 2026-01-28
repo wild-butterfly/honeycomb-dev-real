@@ -246,9 +246,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 collection(db, "jobs", jobDoc.id, "assignments"),
               );
 
-              const assignedEmployeeIds = assignmentsSnap.docs
-                .map((a) => safeNumber((a.data() as any).employeeId, 0))
-                .filter((n) => n !== 0);
+              const assignedEmployeeIds = Array.from(
+                new Set(
+                  assignmentsSnap.docs
+                    .map((doc) => doc.data() as any)
+                    .filter((a) => a && a.employeeId && a.scheduled !== false)
+                    .map((a) => safeNumber(a.employeeId, 0))
+                    .filter((n) => n !== 0),
+                ),
+              );
 
               // pick a “display date”:
               // 1) earliest assignment start
@@ -599,6 +605,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                               (id) => employees.find((e) => e.id === id)?.name,
                             )
                             .filter(Boolean)
+                            .sort((a, b) => a!.localeCompare(b!, "tr"))
                             .join(", ");
 
                     const jobTypeChip =
