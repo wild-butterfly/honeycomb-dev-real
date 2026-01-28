@@ -17,6 +17,7 @@ export interface AssignedEmployee {
     enteredHours: number;
     completed: boolean;
   };
+  unscheduledAssignmentId?: string;
 }
 
 interface Props {
@@ -111,6 +112,28 @@ const AssignedEmployees: React.FC<Props> = ({
                   )}
                 </div>
               ))}
+
+              {emp.schedules.length === 0 && emp.unscheduledAssignmentId && (
+                <div className={styles.scheduleRow}>
+                  <CalendarDaysIcon className={styles.iconMuted} />
+
+                  <span className={styles.scheduleTextMuted}>
+                    Assigned – not scheduled yet (0h)
+                  </span>
+
+                  {onUnassign && (
+                    <button
+                      className={styles.removeBtn}
+                      title="Remove assignment"
+                      onClick={() =>
+                        onUnassign(emp.unscheduledAssignmentId!, emp.name)
+                      }
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className={styles.timeEntry}>
                 Time Entry:{" "}

@@ -80,15 +80,15 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
 
         snap.docs.forEach((d) => {
           const a = d.data();
-          if (a.scheduled === false) return;
-
           const empId = String(a.employeeId);
+
           if (!grouped.has(empId)) {
             grouped.set(empId, {
               employeeId: empId,
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
               labour: { enteredHours: 0, completed: true },
+              unscheduledAssignmentId: undefined,
             });
           }
 
@@ -100,7 +100,11 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
 
           const startIso = toIsoSafe(a.start);
           const endIso = toIsoSafe(a.end);
-          if (!startIso || !endIso) return;
+
+          if (!startIso || !endIso) {
+            target.unscheduledAssignmentId = d.id;
+            return;
+          }
 
           target.schedules.push({
             assignmentId: d.id,
