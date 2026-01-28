@@ -24,7 +24,7 @@ export interface AssignedEmployee {
 
 interface Props {
   employees?: AssignedEmployee[];
-  onUnassign?: (assignmentId: string) => void;
+  onUnassign?: (assignmentId: string, employeeName: string) => void;
 }
 
 /* ================= COMPONENT ================= */
@@ -99,7 +99,7 @@ const AssignedEmployees: React.FC<Props> = ({ employees, onUnassign }) => {
                         <button
                           className={styles.removeBtn}
                           title="Remove this day only"
-                          onClick={() => onUnassign(s.assignmentId)}
+                          onClick={() => onUnassign(s.assignmentId, emp.name)}
                         >
                           ×
                         </button>

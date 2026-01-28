@@ -8,6 +8,7 @@ import DashboardNavbar from "../components/DashboardNavbar";
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
 import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import styles from "./DashboardPage.module.css";
+import ConfirmModal from "../components/ConfirmModal";
 import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
 import {
   TrashIcon,
@@ -891,42 +892,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           onAddCustomer={onAddCustomer}
         />
 
-        {/* 🔥 MODAL: Clean Completed Tasks Confirm (TOP LEVEL) */}
         {showCleanConfirm && (
-          <div className={styles.confirmOverlay}>
-            <div className={styles.confirmModal}>
-              <div className={styles.confirmIcon}>
-                <ExclamationTriangleIcon width={26} height={26} />
-              </div>
-
-              <h4 className={styles.confirmTitle}>Clean completed tasks?</h4>
-
-              <p className={styles.confirmText}>
+          <ConfirmModal
+            title="Clean completed tasks?"
+            description={
+              <>
                 This will permanently delete all completed tasks.
                 <br />
                 This action cannot be undone.
-              </p>
-
-              <div className={styles.confirmActions}>
-                <button
-                  className={styles.confirmCancel}
-                  onClick={() => setShowCleanConfirm(false)}
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className={styles.confirmDanger}
-                  onClick={async () => {
-                    await deleteAllCompletedTasks();
-                    setShowCleanConfirm(false);
-                  }}
-                >
-                  Clean tasks
-                </button>
-              </div>
-            </div>
-          </div>
+              </>
+            }
+            confirmText="Clean tasks"
+            onCancel={() => setShowCleanConfirm(false)}
+            onConfirm={async () => {
+              await deleteAllCompletedTasks();
+              setShowCleanConfirm(false);
+            }}
+          />
         )}
       </div>
     </div>

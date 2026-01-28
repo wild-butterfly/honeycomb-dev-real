@@ -15,6 +15,7 @@ import styles from "./AssignmentSchedulingSection.module.css";
 import { useNavigate } from "react-router-dom";
 import AssignedEmployees, { AssignedEmployee } from "./AssignedEmployees";
 import LabourTimeEntrySection from "./LabourTimeEntrySection";
+import ConfirmModal from "./ConfirmModal";
 
 /* ================= TYPES ================= */
 
@@ -71,6 +72,11 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     AssignedEmployee[]
   >([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+
+  const [confirmUnassign, setConfirmUnassign] = useState<{
+    assignmentId: string;
+    employeeName: string;
+  } | null>(null);
 
   /* ================= TAB SAFETY ================= */
 
@@ -182,6 +188,13 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
     setSelectedEmployee("");
   };
 
+  const handleUnassignRequest = (
+    assignmentId: string,
+    employeeName: string,
+  ) => {
+    setConfirmUnassign({ assignmentId, employeeName });
+  };
+
   /* ================= UNASSIGN (SINGLE DAY) ================= */
 
   const handleUnassignAssignment = async (assignmentId: string) => {
@@ -245,7 +258,7 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
         {activeTab === "scheduling" && (
           <AssignedEmployees
             employees={assignedEmployees}
-            onUnassign={handleUnassignAssignment}
+            onUnassign={handleUnassignRequest}
           />
         )}
 
@@ -261,6 +274,30 @@ const AssignmentSchedulingSection: React.FC<Props> = ({ jobId }) => {
           />
         )}
       </div>
+      {confirmUnassign && (
+        <ConfirmModal
+          title="Remove scheduled assignment?"
+          description={
+            <>
+              This will remove <strong>{confirmUnassign.employeeName}</strong>{" "}
+              from this scheduled day.
+              <br />
+              This action cannot be undone.
+            </>
+          }
+          confirmText="Remove"
+          onCancel={() => setConfirmUnassign(null)}
+          onConfirm={async () => {
+            const payload = confirmUnassign; // ✅ TS için
+            if (!payload) return;
+
+            await deleteDoc(
+              doc(db, "jobs", safeJobId, "assignments", payload.assignmentId),
+            );
+            setConfirmUnassign(null);
+          }}
+        />
+      )}
     </div>
   );
 };

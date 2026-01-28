@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { toLocalISOString } from "../utils/date";
+import ConfirmModal from "./ConfirmModal";
 
 interface Props {
   job?: CalendarJob;
@@ -192,6 +193,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   const [status, setStatus] = useState<
     "active" | "completed" | "return" | "quote"
   >(activeJob.status || "active");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   /* ================= ASSIGNMENTS (SOURCE OF TRUTH = FIRESTORE) ================= */
 
@@ -749,7 +751,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             </>
           ) : (
             <>
-              <button className={styles.deleteBtn} onClick={onDelete}>
+              <button
+                className={styles.deleteBtn}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
                 Delete event
               </button>
               <button
@@ -761,6 +766,28 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             </>
           )}
         </div>
+
+        {showDeleteConfirm && (
+          <ConfirmModal
+            title="Delete this event?"
+            description={
+              <>
+                This will permanently delete this event from the system.
+                <br />
+                This action cannot be undone.
+              </>
+            }
+            confirmText="Delete event"
+            onCancel={() => setShowDeleteConfirm(false)}
+            onConfirm={async () => {
+              if (!onDelete) return;
+
+              await onDelete();
+              setShowDeleteConfirm(false);
+              onClose?.();
+            }}
+          />
+        )}
       </div>
     </div>
   );
