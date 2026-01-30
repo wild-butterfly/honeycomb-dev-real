@@ -15,7 +15,8 @@ export interface AssignedEmployee {
   }[];
   labour: {
     enteredHours: number;
-    completed: boolean;
+    completed: boolean | null;
+    hasUnscheduled: boolean;
   };
   unscheduledAssignmentId?: string;
 }
@@ -56,14 +57,18 @@ const AssignedEmployees: React.FC<Props> = ({
 
                 <span
                   className={
-                    emp.labour.completed
+                    emp.labour.completed === true
                       ? styles.statusCompleted
-                      : styles.statusIncomplete
+                      : emp.labour.completed === false
+                        ? styles.statusIncomplete
+                        : styles.statusAssigned
                   }
                 >
-                  {emp.labour.completed
+                  {emp.labour.completed === true
                     ? "LABOUR COMPLETED"
-                    : "LABOUR NOT COMPLETED"}
+                    : emp.labour.completed === false
+                      ? "LABOUR NOT COMPLETED"
+                      : "ASSIGNED"}
                 </span>
               </div>
 

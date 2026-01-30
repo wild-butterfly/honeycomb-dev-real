@@ -86,7 +86,11 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
               employeeId: empId,
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
-              labour: { enteredHours: 0, completed: false },
+              labour: {
+                enteredHours: 0,
+                completed: false,
+                hasUnscheduled: false,
+              },
               unscheduledAssignmentId: undefined,
             });
           }
@@ -96,10 +100,17 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           const startIso = toIsoSafe(a.start);
           const endIso = toIsoSafe(a.end);
 
-          if (!startIso || !endIso) {
-            target.unscheduledAssignmentId = d.id;
+          if (a.scheduled === false) {
+            if (!target.unscheduledAssignmentId) {
+              target.unscheduledAssignmentId = d.id;
+            }
+
+            target.labour.hasUnscheduled = true;
+
             return;
           }
+
+          if (!startIso || !endIso) return;
 
           target.schedules.push({
             assignmentId: d.id,
@@ -112,11 +123,15 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
 
         // ✅ LABOUR COMPLETED badge logic
         grouped.forEach((emp) => {
-          emp.labour.completed =
-            emp.schedules.length > 0 &&
-            emp.schedules.every((s) => s.completed === true);
-        });
+          const hasSchedules = emp.schedules.length > 0;
+          const allCompleted = emp.schedules.every((s) => s.completed === true);
 
+          if (!hasSchedules && emp.labour.hasUnscheduled) {
+            emp.labour.completed = null; // ⭐ ASSIGNED
+          } else {
+            emp.labour.completed = hasSchedules && allCompleted;
+          }
+        });
         setAssignedEmployees(Array.from(grouped.values()));
       },
     );
@@ -208,18 +223,35 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           onClick={async () => {
             if (!selectedEmployee) return;
 
-            const ref = await addDoc(
+            const snap = await getDocs(
               collection(db, "jobs", safeJobId, "assignments"),
-              {
-                employeeId: selectedEmployee,
-                scheduled: false,
-                labourCompleted: false,
-                createdAt: serverTimestamp(),
-              },
             );
 
+            let assignmentId: string | null = null;
+
+            // 🔥 mevcut unscheduled assignment var mı bul
+            snap.docs.forEach((d) => {
+              const a = d.data();
+              if (a.employeeId === selectedEmployee && a.scheduled === false) {
+                assignmentId = d.id;
+              }
+            });
+
+            if (!assignmentId) {
+              const ref = await addDoc(
+                collection(db, "jobs", safeJobId, "assignments"),
+                {
+                  employeeId: selectedEmployee,
+                  scheduled: false,
+                  labourCompleted: false,
+                  createdAt: serverTimestamp(),
+                },
+              );
+              assignmentId = ref.id;
+            }
+
             navigate(
-              `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}&assignmentId=${ref.id}`,
+              `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}&assignmentId=${assignmentId}`,
             );
           }}
         >
