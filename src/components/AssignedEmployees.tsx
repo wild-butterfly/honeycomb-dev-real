@@ -23,7 +23,7 @@ export interface AssignedEmployee {
 
 interface Props {
   employees: AssignedEmployee[];
-  onUnassign?: (assignmentId: string, employeeName: string) => void;
+  onUnassign?: (employeeId: string, employeeName: string) => void;
   onToggleAssignmentCompleted?: (
     assignmentId: string,
     completed: boolean,
@@ -120,7 +120,7 @@ const AssignedEmployees: React.FC<Props> = ({
                     <button
                       className={styles.removeBtn}
                       title="Remove assignment"
-                      onClick={() => onUnassign(s.assignmentId, emp.name)}
+                      onClick={() => onUnassign(emp.employeeId, emp.name)}
                     >
                       ×
                     </button>

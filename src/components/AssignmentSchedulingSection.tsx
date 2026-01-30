@@ -144,16 +144,26 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
+    const snap = await getDocs(
+      collection(db, "jobs", safeJobId, "assignments"),
+    );
+
+    const exists = snap.docs.find(
+      (d) =>
+        String(d.data().employeeId) === selectedEmployee &&
+        d.data().scheduled === false,
+    );
+
+    if (exists) {
+      setSelectedEmployee("");
+      return;
+    }
+
     await addDoc(collection(db, "jobs", safeJobId, "assignments"), {
       employeeId: selectedEmployee,
       scheduled: false,
       labourCompleted: false,
       createdAt: serverTimestamp(),
-    });
-
-    await updateDoc(doc(db, "jobs", safeJobId), {
-      status: "active",
-      completedAt: null,
     });
 
     setSelectedEmployee("");
@@ -227,16 +237,23 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
               collection(db, "jobs", safeJobId, "assignments"),
             );
 
-            let assignmentId: string | null = null;
+            let scheduledId: string | null = null;
+            let unscheduledId: string | null = null;
 
-            // 🔥 mevcut unscheduled assignment var mı bul
             snap.docs.forEach((d) => {
               const a = d.data();
-              if (a.employeeId === selectedEmployee && a.scheduled === false) {
-                assignmentId = d.id;
-              }
+              if (String(a.employeeId) !== selectedEmployee) return;
+
+              // scheduled doc (start/end veya scheduled !== false)
+              if (a.scheduled !== false) scheduledId = d.id;
+              // unscheduled doc
+              if (a.scheduled === false) unscheduledId = d.id;
             });
 
+            // 1) scheduled varsa onu kullan
+            let assignmentId: string | null = scheduledId ?? unscheduledId;
+
+            // 2) hiç yoksa create
             if (!assignmentId) {
               const ref = await addDoc(
                 collection(db, "jobs", safeJobId, "assignments"),
@@ -261,8 +278,11 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
 
       <AssignedEmployees
         employees={assignedEmployees}
-        onUnassign={(id, name) =>
-          setConfirmUnassign({ assignmentId: id, employeeName: name })
+        onUnassign={(assignmentId, name) =>
+          setConfirmUnassign({
+            assignmentId,
+            employeeName: name,
+          })
         }
         onToggleAssignmentCompleted={handleToggleAssignmentCompleted}
       />
@@ -280,15 +300,21 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           }
           onCancel={() => setConfirmUnassign(null)}
           onConfirm={async () => {
-            await deleteDoc(
-              doc(
-                db,
-                "jobs",
-                safeJobId,
-                "assignments",
-                confirmUnassign.assignmentId,
-              ),
+            const snap = await getDocs(
+              collection(db, "jobs", safeJobId, "assignments"),
             );
+
+            const deletes = snap.docs
+              .filter(
+                (d) =>
+                  String(d.data().employeeId) ===
+                    String(confirmUnassign.assignmentId.split("_")[0]) ||
+                  d.id === confirmUnassign.assignmentId,
+              )
+              .map((d) => deleteDoc(d.ref));
+
+            await Promise.all(deletes);
+
             setConfirmUnassign(null);
           }}
         />
