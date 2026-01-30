@@ -15,7 +15,6 @@ import { db } from "../firebase";
 import styles from "./AssignmentSchedulingSection.module.css";
 import { useNavigate } from "react-router-dom";
 import AssignedEmployees, { AssignedEmployee } from "./AssignedEmployees";
-import LabourTimeEntrySection from "./LabourTimeEntrySection";
 import ConfirmModal from "./ConfirmModal";
 
 /* ================= HELPERS ================= */
@@ -73,7 +72,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
   useEffect(() => {
     if (!safeJobId) return;
 
-    return onSnapshot(
+    const unsub = onSnapshot(
       collection(db, "jobs", safeJobId, "assignments"),
       (snap) => {
         const grouped = new Map<string, AssignedEmployee>();
@@ -87,16 +86,12 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
               employeeId: empId,
               name: employeeNameById.get(empId) || "Loading...",
               schedules: [],
-              labour: { enteredHours: 0, completed: true },
+              labour: { enteredHours: 0, completed: false },
               unscheduledAssignmentId: undefined,
             });
           }
 
           const target = grouped.get(empId)!;
-
-          if (a.labourCompleted !== true) {
-            target.labour.completed = false;
-          }
 
           const startIso = toIsoSafe(a.start);
           const endIso = toIsoSafe(a.end);
@@ -115,9 +110,18 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           });
         });
 
+        // ✅ LABOUR COMPLETED badge logic
+        grouped.forEach((emp) => {
+          emp.labour.completed =
+            emp.schedules.length > 0 &&
+            emp.schedules.every((s) => s.completed === true);
+        });
+
         setAssignedEmployees(Array.from(grouped.values()));
       },
     );
+
+    return () => unsub();
   }, [safeJobId, employeeNameById]);
 
   /* ================= ASSIGN ================= */
@@ -135,16 +139,17 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
     setSelectedEmployee("");
   };
 
-  /* ================= ASSIGNMENT COMPLETE ================= */
+  /* ================= TOGGLE ASSIGNMENT COMPLETED ================= */
 
-  const handleMarkAssignmentCompleted = async (assignmentId: string) => {
-    // 1️⃣ assignment completed
+  const handleToggleAssignmentCompleted = async (
+    assignmentId: string,
+    completed: boolean,
+  ) => {
     await updateDoc(doc(db, "jobs", safeJobId, "assignments", assignmentId), {
-      labourCompleted: true,
-      labourCompletedAt: serverTimestamp(),
+      labourCompleted: completed,
+      labourCompletedAt: completed ? serverTimestamp() : null,
     });
 
-    // 2️⃣ job completion check (FERGUS LOGIC)
     const snap = await getDocs(
       collection(db, "jobs", safeJobId, "assignments"),
     );
@@ -162,7 +167,10 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
         !hasIncomplete && scheduledAssignments.length > 0
           ? "completed"
           : "active",
-      ...(!hasIncomplete && { completedAt: serverTimestamp() }),
+      completedAt:
+        !hasIncomplete && scheduledAssignments.length > 0
+          ? serverTimestamp()
+          : null,
     });
   };
 
@@ -185,7 +193,10 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           ))}
         </select>
 
-        <button onClick={handleAssign}>Assign</button>
+        <button className={styles.assignBtn} onClick={handleAssign}>
+          Assign
+        </button>
+
         <button
           className={styles.primaryBtn}
           disabled={!selectedEmployee}
@@ -216,7 +227,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
         onUnassign={(id, name) =>
           setConfirmUnassign({ assignmentId: id, employeeName: name })
         }
-        onMarkAssignmentCompleted={handleMarkAssignmentCompleted}
+        onToggleAssignmentCompleted={handleToggleAssignmentCompleted}
       />
 
       {confirmUnassign && (

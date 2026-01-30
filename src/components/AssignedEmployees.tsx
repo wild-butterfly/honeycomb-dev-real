@@ -23,13 +23,16 @@ export interface AssignedEmployee {
 interface Props {
   employees: AssignedEmployee[];
   onUnassign?: (assignmentId: string, employeeName: string) => void;
-  onMarkAssignmentCompleted?: (assignmentId: string) => void;
+  onToggleAssignmentCompleted?: (
+    assignmentId: string,
+    completed: boolean,
+  ) => void;
 }
 
 const AssignedEmployees: React.FC<Props> = ({
   employees,
   onUnassign,
-  onMarkAssignmentCompleted,
+  onToggleAssignmentCompleted,
 }) => {
   if (!employees.length) {
     return <div className={styles.muted}>No employees assigned</div>;
@@ -91,13 +94,20 @@ const AssignedEmployees: React.FC<Props> = ({
                     ({s.hours}h)
                   </span>
 
-                  {!s.completed && onMarkAssignmentCompleted && (
+                  {onToggleAssignmentCompleted && (
                     <button
-                      className={styles.completeBtn}
-                      onClick={() => onMarkAssignmentCompleted(s.assignmentId)}
+                      className={
+                        s.completed ? styles.undoBtn : styles.completeBtn
+                      }
+                      onClick={() =>
+                        onToggleAssignmentCompleted(
+                          s.assignmentId,
+                          !s.completed,
+                        )
+                      }
                     >
                       <CheckCircleIcon className={styles.btnIcon} />
-                      Mark completed
+                      {s.completed ? "Undo completion" : "Mark completed"}
                     </button>
                   )}
 

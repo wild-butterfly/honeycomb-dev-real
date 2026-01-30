@@ -204,3 +204,64 @@
   opacity: 0.6;
   font-style: italic;
 }
+
+/* Undo completion button */
+.undoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+
+  background: #fffdf5;
+  color: #7a6200;
+
+  border: 2px solid #e6c46a;
+  border-radius: 10px;
+
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.undoBtn:hover {
+  background: #fff4cc;
+  box-shadow: 0 3px 8px rgba(185, 154, 42, 0.25);
+}
+
+.undoBtn:active {
+  transform: scale(0.97);
+}
+
+/* Assign button */
+
+.assignBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+
+  background: linear-gradient(180deg, #ffe066 0%, #ffd43b 100%);
+
+  color: #5c4a00;
+  border: 2px solid #f0c419;
+  border-radius: 12px;
+
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease;
+}
+
+.assignBtn:hover {
+  background: linear-gradient(180deg, #ffec99 0%, #ffd43b 100%);
+  box-shadow: 0 4px 10px rgba(185, 154, 42, 0.35);
+}
+
+.assignBtn:active {
+  transform: scale(0.97);
+}
