@@ -7,6 +7,7 @@ import styles from "./JobPage.module.css";
 import LeftSidebar from "../components/LeftSidebar";
 import { db } from "../firebase";
 import AssignmentSchedulingSection from "../components/AssignmentSchedulingSection";
+import LabourTimeEntrySection from "../components/LabourTimeEntrySection";
 
 /* ===================== TYPES ===================== */
 
@@ -16,6 +17,8 @@ interface JobDoc {
   notes?: string;
 }
 
+type TabType = "scheduling" | "labour";
+
 /* ===================== COMPONENT ===================== */
 
 const JobPage: React.FC = () => {
@@ -24,23 +27,27 @@ const JobPage: React.FC = () => {
   const [job, setJob] = useState<JobDoc | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ EDIT STATES (BURADA OLMALI)
+  const [activeTab, setActiveTab] = useState<TabType>("scheduling");
+
+  /* ---------- NOTES EDIT ---------- */
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
 
-  /* LOAD JOB */
+  /* ---------- LOAD JOB ---------- */
   useEffect(() => {
     if (!id) return;
 
     const loadJob = async () => {
       const snap = await getDoc(doc(db, "jobs", id));
+
       if (snap.exists()) {
         setJob({
           id: snap.id,
           ...(snap.data() as Omit<JobDoc, "id">),
         });
       }
+
       setLoading(false);
     };
 
@@ -49,6 +56,8 @@ const JobPage: React.FC = () => {
 
   if (loading) return <div className={styles.pageWrapper}>Loading…</div>;
   if (!job) return <div className={styles.pageWrapper}>Job not found</div>;
+
+  /* ===================== UI ===================== */
 
   return (
     <div className={styles.pageWrapper}>
@@ -92,6 +101,7 @@ const JobPage: React.FC = () => {
                     disabled={savingNotes}
                     onClick={async () => {
                       if (!id) return;
+
                       setSavingNotes(true);
 
                       await updateDoc(doc(db, "jobs", id), {
@@ -99,7 +109,7 @@ const JobPage: React.FC = () => {
                       });
 
                       setJob((prev) =>
-                        prev ? { ...prev, notes: notesDraft } : prev
+                        prev ? { ...prev, notes: notesDraft } : prev,
                       );
 
                       setSavingNotes(false);
@@ -122,9 +132,40 @@ const JobPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ASSIGNMENT & SCHEDULING */}
+        {/* ================= SECTION WITH TABS ================= */}
+
         <div className={styles.section}>
-          <AssignmentSchedulingSection jobId={job.id} />
+          {/* Tabs header (kutunun içinde) */}
+          <div className={styles.sectionTabs}>
+            <button
+              className={
+                activeTab === "scheduling"
+                  ? styles.sectionTabActive
+                  : styles.sectionTab
+              }
+              onClick={() => setActiveTab("scheduling")}
+            >
+              Scheduling
+            </button>
+
+            <button
+              className={
+                activeTab === "labour"
+                  ? styles.sectionTabActive
+                  : styles.sectionTab
+              }
+              onClick={() => setActiveTab("labour")}
+            >
+              Labour
+            </button>
+          </div>
+
+          {/* Content */}
+          {activeTab === "scheduling" && (
+            <AssignmentSchedulingSection jobId={job.id} />
+          )}
+
+          {activeTab === "labour" && <LabourTimeEntrySection jobId={job.id} />}
         </div>
       </div>
     </div>

@@ -1,77 +1,69 @@
+/* =========================
+   WRAPPER
+========================= */
+
 .wrapper {
   margin-top: 24px;
 }
 
-/* ---------------- TABS ---------------- */
+/* =========================
+   TITLE
+========================= */
 
-.tabs {
-  display: flex;
-  gap: 28px;
-  border-bottom: 1px solid #e6d9a8;
-  margin-bottom: 18px;
-}
-
-.tab {
-  background: none;
-  border: none;
-  padding: 10px 0;
-  font-size: 14px;
-  cursor: pointer;
-  color: #6b5a20;
-}
-
-.active {
-  font-weight: 600;
-  border-bottom: 3px solid #e6c15a;
-  color: #3b2f00;
-}
-
-/* ---------------- CARD ---------------- */
-
-.card {
-  background: #fffaf0;
-  border: 1px solid #e6d9a8;
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.title {
-  font-size: 15px;
-  font-weight: 600;
+.wrapper h3 {
+  font-size: 16px;
+  font-weight: 700;
   margin-bottom: 14px;
-  color: #3b2f00;
+  color: #2b2b2b;
 }
 
-/* ---------------- ASSIGN ROW ---------------- */
+/* =========================
+   ASSIGN ROW (lighter)
+========================= */
 
 .assignRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.select {
+/* select */
+
+.assignRow select {
   flex: 1;
-  padding: 11px 12px;
+  padding: 12px 14px;
+
   border-radius: 12px;
-  border: 1px solid #e6c15a;
-  background: #fffdf6;
+
+  border: 1px solid #e6e6e6;
+  background: #ffffff;
+
   font-size: 14px;
+
+  transition:
+    border 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* ---------------- BUTTONS ---------------- */
+.assignRow select:focus {
+  outline: none;
+  border-color: #f5c542;
+  box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.2);
+}
+
+/* =========================
+   BUTTONS (modern SaaS)
+========================= */
 
 .assignBtn {
-  background: #fffdf6; /* kartla uyumlu */
-  color: #3b2f00;
+  background: #ffffff;
+  color: #333;
 
-  border: 2px solid #e6c15a;
+  border: 1px solid #e2e2e2;
   border-radius: 12px;
 
-  padding: 9px 18px;
-
-  font-size: 14px;
+  padding: 10px 18px;
   font-weight: 600;
 
   cursor: pointer;
@@ -79,129 +71,168 @@
 }
 
 .assignBtn:hover {
-  background: #fff2c2; /* completed butonuna yakın */
+  background: #f9f9f9;
 }
 
-.primaryBtn {
-  background: #e6c15a; /* honey gold */
-  color: #ffff; /* softer text */
+/* primary */
 
-  border: 2px solid #c9a845;
+.primaryBtn {
+  background: #f5c542;
+  color: #222;
+
+  border: none;
   border-radius: 12px;
 
-  padding: 9px 20px;
-
-  font-size: 14px;
+  padding: 10px 20px;
   font-weight: 700;
 
   cursor: pointer;
   transition: all 0.15s ease;
+
+  box-shadow: 0 2px 6px rgba(245, 197, 66, 0.25);
 }
 
 .primaryBtn:hover {
-  background: #d6b24f;
-  color: #ffffff;
+  background: #eabf3d;
+  transform: translateY(-1px);
 }
 
-.tab {
-  background: transparent;
-  border: none;
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
+/* =========================
+   EMPLOYEE CARDS  (BIG CHANGE)
+========================= */
 
-.active {
-  border-bottom: 2px solid #d6a400; /* senin honeycomb sarınla uyumlu */
-  font-weight: 700;
-}
+.employeeBlock {
+  margin-top: 14px;
 
-.empty {
-  color: #999;
-  font-style: italic;
-  padding: 6px 0;
-}
+  padding: 16px 18px;
 
-/* LABOUR */
+  background: #ffffff; /* 🔥 artık beyaz */
 
-.labourWrapper {
-  margin-top: 16px;
-}
-
-.labourCard {
-  background: #fffaf0;
-  border: 1px solid #f1d58a;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.labourHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.employeeInfo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #f1c232;
-  color: #000;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.employeeName {
-  font-weight: 600;
-}
-
-.labourBadge {
-  background: #f5a623;
-  color: #fff;
-  font-size: 11px;
-  padding: 4px 10px;
   border-radius: 14px;
+
+  border: 1px solid #f0f0f0; /* 🔥 çok hafif */
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); /* 🔥 soft */
+
+  transition: all 0.15s ease;
 }
 
-/* ENTRIES */
+.employeeBlock:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
 
-.labourEntry {
+/* header */
+
+.employeeBlock h4 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+}
+
+/* =========================
+   GRID TABLE
+========================= */
+
+.headerRow,
+.entryRow,
+.totalRow {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 0.6fr;
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 13px;
+
+  grid-template-columns:
+    120px
+    160px
+    80px
+    110px
+    110px
+    120px
+    60px;
+
+  align-items: center;
+  gap: 8px;
 }
 
-.entryDate {
-  color: #555;
-}
+/* header */
 
-.entryTime {
-  color: #333;
-}
+.headerRow {
+  padding: 8px 6px;
 
-.entryHours {
-  text-align: right;
-  font-weight: 500;
-}
-
-/* TOTAL */
-
-.labourTotal {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 8px;
+  font-size: 12px;
   font-weight: 600;
+
+  color: #777;
+
+  border-bottom: 1px solid #f2f2f2;
+}
+
+/* rows */
+
+.entryRow {
+  padding: 10px 6px;
+
+  font-size: 13px;
+
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.entryRow:last-child {
+  border-bottom: none;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.actions button {
+  padding: 5px 8px;
+
+  border-radius: 8px;
+
+  border: 1px solid #e6e6e6;
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+.actions button:hover {
+  background: #f7f7f7;
+}
+
+/* =========================
+   TOTAL ROW
+========================= */
+
+.totalRow {
+  margin-top: 6px;
+
+  padding: 10px 6px;
+
+  font-weight: 700;
+
+  background: #fafafa; /* 🔥 çok hafif */
+
+  border-top: 1px solid #eee;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .headerRow {
+    display: none;
+  }
+
+  .entryRow,
+  .totalRow {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 6px;
+  }
 }

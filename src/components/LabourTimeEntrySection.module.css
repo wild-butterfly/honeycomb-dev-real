@@ -1,104 +1,146 @@
-/* =========================
-   BASE / WRAPPER
-   ========================= */
+/* ======================================
+   WRAPPER / CARD
+====================================== */
 
 .wrapper {
   margin-top: 20px;
-  background: #fff9e6;
-  border: 2px solid #f0d77a;
+
+  background: #fffef9; /* soft cream */
+  border: 1px solid #efe2c3;
+
   border-radius: 18px;
-  padding: 16px;
+  padding: 20px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* dekoratif layer’lar click yutmasın */
-.wrapper::before,
-.wrapper::after,
-.form::before,
-.form::after {
-  pointer-events: none;
-}
-
-/* =========================
-   FORM
-   ========================= */
+/* ======================================
+   FORM LAYOUT
+====================================== */
 
 .form {
   display: grid;
-  gap: 10px;
-  margin-bottom: 16px;
-  position: relative;
+  gap: 12px;
+  margin-bottom: 18px;
 }
+
+/* ======================================
+   INPUTS (clean white SaaS style)
+====================================== */
 
 .form select,
 .form input,
 .form textarea {
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 2px solid #f0d77a;
-  background: #fff6dc;
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  border: 1.5px solid #e7d8b5;
+
   font-size: 14px;
+
+  transition: 0.15s;
 }
+
+/* textarea only */
 
 .form textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 90px;
 }
 
-/* =========================
-   ADD BUTTON
-   ========================= */
+/* ======================================
+   FOCUS (premium feel)
+====================================== */
+
+.form select:focus,
+.form input:focus,
+.form textarea:focus {
+  outline: none;
+
+  border-color: #ffcc00;
+
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
+}
+
+/* ======================================
+   ADD BUTTON (main CTA)
+====================================== */
 
 .form button {
-  margin-top: 8px;
-  background: linear-gradient(135deg, #f5c542, #e6b933);
-  color: #1f2937;
-  padding: 12px;
-  border-radius: 16px;
-  border: none;
+  margin-top: 10px;
+
+  background: linear-gradient(110deg, #ffe066, #ffcc00);
+
+  border: 2px solid #ffcc00;
+
+  color: #3b2f00;
+
   font-weight: 600;
   font-size: 14px;
+
+  border-radius: 14px;
+  padding: 14px;
+
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(245, 197, 66, 0.35);
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+
+  box-shadow: 0 6px 18px rgba(255, 204, 0, 0.35);
+
+  transition: 0.15s ease;
 }
 
 .form button:hover {
-  background: linear-gradient(135deg, #f7d35a, #ecc84a);
-  box-shadow: 0 8px 18px rgba(245, 197, 66, 0.45);
+  transform: translateY(-1px);
+
+  background: linear-gradient(110deg, #ffd633, #ffb800);
+
+  box-shadow: 0 8px 22px rgba(255, 204, 0, 0.45);
 }
 
 .form button:active {
-  background: linear-gradient(135deg, #eac233, #d9b228);
-  box-shadow: 0 4px 10px rgba(245, 197, 66, 0.35);
+  transform: translateY(0);
+
+  box-shadow: 0 3px 10px rgba(255, 204, 0, 0.35);
 }
 
-/* =========================
-   EMPLOYEE BLOCK
-   ========================= */
+/* ======================================
+   EMPLOYEE BLOCK (each person card)
+====================================== */
 
 .employeeBlock {
-  margin-top: 14px;
-  padding: 12px;
-  background: #fffdf6;
-  border: 2px solid #f0d77a;
+  margin-top: 16px;
+
+  padding: 14px;
+
+  background: #ffffff;
+
+  border: 1.5px solid #efe2c3;
+
   border-radius: 14px;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .employeeBlock h4 {
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
+
   font-size: 15px;
   font-weight: 700;
+
   color: #1f2937;
 }
 
-/* =========================
-   GRID TABLE (FERGUS STYLE)
-   ========================= */
+/* ======================================
+   TABLE GRID
+====================================== */
 
 .headerRow,
 .entryRow,
 .totalRow {
   display: grid;
+
   grid-template-columns:
     120px /* Date */
     160px /* Time */
@@ -112,35 +154,40 @@
   gap: 8px;
 }
 
-/* =========================
-   HEADER
-   ========================= */
+/* ======================================
+   HEADER ROW
+====================================== */
 
 .headerRow {
   padding: 6px 8px;
+
   font-size: 12px;
   font-weight: 600;
+
   color: #7a5b00;
-  border-bottom: 1px solid #f0d77a;
+
+  border-bottom: 1px solid #eee;
 }
 
-/* =========================
+/* ======================================
    ENTRY ROWS
-   ========================= */
+====================================== */
 
 .entryRow {
   padding: 8px;
+
   font-size: 13px;
-  border-bottom: 1px solid rgba(240, 215, 122, 0.4);
+
+  border-bottom: 1px solid #f4f4f4;
 }
 
 .entryRow:last-child {
   border-bottom: none;
 }
 
-/* =========================
-   ACTION BUTTONS
-   ========================= */
+/* ======================================
+   ACTION BUTTONS (edit/delete)
+====================================== */
 
 .actions {
   display: flex;
@@ -149,32 +196,43 @@
 
 .actions button {
   padding: 4px 6px;
+
   border-radius: 6px;
-  border: 1px solid #f0d77a;
-  background: #fff7dc;
+
+  border: 1px solid #e7d8b5;
+
+  background: #ffffff;
+
   cursor: pointer;
+
   font-size: 12px;
+
+  transition: 0.15s;
 }
 
 .actions button:hover {
-  background: #ffefb8;
+  background: #fff6dc;
 }
 
-/* =========================
+/* ======================================
    TOTAL ROW
-   ========================= */
+====================================== */
 
 .totalRow {
-  margin-top: 6px;
+  margin-top: 8px;
+
   padding: 8px;
+
   font-weight: 700;
-  background: #fff3c4;
-  border-top: 2px solid #f5c542;
+
+  background: #fff8dc;
+
+  border-top: 2px solid #ffcc00;
 }
 
-/* =========================
-   RESPONSIVE (OPTIONAL)
-   ========================= */
+/* ======================================
+   RESPONSIVE
+====================================== */
 
 @media (max-width: 900px) {
   .headerRow {

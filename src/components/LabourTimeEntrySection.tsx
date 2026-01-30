@@ -44,7 +44,6 @@ export type LabourEmployee = {
 
 interface Props {
   jobId: string;
-  employees: LabourEmployee[];
 }
 
 interface LabourEntry {
@@ -74,7 +73,32 @@ type Reason = { id: string; name: string; chargeable: boolean };
 
 /* ================= COMPONENT ================= */
 
-const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
+const LabourTimeEntrySection: React.FC<Props> = ({ jobId }) => {
+  /* ---------- EMPLOYEES ---------- */
+
+  const [employees, setEmployees] = useState<LabourEmployee[]>([]);
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      const snap = await getDocs(collection(db, "employees"));
+
+      setEmployees(
+        snap.docs.map((d) => {
+          const data = d.data() as LabourEmployee;
+
+          return {
+            id: d.id,
+            name: data.name,
+            role: data.role,
+            rate: data.rate,
+          };
+        }),
+      );
+    };
+
+    loadEmployees();
+  }, []);
+
   /* ---------- STATE ---------- */
 
   const [entries, setEntries] = useState<LabourEntry[]>([]);
@@ -127,7 +151,7 @@ const LabourTimeEntrySection: React.FC<Props> = ({ jobId, employees }) => {
       const q = query(
         collection(db, "labourEntries"),
         where("jobId", "==", jobId),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
 
       const snap = await getDocs(q);
