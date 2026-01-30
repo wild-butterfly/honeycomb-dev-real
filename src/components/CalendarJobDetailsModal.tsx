@@ -186,6 +186,18 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
 
+  const derivedStatus = useMemo(() => {
+    if (!assignmentsLoaded) return "active";
+
+    const scheduled = assignments.filter((a) => a.scheduled !== false);
+
+    if (!scheduled.length) return "active";
+
+    const allCompleted = scheduled.every((a) => a.labourCompleted === true);
+
+    return allCompleted ? "completed" : "active";
+  }, [assignmentsLoaded, assignments]);
+
   // 🔥 Which employee is currently being edited
   const [editingEmployeeId, setEditingEmployeeId] = useState<number | null>(
     null,
@@ -277,6 +289,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
           start: toISOFromAny(data.start),
           end: toISOFromAny(data.end),
           scheduled: data.scheduled !== false,
+          labourCompleted: data.labourCompleted === true,
         };
       });
 
@@ -691,10 +704,15 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             </select>
           ) : (
             <div className={styles.sectionValue}>
-              {status === "active" && "Active"}
-              {status === "completed" && "Completed"}
-              {status === "return" && "Need to Return"}
-              {status === "quote" && "Quote Requested"}
+              {derivedStatus === "completed"
+                ? "Completed"
+                : derivedStatus === "active"
+                  ? "Active"
+                  : status === "return"
+                    ? "Need to Return"
+                    : status === "quote"
+                      ? "Quote Requested"
+                      : "Active"}
             </div>
           )}
         </div>
