@@ -49,6 +49,7 @@ export type Assignment = {
   start?: string;
   end?: string;
   scheduled?: boolean;
+  labourCompleted?: boolean;
 };
 
 export type CalendarJob = {
@@ -73,6 +74,15 @@ export type CalendarJob = {
 const jobsSeed: CalendarJob[] = [];
 
 /* HELPERS */
+
+function computeJobStatus(job: CalendarJob): "active" | "completed" {
+  const scheduled = job.assignments.filter((a) => a.scheduled !== false);
+
+  if (scheduled.length === 0) return "active";
+
+  const hasIncomplete = scheduled.some((a) => a.labourCompleted !== true);
+  return hasIncomplete ? "active" : "completed";
+}
 
 function toJsDate(v: any): Date | null {
   if (!v) return null;
@@ -200,7 +210,6 @@ const CalendarPage: React.FC = () => {
     employeeId: number;
   } | null>(null);
 
-  // (Bu fonksiyon kullanılmıyor ama kalsın istersen)
   const startSchedule = (jobId: string, employeeId: number) => {
     setScheduleMode({ jobId, employeeId });
   };
@@ -449,6 +458,13 @@ const CalendarPage: React.FC = () => {
     );
   };
 
+  const jobsWithDerivedStatus = useMemo(() => {
+    return jobs.map((j) => ({
+      ...j,
+      status: computeJobStatus(j),
+    }));
+  }, [jobs]);
+
   /**
    * DAY view (DesktopCalendarLayout)
    */
@@ -574,7 +590,7 @@ const CalendarPage: React.FC = () => {
 
   // ✅ Timeline "+" : job + first assignment create, then open modal with correct staff
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    // 🔥 SCHEDULE MODE: mevcut job'a yeni assignment ekle, modal açma
+    // 🔥 SCHEDULE MODE:
     if (scheduleMode) {
       await addAssignmentToExistingJob(
         scheduleMode.jobId,
@@ -586,7 +602,6 @@ const CalendarPage: React.FC = () => {
       return;
     }
 
-    // 1) JOB oluştur
     const jobRef = await addDoc(collection(db, "jobs"), {
       title: "New Job",
       customer: "New Customer",
@@ -595,7 +610,6 @@ const CalendarPage: React.FC = () => {
       createdAt: serverTimestamp(),
     });
 
-    // 2) İlk ASSIGNMENT oluştur
     const assignmentRef = await addDoc(
       collection(db, "jobs", jobRef.id, "assignments"),
       {
@@ -607,7 +621,6 @@ const CalendarPage: React.FC = () => {
       },
     );
 
-    // 3) ✅ OPTIMISTIC UI: snapshot gelmeden modalda staff görünsün
     setJobs((prev) => {
       const already = prev.some((j) => j.id === jobRef.id);
       if (already) return prev;
@@ -633,8 +646,7 @@ const CalendarPage: React.FC = () => {
       ];
     });
 
-    // 4) ✅ MODAL'ı bu job ile aç (ASSIGNED STAFF dolu gelir)
-    setDraftJob(null); // artık draft'a gerek yok (kalsın dursun ama açık olmasın)
+    setDraftJob(null);
     setOpenJobId(jobRef.id);
     setRangeMode("day");
   };
@@ -642,16 +654,18 @@ const CalendarPage: React.FC = () => {
   /* FILTERS */
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
+    return jobsWithDerivedStatus.filter((job) => {
       if (job.deleted) return false;
+
+      const derivedStatus = computeJobStatus(job);
 
       if (jobFilter === "all") return true;
       if (jobFilter === "unassigned")
         return getAssignedEmployeeIds(job).length === 0;
 
-      return job.status === jobFilter;
+      return derivedStatus === jobFilter;
     });
-  }, [jobFilter, jobs]);
+  }, [jobFilter, jobsWithDerivedStatus]);
 
   const staffFilteredJobs = useMemo(() => {
     if (selectedStaff.length === 0) return filteredJobs;

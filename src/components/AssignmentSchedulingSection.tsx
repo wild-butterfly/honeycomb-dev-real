@@ -136,6 +136,11 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
       createdAt: serverTimestamp(),
     });
 
+    await updateDoc(doc(db, "jobs", safeJobId), {
+      status: "active",
+      completedAt: null,
+    });
+
     setSelectedEmployee("");
   };
 
