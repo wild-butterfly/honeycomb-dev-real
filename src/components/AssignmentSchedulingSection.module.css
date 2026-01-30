@@ -6,10 +6,6 @@
   margin-top: 24px;
 }
 
-/* =========================
-   TITLE
-========================= */
-
 .wrapper h3 {
   font-size: 16px;
   font-weight: 700;
@@ -17,27 +13,49 @@
   color: #2b2b2b;
 }
 
-/* =========================
-   ASSIGN ROW (lighter)
-========================= */
+/* =================================================
+   ASSIGN BAR (inner bar → senin dediğin kısım)
+   hafif border + radius + soft bg
+================================================= */
 
 .assignRow {
   display: flex;
   align-items: center;
   gap: 12px;
+
+  padding: 12px 14px;
   margin-bottom: 20px;
+
+  background: #fffdf7;
+
+  /* ⭐ hafif iç border */
+  border: 1px solid #e9e3d3;
+
+  /* ⭐ istediğin radius */
+  border-radius: 14px;
+
+  transition:
+    border 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* select */
+.assignRow:hover {
+  border-color: #e2c56b;
+}
+
+/* =================================================
+   SELECT  (class kullanmadan direkt target)
+================================================= */
 
 .assignRow select {
   flex: 1;
-  padding: 12px 14px;
 
+  padding: 10px 14px;
+
+  background: white;
+
+  border: 1px solid #e6e2d6;
   border-radius: 12px;
-
-  border: 1px solid #e6e6e6;
-  background: #ffffff;
 
   font-size: 14px;
 
@@ -46,24 +64,33 @@
     box-shadow 0.15s ease;
 }
 
-.assignRow select:focus {
-  outline: none;
-  border-color: #f5c542;
-  box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.2);
+.assignRow select:hover {
+  border-color: #e2c56b;
 }
 
-/* =========================
-   BUTTONS (modern SaaS)
-========================= */
+.assignRow select:focus {
+  outline: none;
+
+  border-color: #ffcc00;
+
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
+}
+
+/* =================================================
+   BUTTONS
+================================================= */
+
+/* Secondary (Assign) */
 
 .assignBtn {
   background: #ffffff;
   color: #333;
 
-  border: 1px solid #e2e2e2;
+  border: 1px solid #e3e3e3;
   border-radius: 12px;
 
-  padding: 10px 18px;
+  padding: 9px 16px;
+
   font-weight: 600;
 
   cursor: pointer;
@@ -71,57 +98,57 @@
 }
 
 .assignBtn:hover {
-  background: #f9f9f9;
+  background: #f7f7f7;
 }
 
-/* primary */
+/* Primary (Schedule) */
 
 .primaryBtn {
-  background: #f5c542;
-  color: #222;
+  background: linear-gradient(110deg, #ffe066 40%, #ffd43b 120%);
+  color: #2b2b2b;
 
-  border: none;
+  border: 1px solid #f0c419;
   border-radius: 12px;
 
-  padding: 10px 20px;
+  padding: 9px 18px;
+
   font-weight: 700;
 
   cursor: pointer;
-  transition: all 0.15s ease;
 
   box-shadow: 0 2px 6px rgba(245, 197, 66, 0.25);
+
+  transition: all 0.15s ease;
 }
 
 .primaryBtn:hover {
-  background: #eabf3d;
   transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(245, 197, 66, 0.35);
 }
 
-/* =========================
-   EMPLOYEE CARDS  (BIG CHANGE)
-========================= */
+/* =================================================
+   EMPLOYEE CARDS (modern, not paper-white)
+================================================= */
 
 .employeeBlock {
   margin-top: 14px;
 
   padding: 16px 18px;
 
-  background: #ffffff; /* 🔥 artık beyaz */
+  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
 
+  border: 1px solid #ffcc00;
   border-radius: 14px;
 
-  border: 1px solid #f0f0f0; /* 🔥 çok hafif */
-
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); /* 🔥 soft */
-
-  transition: all 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
 }
 
 .employeeBlock:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
 }
-
-/* header */
 
 .employeeBlock h4 {
   margin: 0 0 8px 0;
@@ -130,9 +157,9 @@
   color: #222;
 }
 
-/* =========================
+/* =================================================
    GRID TABLE
-========================= */
+================================================= */
 
 .headerRow,
 .entryRow,
@@ -152,8 +179,6 @@
   gap: 8px;
 }
 
-/* header */
-
 .headerRow {
   padding: 8px 6px;
 
@@ -162,26 +187,24 @@
 
   color: #777;
 
-  border-bottom: 1px solid #f2f2f2;
+  border-bottom: 1px solid #f0ead7;
 }
-
-/* rows */
 
 .entryRow {
   padding: 10px 6px;
 
   font-size: 13px;
 
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid #f4f1e6;
 }
 
 .entryRow:last-child {
   border-bottom: none;
 }
 
-/* =========================
+/* =================================================
    ACTION BUTTONS
-========================= */
+================================================= */
 
 .actions {
   display: flex;
@@ -205,9 +228,9 @@
   background: #f7f7f7;
 }
 
-/* =========================
+/* =================================================
    TOTAL ROW
-========================= */
+================================================= */
 
 .totalRow {
   margin-top: 6px;
@@ -216,14 +239,14 @@
 
   font-weight: 700;
 
-  background: #fafafa; /* 🔥 çok hafif */
+  background: #fafafa;
 
   border-top: 1px solid #eee;
 }
 
-/* =========================
+/* =================================================
    RESPONSIVE
-========================= */
+================================================= */
 
 @media (max-width: 900px) {
   .headerRow {
