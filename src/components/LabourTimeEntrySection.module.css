@@ -1,247 +1,307 @@
-/* ======================================
-   WRAPPER / CARD
-====================================== */
-
 .wrapper {
   margin-top: 20px;
-
-  background: #fffef9; /* soft cream */
+  background: #fffef9;
   border: 1px solid #efe2c3;
-
   border-radius: 18px;
   padding: 20px;
-
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* ======================================
-   FORM LAYOUT
-====================================== */
-
-.form {
+.layout {
   display: grid;
-  gap: 12px;
-  margin-bottom: 18px;
+  grid-template-columns: 2fr 1fr;
+  gap: 22px;
+  align-items: start;
 }
 
-/* ======================================
-   INPUTS (clean white SaaS style)
-====================================== */
+/* LEFT */
+.formSide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-.form select,
-.form input,
-.form textarea {
+.formSide h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #2b2b2b;
+}
+
+.rowTop {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+  align-items: center;
+}
+
+.rowTime {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.arrow {
+  font-weight: 800;
+  color: #8a6b00;
+}
+
+select,
+input,
+textarea {
   padding: 12px 14px;
-
   border-radius: 12px;
-
   background: #ffffff;
-
   border: 1.5px solid #e7d8b5;
-
   font-size: 14px;
-
   transition: 0.15s;
 }
 
-/* textarea only */
-
-.form textarea {
+textarea {
   resize: vertical;
   min-height: 90px;
 }
 
-/* ======================================
-   FOCUS (premium feel)
-====================================== */
-
-.form select:focus,
-.form input:focus,
-.form textarea:focus {
+select:focus,
+input:focus,
+textarea:focus {
   outline: none;
-
   border-color: #ffcc00;
-
   box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
 }
 
-/* ======================================
-   ADD BUTTON (main CTA)
-====================================== */
-
-.form button {
-  margin-top: 10px;
-
-  background: linear-gradient(110deg, #ffe066, #ffcc00);
-
-  border: 2px solid #ffcc00;
-
-  color: #3b2f00;
-
-  font-weight: 600;
-  font-size: 14px;
-
-  border-radius: 14px;
-  padding: 14px;
-
-  cursor: pointer;
-
-  box-shadow: 0 6px 18px rgba(255, 204, 0, 0.35);
-
-  transition: 0.15s ease;
-}
-
-.form button:hover {
-  transform: translateY(-1px);
-
-  background: linear-gradient(110deg, #ffd633, #ffb800);
-
-  box-shadow: 0 8px 22px rgba(255, 204, 0, 0.45);
-}
-
-.form button:active {
-  transform: translateY(0);
-
-  box-shadow: 0 3px 10px rgba(255, 204, 0, 0.35);
-}
-
-/* ======================================
-   EMPLOYEE BLOCK (each person card)
-====================================== */
-
-.employeeBlock {
-  margin-top: 16px;
-
-  padding: 14px;
-
-  background: #ffffff;
-
-  border: 1.5px solid #efe2c3;
-
-  border-radius: 14px;
-
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-}
-
-.employeeBlock h4 {
-  margin: 0 0 8px 0;
-
-  font-size: 15px;
-  font-weight: 700;
-
-  color: #1f2937;
-}
-
-/* ======================================
-   TABLE GRID
-====================================== */
-
-.headerRow,
-.entryRow,
-.totalRow {
-  display: grid;
-
-  grid-template-columns:
-    120px /* Date */
-    160px /* Time */
-    80px /* Rate */
-    110px /* Chargeable */
-    110px /* Uncharged */
-    120px /* Charged Out */
-    60px; /* Actions */
-
+/* money input */
+.moneyInput {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  background: #fff;
+  border: 1.5px solid #e7d8b5;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* ======================================
-   HEADER ROW
-====================================== */
-
-.headerRow {
-  padding: 6px 8px;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  color: #7a5b00;
-
-  border-bottom: 1px solid #eee;
+.moneyInput span {
+  padding: 0 10px;
+  color: #7a6200;
+  font-weight: 800;
+  border-right: 1px solid #eee1bf;
 }
 
-/* ======================================
-   ENTRY ROWS
-====================================== */
+.moneyInput input {
+  border: none;
+  border-radius: 0;
+  width: 100%;
+}
 
-.entryRow {
-  padding: 8px;
+/* uncharged block */
+.unchargedBlock {
+  margin-top: 6px;
+}
 
+.unchargedTitle {
   font-size: 13px;
-
-  border-bottom: 1px solid #f4f4f4;
+  font-weight: 800;
+  color: #7a5b00;
+  margin-bottom: 8px;
 }
 
-.entryRow:last-child {
+.unchargedRow {
+  display: grid;
+  grid-template-columns: 1fr 110px 90px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.unchargedRow button {
+  border-radius: 12px;
+  padding: 12px 10px;
+  background: #fff6dc;
+  border: 1.5px solid #e7d8b5;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.unchargedRow button:hover {
+  background: #ffefc2;
+}
+
+/* table */
+.unchargedTable {
+  border: 1px solid #eee1bf;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.unchargedHead,
+.unchargedItem {
+  display: grid;
+  grid-template-columns: 1fr 110px 48px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.unchargedHead {
+  background: #fff8dc;
+  font-size: 12px;
+  font-weight: 800;
+  color: #7a5b00;
+  border-bottom: 1px solid #eee1bf;
+}
+
+.unchargedItem {
+  font-size: 13px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
+.unchargedItem:last-child {
   border-bottom: none;
 }
 
-/* ======================================
-   ACTION BUTTONS (edit/delete)
-====================================== */
-
-.actions {
-  display: flex;
-  gap: 6px;
-}
-
-.actions button {
-  padding: 4px 6px;
-
-  border-radius: 6px;
-
+.unchargedItem button {
+  width: 34px;
+  height: 30px;
+  border-radius: 10px;
   border: 1px solid #e7d8b5;
-
-  background: #ffffff;
-
+  background: #fff;
   cursor: pointer;
-
-  font-size: 12px;
-
-  transition: 0.15s;
 }
 
-.actions button:hover {
+.unchargedItem button:hover {
   background: #fff6dc;
 }
 
-/* ======================================
-   TOTAL ROW
-====================================== */
-
-.totalRow {
-  margin-top: 8px;
-
-  padding: 8px;
-
-  font-weight: 700;
-
-  background: #fff8dc;
-
-  border-top: 2px solid #ffcc00;
+.unchargedEmpty {
+  padding: 12px;
+  font-size: 13px;
+  color: #8c8c8c;
 }
 
-/* ======================================
-   RESPONSIVE
-====================================== */
+/* primary button */
+.primaryBtn {
+  margin-top: 10px;
+  background: linear-gradient(110deg, #ffe066, #ffcc00);
+  border: 2px solid #ffcc00;
+  color: #3b2f00;
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 204, 0, 0.35);
+  transition: 0.15s ease;
+}
 
-@media (max-width: 900px) {
-  .headerRow {
-    display: none;
-  }
+.primaryBtn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(110deg, #ffd633, #ffb800);
+  box-shadow: 0 8px 22px rgba(255, 204, 0, 0.45);
+}
 
-  .entryRow,
-  .totalRow {
-    grid-template-columns: 1fr 1fr;
-    row-gap: 6px;
+/* RIGHT summary */
+.summarySide {
+  background: #fff7da;
+  border: 1px solid #efe2c3;
+  border-radius: 14px;
+  padding: 18px;
+  font-size: 14px;
+}
+
+.summarySide h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.summarySide hr {
+  border: none;
+  border-top: 1px solid #d9caa0;
+  margin: 12px 0;
+}
+
+.total {
+  font-size: 22px;
+  font-weight: 900;
+  color: #c69300;
+}
+
+/* responsive */
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
+}
+
+/* RIGHT COLUMN WRAPPER */
+.rightSide {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* SAVED LIST (Fergus style card) */
+.savedList {
+  background: #fff;
+  border: 1px solid #efe2c3;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.savedList h4 {
+  margin: 0 0 10px 0;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.savedRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 70px 80px 60px 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.savedRow:last-child {
+  border-bottom: none;
+}
+
+.savedRow button {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e7d8b5;
+  background: #fff6dc;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.savedRow button:hover {
+  background: #ffefc2;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, #ffd54d, #ffb800);
+  color: #3b2f00;
+
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.savedRow {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 70px 80px 60px 60px;
 }
