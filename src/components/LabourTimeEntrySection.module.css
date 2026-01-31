@@ -305,3 +305,159 @@ textarea:focus {
   display: grid;
   grid-template-columns: 40px 1fr 1fr 70px 80px 60px 60px;
 }
+
+/* ===== Entries row extras ===== */
+.name {
+  font-weight: 800;
+  color: #2b2b2b;
+}
+
+.timeBlock {
+  display: grid;
+  grid-template-columns: auto 18px auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeTop,
+.timeBottom {
+  font-variant-numeric: tabular-nums;
+}
+
+.timeArrow {
+  text-align: center;
+  color: #8a6b00;
+  font-weight: 900;
+}
+
+.hoursCell {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.moneyCell {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 800;
+}
+
+.editBtn {
+  background: #fff6dc;
+}
+
+.deleteBtn {
+  background: #fff;
+}
+
+.editBtn:hover {
+  background: #ffefc2;
+}
+
+.deleteBtn:hover {
+  background: #fff6dc;
+}
+
+/* ===== Avatar ===== */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 12px;
+  color: #3b2f00;
+  background: #ffcc00;
+  border: 1px solid #e7d8b5;
+}
+
+/* ===== Modal (Fergus-style) ===== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 20, 10, 0.42);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 22px;
+}
+
+.modalCard {
+  width: min(520px, 92vw);
+  background: #fffef9;
+  border: 1px solid #efe2c3;
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fff7da;
+  border-bottom: 1px solid #efe2c3;
+}
+
+.modalTitle {
+  font-weight: 900;
+  color: #2b2b2b;
+}
+
+.modalClose {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  border: 1px solid #e7d8b5;
+  background: #fff;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  background: #fff6dc;
+}
+
+.modalBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.secondaryBtn {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1.5px solid #e7d8b5;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.secondaryBtn:hover {
+  background: #fff6dc;
+}
+
+.modalSummary {
+  margin-top: 4px;
+  background: #fff7da;
+  border: 1px solid #efe2c3;
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.modalTotal {
+  font-size: 18px;
+  font-weight: 900;
+  color: #c69300;
+  margin-top: 2px;
+}
