@@ -1,4 +1,5 @@
-// App.tsx
+// src/App.tsx
+
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
@@ -10,37 +11,54 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
-
 import CalendarPage from "./pages/CalendarPage";
+import JobPage from "./pages/JobPage";
+import TaskPage from "./pages/TaskPage";
+
 import FeaturesPage from "./pages/FeaturesPage";
 import PricingPage from "./pages/PricingPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import HelpPage from "./pages/HelpPage";
-import TaskPage from "./pages/TaskPage";
-import JobPage from "./pages/JobPage";
 
-
+import { setCompanyId } from "./lib/firestorePaths";
 import { NewJobModalProvider } from "./components/NewJobModalContext";
+import type { CustomerType } from "./pages/DashboardPage";
+
+/* ======================================================
+   🔥 CRITICAL — SET COMPANY BEFORE ANY COMPONENT RENDERS
+   MUST be outside React component
+====================================================== */
+
+setCompanyId("a1testing"); // later → from login user.profile.companyId
+
+/* ======================================================
+   APP
+====================================================== */
 
 const App: React.FC = () => {
   const location = useLocation();
-  const isDashboard = location.pathname.startsWith("/dashboard");
 
   const [search, setSearch] = useState("");
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<CustomerType[]>([]);
 
-  const handleAddCustomer = (customer: any) => {
-    setCustomers((prev) => [...prev, customer]);
+  const isDashboard = location.pathname.startsWith("/dashboard");
+
+  const handleAddCustomer = (customer: Omit<CustomerType, "id">) => {
+    const newCustomer: CustomerType = {
+      ...customer,
+      id: Date.now(),
+    };
+
+    setCustomers((prev) => [...prev, newCustomer]);
   };
 
   return (
     <div id="root-layout" className={isDashboard ? "no-footer" : undefined}>
-      {/* Marketing Navbar (dashboard dışı sayfalarda görünür) */}
       {!isDashboard && <Navbar />}
 
       <main id="app-content">
         <Routes>
-          {/* Public pages */}
+          {/* Public */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -50,11 +68,11 @@ const App: React.FC = () => {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/about" element={<AboutUsPage />} />
           <Route path="/help" element={<HelpPage />} />
+
           <Route path="/tasks" element={<TaskPage />} />
           <Route path="/jobs/:id" element={<JobPage />} />
-          
 
-          {/* Dashboard home */}
+          {/* Dashboard */}
           <Route
             path="/dashboard"
             element={
@@ -72,7 +90,6 @@ const App: React.FC = () => {
             }
           />
 
-          {/* Calendar */}
           <Route
             path="/dashboard/calendar"
             element={
@@ -87,11 +104,14 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      {/* Footer dashboard dışında görünür */}
       {!isDashboard && <Footer />}
     </div>
   );
 };
+
+/* ======================================================
+   ROOT WRAPPER
+====================================================== */
 
 const RootApp = () => (
   <BrowserRouter>

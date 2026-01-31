@@ -22,6 +22,7 @@ import {
   updateDoc,
   deleteField,
 } from "firebase/firestore";
+import { jobsCol } from "../lib/firestorePaths";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBzCyZj58fS2U0_CGPEk6p1dNmXLJwkF9o",
@@ -33,7 +34,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function cleanupLegacyJobs() {
-  const jobsSnap = await getDocs(collection(db, "jobs"));
+  const jobsSnap = await getDocs(collection(db, jobsCol()));
 
   let cleaned = 0;
   let skipped = 0;

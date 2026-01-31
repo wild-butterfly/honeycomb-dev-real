@@ -8,6 +8,7 @@ import LeftSidebar from "../components/LeftSidebar";
 import { db } from "../firebase";
 import AssignmentSchedulingSection from "../components/AssignmentSchedulingSection";
 import LabourTimeEntrySection from "../components/LabourTimeEntrySection";
+import { jobDoc } from "../lib/firestorePaths";
 
 /* ===================== TYPES ===================== */
 
@@ -34,18 +35,28 @@ const JobPage: React.FC = () => {
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
 
-  /* ---------- LOAD JOB ---------- */
+  /* ===================================================== */
+  /* 🔥 LOAD JOB (READ ONLY — NO WRITES HERE)               */
+  /* ===================================================== */
+
   useEffect(() => {
     if (!id) return;
 
     const loadJob = async () => {
-      const snap = await getDoc(doc(db, "jobs", id));
+      try {
+        const snap = await getDoc(doc(db, jobDoc(id))); // ✅ READ ONLY
 
-      if (snap.exists()) {
-        setJob({
-          id: snap.id,
-          ...(snap.data() as Omit<JobDoc, "id">),
-        });
+        if (snap.exists()) {
+          setJob({
+            id: snap.id,
+            ...(snap.data() as Omit<JobDoc, "id">),
+          });
+        } else {
+          setJob(null);
+        }
+      } catch (err) {
+        console.error("Failed to load job:", err);
+        setJob(null);
       }
 
       setLoading(false);
@@ -54,10 +65,35 @@ const JobPage: React.FC = () => {
     loadJob();
   }, [id]);
 
+  /* ===================================================== */
+  /* UI STATES                                             */
+  /* ===================================================== */
+
   if (loading) return <div className={styles.pageWrapper}>Loading…</div>;
   if (!job) return <div className={styles.pageWrapper}>Job not found</div>;
 
-  /* ===================== UI ===================== */
+  /* ===================================================== */
+  /* SAVE NOTES                                            */
+  /* ===================================================== */
+
+  const handleSaveNotes = async () => {
+    if (!id) return;
+
+    setSavingNotes(true);
+
+    await updateDoc(doc(db, jobDoc(id)), {
+      notes: notesDraft,
+    });
+
+    setJob((prev) => (prev ? { ...prev, notes: notesDraft } : prev));
+
+    setSavingNotes(false);
+    setIsEditingNotes(false);
+  };
+
+  /* ===================================================== */
+  /* UI                                                    */
+  /* ===================================================== */
 
   return (
     <div className={styles.pageWrapper}>
@@ -99,22 +135,7 @@ const JobPage: React.FC = () => {
                 <div className={styles.editActionsInline}>
                   <button
                     disabled={savingNotes}
-                    onClick={async () => {
-                      if (!id) return;
-
-                      setSavingNotes(true);
-
-                      await updateDoc(doc(db, "jobs", id), {
-                        notes: notesDraft,
-                      });
-
-                      setJob((prev) =>
-                        prev ? { ...prev, notes: notesDraft } : prev,
-                      );
-
-                      setSavingNotes(false);
-                      setIsEditingNotes(false);
-                    }}
+                    onClick={handleSaveNotes}
                     className={styles.saveBtn}
                   >
                     Save
@@ -135,7 +156,6 @@ const JobPage: React.FC = () => {
         {/* ================= SECTION WITH TABS ================= */}
 
         <div className={styles.section}>
-          {/* Tabs header (kutunun içinde) */}
           <div className={styles.sectionTabs}>
             <button
               className={
@@ -160,7 +180,6 @@ const JobPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Content */}
           {activeTab === "scheduling" && (
             <AssignmentSchedulingSection jobId={job.id} />
           )}

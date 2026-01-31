@@ -37,6 +37,13 @@ import { deleteJobFromFirestore } from "../services/calendarJobs";
 
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
 
+import {
+  jobsCol,
+  jobDoc,
+  assignmentsCol,
+  assignmentDoc,
+} from "../lib/firestorePaths";
+
 /* TYPES */
 export type Employee = {
   id: number;
@@ -74,6 +81,17 @@ export type CalendarJob = {
 const jobsSeed: CalendarJob[] = [];
 
 /* HELPERS */
+
+// 🔥 SINGLE SOURCE OF TRUTH (Monday start)
+function getStartOfWeek(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+
+  const day = (d.getDay() + 6) % 7; // Monday based
+  d.setDate(d.getDate() - day);
+
+  return d;
+}
 
 function computeJobStatus(job: CalendarJob): "active" | "completed" {
   const scheduled = job.assignments.filter((a) => a.scheduled !== false);
@@ -153,26 +171,6 @@ function assignmentsForDay(job: CalendarJob, employeeId: number, day: Date) {
       d.getMonth() === day.getMonth() &&
       d.getDate() === day.getDate()
     );
-  });
-}
-
-function isSameWeek(job: CalendarJob, ref: Date) {
-  const monday = new Date(ref);
-  monday.setDate(ref.getDate() - ((ref.getDay() + 6) % 7));
-  monday.setHours(0, 0, 0, 0);
-
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-
-  return job.assignments.some((a) => {
-    if (a.scheduled === false) return false;
-    if (!a.start) return false;
-
-    const d = new Date(a.start);
-    if (isNaN(d.getTime())) return false;
-
-    return d >= monday && d <= sunday;
   });
 }
 
@@ -296,7 +294,7 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     const assignmentUnsubs = new Map<string, () => void>();
 
-    const unsubJobs = onSnapshot(collection(db, "jobs"), (jobsSnap) => {
+    const unsubJobs = onSnapshot(collection(db, jobsCol()), (jobsSnap) => {
       const jobIds = jobsSnap.docs.map((d) => d.id);
 
       setJobs((prev) => prev.filter((j) => jobIds.includes(j.id)));
@@ -330,7 +328,7 @@ const CalendarPage: React.FC = () => {
 
         if (!assignmentUnsubs.has(jobId)) {
           const unsubAssignments = onSnapshot(
-            collection(db, "jobs", jobId, "assignments"),
+            collection(db, assignmentsCol(jobId)),
             (assignSnap) => {
               const assignments: Assignment[] = assignSnap.docs.map((a) => ({
                 id: a.id,
@@ -393,7 +391,7 @@ const CalendarPage: React.FC = () => {
     targetEmployeeId?: number,
   ) => {
     await setDoc(
-      doc(db, "jobs", jobId, "assignments", assignmentId),
+      doc(db, assignmentDoc(jobId, assignmentId)),
       {
         employeeId: targetEmployeeId ?? fromEmployeeId,
         start: toLocalISOString(newStart),
@@ -409,7 +407,7 @@ const CalendarPage: React.FC = () => {
   /* ========================================================= */
 
   const deleteAssignment = async (jobId: string, assignmentId: string) => {
-    await deleteDoc(doc(db, "jobs", jobId, "assignments", assignmentId));
+    await deleteDoc(doc(db, assignmentDoc(jobId, assignmentId)));
   };
 
   /**
@@ -540,7 +538,7 @@ const CalendarPage: React.FC = () => {
     const endISO = newEnd.toISOString();
 
     await setDoc(
-      doc(db, "jobs", jobId, "assignments", assignmentId),
+      doc(db, assignmentDoc(jobId, assignmentId)),
       {
         employeeId: targetEmployeeId ?? fromEmployeeId,
         start: startISO,
@@ -558,7 +556,7 @@ const CalendarPage: React.FC = () => {
     start: Date,
     end: Date,
   ) => {
-    await addDoc(collection(db, "jobs", jobId, "assignments"), {
+    await addDoc(collection(db, assignmentsCol(jobId)), {
       employeeId,
       start: toLocalISOString(start),
       end: toLocalISOString(end),
@@ -573,7 +571,7 @@ const CalendarPage: React.FC = () => {
     start: Date,
     end: Date,
   ) => {
-    await addDoc(collection(db, "jobs", jobId, "assignments"), {
+    await addDoc(collection(db, assignmentsCol(jobId)), {
       employeeId,
       start: toLocalISOString(start),
       end: toLocalISOString(end),
@@ -602,7 +600,7 @@ const CalendarPage: React.FC = () => {
       return;
     }
 
-    const jobRef = await addDoc(collection(db, "jobs"), {
+    const jobRef = await addDoc(collection(db, jobsCol()), {
       title: "New Job",
       customer: "New Customer",
       status: "active",
@@ -611,7 +609,7 @@ const CalendarPage: React.FC = () => {
     });
 
     const assignmentRef = await addDoc(
-      collection(db, "jobs", jobRef.id, "assignments"),
+      collection(db, assignmentsCol(jobRef.id)),
       {
         employeeId,
         start: toLocalISOString(start),
@@ -681,26 +679,50 @@ const CalendarPage: React.FC = () => {
     );
   }, [staffFilteredJobs, selectedDate]);
 
+  // 🔑 WEEK VIEW (FIXED – same logic as header)
+  const jobsForSelectedWeek = useMemo(() => {
+    const weekStart = getStartOfWeek(selectedDate);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    return staffFilteredJobs.filter((job) =>
+      job.assignments.some((a) => {
+        if (a.scheduled === false) return false;
+        if (!a.start) return false;
+
+        const d = new Date(a.start);
+        return d >= weekStart && d <= weekEnd;
+      }),
+    );
+  }, [staffFilteredJobs, selectedDate]);
+
   /* MONTH GROUP */
   const groupedMonthJobs = staffFilteredJobs.reduce(
     (acc, job) => {
-      job.assignments.forEach((a) => {
-        if (a.scheduled === false) return;
-        if (!a.start) return;
+      // 🔥 sadece ilk geçerli assignment'ı bul
+      const first = job.assignments.find((a) => {
+        if (a.scheduled === false) return false;
+        if (!a.start) return false;
 
         const d = new Date(a.start);
-        if (isNaN(d.getTime())) return;
 
-        if (
-          d.getMonth() !== selectedDate.getMonth() ||
-          d.getFullYear() !== selectedDate.getFullYear()
-        )
-          return;
-
-        const day = d.getDate();
-        if (!acc[day]) acc[day] = [];
-        acc[day].push(job);
+        return (
+          d.getMonth() === selectedDate.getMonth() &&
+          d.getFullYear() === selectedDate.getFullYear()
+        );
       });
+
+      if (!first) return acc;
+
+      const d = new Date(first.start!);
+      const day = d.getDate();
+
+      if (!acc[day]) acc[day] = [];
+
+      // 🔥 sadece 1 kez ekle
+      acc[day].push(job);
 
       return acc;
     },
@@ -737,7 +759,7 @@ const CalendarPage: React.FC = () => {
           end.setHours(10, 0, 0, 0);
 
           // 🔥 1) Firestore
-          const jobRef = await addDoc(collection(db, "jobs"), {
+          const jobRef = await addDoc(collection(db, jobsCol()), {
             title: "",
             customer: "",
             location: "",
@@ -821,11 +843,10 @@ const CalendarPage: React.FC = () => {
         {/* ================= WEEK ================= */}
         {rangeMode === "week" && (
           <>
+            {/* ================= MOBILE ================= */}
             <div className={styles.onlyMobile}>
               <MobileWeekList
-                jobs={staffFilteredJobs.filter((j) =>
-                  isSameWeek(j, selectedDate),
-                )}
+                jobs={jobsForSelectedWeek}
                 employees={employees}
                 selectedDate={selectedDate}
                 onJobClick={handleOpenJob}
@@ -833,9 +854,7 @@ const CalendarPage: React.FC = () => {
 
               <aside className={styles.sidebarWrapper}>
                 <SidebarJobs
-                  jobs={staffFilteredJobs.filter((j) =>
-                    isSameWeek(j, selectedDate),
-                  )}
+                  jobs={jobsForSelectedWeek}
                   onJobClick={handleOpenJob}
                   jobFilter={jobFilter}
                   onJobFilterChange={setJobFilter}
@@ -843,14 +862,13 @@ const CalendarPage: React.FC = () => {
               </aside>
             </div>
 
+            {/* ================= DESKTOP ================= */}
             <div className={styles.onlyDesktop}>
               <div className={styles.desktopMainAndSidebar}>
                 <div className={styles.timelineCardWrapper}>
                   <WeekCalendarLayout
                     date={selectedDate}
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameWeek(j, selectedDate),
-                    )}
+                    jobs={jobsForSelectedWeek}
                     employees={employees}
                     onJobClick={handleOpenJob}
                     onJobMove={handleWeekMove}
@@ -860,9 +878,7 @@ const CalendarPage: React.FC = () => {
 
                 <aside className={styles.sidebarWrapper}>
                   <SidebarJobs
-                    jobs={staffFilteredJobs.filter((j) =>
-                      isSameWeek(j, selectedDate),
-                    )}
+                    jobs={jobsForSelectedWeek}
                     onJobClick={handleOpenJob}
                     jobFilter={jobFilter}
                     onJobFilterChange={setJobFilter}

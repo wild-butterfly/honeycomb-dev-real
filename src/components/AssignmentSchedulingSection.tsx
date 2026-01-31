@@ -16,6 +16,13 @@ import styles from "./AssignmentSchedulingSection.module.css";
 import { useNavigate } from "react-router-dom";
 import AssignedEmployees, { AssignedEmployee } from "./AssignedEmployees";
 import ConfirmModal from "./ConfirmModal";
+import {
+  jobsCol,
+  employeesCol,
+  assignmentsCol,
+  jobDoc,
+  assignmentDoc,
+} from "../lib/firestorePaths";
 
 /* ================= HELPERS ================= */
 
@@ -54,7 +61,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
   /* ================= LOAD EMPLOYEES ================= */
 
   useEffect(() => {
-    getDocs(collection(db, "employees")).then((snap) =>
+    getDocs(collection(db, employeesCol())).then((snap) =>
       setEmployees(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
     );
   }, []);
@@ -73,7 +80,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
     if (!safeJobId) return;
 
     const unsub = onSnapshot(
-      collection(db, "jobs", safeJobId, "assignments"),
+      collection(db, assignmentsCol(safeJobId)),
       (snap) => {
         const grouped = new Map<string, AssignedEmployee>();
 
@@ -144,9 +151,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
   const handleAssign = async () => {
     if (!selectedEmployee) return;
 
-    const snap = await getDocs(
-      collection(db, "jobs", safeJobId, "assignments"),
-    );
+    const snap = await getDocs(collection(db, assignmentsCol(safeJobId)));
 
     const exists = snap.docs.find(
       (d) =>
@@ -159,7 +164,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
       return;
     }
 
-    await addDoc(collection(db, "jobs", safeJobId, "assignments"), {
+    await addDoc(collection(db, assignmentsCol(safeJobId)), {
       employeeId: selectedEmployee,
       scheduled: false,
       labourCompleted: false,
@@ -175,14 +180,12 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
     assignmentId: string,
     completed: boolean,
   ) => {
-    await updateDoc(doc(db, "jobs", safeJobId, "assignments", assignmentId), {
+    await updateDoc(doc(db, assignmentDoc(safeJobId, assignmentId)), {
       labourCompleted: completed,
       labourCompletedAt: completed ? serverTimestamp() : null,
     });
 
-    const snap = await getDocs(
-      collection(db, "jobs", safeJobId, "assignments"),
-    );
+    const snap = await getDocs(collection(db, assignmentsCol(safeJobId)));
 
     const scheduledAssignments = snap.docs
       .map((d) => d.data())
@@ -192,7 +195,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
       (a) => a.labourCompleted !== true,
     );
 
-    await updateDoc(doc(db, "jobs", safeJobId), {
+    await updateDoc(doc(db, jobDoc(safeJobId)), {
       status:
         !hasIncomplete && scheduledAssignments.length > 0
           ? "completed"
@@ -234,7 +237,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
             if (!selectedEmployee) return;
 
             const snap = await getDocs(
-              collection(db, "jobs", safeJobId, "assignments"),
+              collection(db, assignmentsCol(safeJobId)),
             );
 
             let scheduledId: string | null = null;
@@ -256,7 +259,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
             // 2) hiç yoksa create
             if (!assignmentId) {
               const ref = await addDoc(
-                collection(db, "jobs", safeJobId, "assignments"),
+                collection(db, assignmentsCol(safeJobId)),
                 {
                   employeeId: selectedEmployee,
                   scheduled: false,
@@ -301,7 +304,7 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           onCancel={() => setConfirmUnassign(null)}
           onConfirm={async () => {
             const snap = await getDocs(
-              collection(db, "jobs", safeJobId, "assignments"),
+              collection(db, assignmentsCol(safeJobId)),
             );
 
             const deletes = snap.docs

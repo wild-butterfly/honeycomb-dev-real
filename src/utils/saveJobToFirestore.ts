@@ -1,15 +1,8 @@
-// src/utils/saveJobToFirestore.ts
-// Created by Clevermode © 2025. All rights reserved.
-
 import { db } from "../firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { CalendarJob } from "../pages/CalendarPage";
+import { jobDoc } from "../lib/firestorePaths";
 
-/**
- * Saves ONLY job metadata.
- * Assignment timing is handled in:
- * jobs/{jobId}/assignments/{assignmentId}
- */
 export async function saveJobToFirestore(
   job: Pick<
     CalendarJob,
@@ -25,10 +18,7 @@ export async function saveJobToFirestore(
   >,
 ) {
   try {
-    if (!job?.id) {
-      console.warn("⚠️ saveJobToFirestore called without job.id");
-      return;
-    }
+    if (!job?.id) return;
 
     const {
       id,
@@ -43,7 +33,7 @@ export async function saveJobToFirestore(
     } = job;
 
     await setDoc(
-      doc(db, "jobs", id),
+      doc(db, jobDoc(id)),
       {
         title: title ?? "",
         customer: customer ?? "",
@@ -57,10 +47,7 @@ export async function saveJobToFirestore(
       },
       { merge: true },
     );
-
-    console.log("🔥 Job metadata saved:", id);
   } catch (err) {
-    console.error("❌ Error saving job metadata:", err);
+    console.error(err);
   }
 }
-

@@ -37,10 +37,17 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import {
+  jobsCol,
+  assignmentsCol,
+  jobDoc,
+  assignmentDoc,
+} from "../lib/firestorePaths";
+import { setCompanyId } from "../lib/firestorePaths";
 
 /* ───────── Types ───────── */
 
-type CustomerType = { id: number; name: string };
+export type CustomerType = { id: number; name: string };
 
 export type DashboardPageProps = {
   search: string;
@@ -180,6 +187,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   // 🔥 STEP 4: TASKS (Firestore)
   // --------------------
+
+  useEffect(() => {
+    // later you will get this from login / user profile
+    setCompanyId("a1testing");
+  }, []);
+
   useEffect(() => {
     const unsubscribe = subscribeToTasks((firestoreTasks) => {
       setTasks(firestoreTasks);
@@ -191,7 +204,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   /* ───────── Firestore: Employees ───────── */
 
   useEffect(() => {
-    const q = query(collection(db, "employees"), orderBy("name", "asc"));
+    const q = query(
+      collection(db, `companies/a1testing/employees`),
+      orderBy("name", "asc"),
+    );
 
     const unsub = onSnapshot(
       q,
@@ -229,7 +245,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   useEffect(() => {
     setJobsLoading(true);
 
-    const q = query(collection(db, "jobs"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, jobsCol()), orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(
       q,
@@ -243,7 +259,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
               // assignments subcollection
               const assignmentsSnap = await getDocs(
-                collection(db, "jobs", jobDoc.id, "assignments"),
+                collection(db, assignmentsCol(jobDoc.id)),
               );
 
               const assignedEmployeeIds = Array.from(
@@ -327,7 +343,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   ) => {
     try {
       // Create job doc
-      const jobRef = await addDoc(collection(db, "jobs"), {
+      const jobRef = await addDoc(collection(db, jobsCol()), {
         title: job.title,
         jobType: job.jobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE_UP",
         status: "Pending",
@@ -340,15 +356,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       // If you have current user employee id, replace this with real value.
       const defaultEmployeeId = 1;
 
-      await setDoc(
-        doc(db, "jobs", jobRef.id, "assignments", String(Date.now())),
-        {
-          employeeId: defaultEmployeeId,
-          start: Timestamp.fromDate(new Date()),
-          end: Timestamp.fromDate(new Date()),
-          createdAt: serverTimestamp(),
-        },
-      );
+      const newAssignmentId = String(Date.now());
+
+      await setDoc(doc(db, assignmentDoc(jobRef.id, newAssignmentId)), {
+        employeeId: defaultEmployeeId,
+        start: Timestamp.fromDate(new Date()),
+        end: Timestamp.fromDate(new Date()),
+        scheduled: true,
+        createdAt: serverTimestamp(),
+      });
 
       setShowNewJobModal(false);
     } catch (err) {

@@ -1,24 +1,23 @@
 import {
   collection,
   getDocs,
-  getDoc,
-  doc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { CalendarJob, Assignment } from "../pages/CalendarPage";
+import { jobsCol, assignmentsCol } from "../lib/firestorePaths";
 
 /**
  * Fetch all jobs with assignments
  */
 export async function fetchJobs(): Promise<CalendarJob[]> {
-  const snap = await getDocs(collection(db, "jobs"));
+  const snap = await getDocs(collection(db, jobsCol()));
 
   const jobs: CalendarJob[] = await Promise.all(
-    snap.docs.map(async (jobDoc) => {
-      const data = jobDoc.data();
+    snap.docs.map(async (jobDocSnap) => {
+      const data = jobDocSnap.data();
 
       const assignmentsSnap = await getDocs(
-        collection(db, "jobs", jobDoc.id, "assignments")
+        collection(db, assignmentsCol(jobDocSnap.id))
       );
 
       const assignments: Assignment[] = assignmentsSnap.docs.map((a) => ({
@@ -29,7 +28,7 @@ export async function fetchJobs(): Promise<CalendarJob[]> {
       }));
 
       return {
-        id: jobDoc.id, // 🔥 STRING
+        id: jobDocSnap.id,
         title: data.title ?? "Untitled Job",
         customer: data.customer ?? "",
         status: data.status ?? "active",

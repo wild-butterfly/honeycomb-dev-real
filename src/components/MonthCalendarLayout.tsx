@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useEffect, useState } from "react";
 import styles from "./MonthCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
+import { UsersIcon } from "@heroicons/react/24/solid";
 
 interface Props {
   date: Date;
@@ -65,9 +66,12 @@ const MonthCalendarLayout: React.FC<Props> = ({
     const map: Record<string, CalendarItem[]> = {};
     days.forEach((d) => (map[d.toDateString()] = []));
 
-    const items = buildCalendarItems(jobs);
+    const allItems = buildCalendarItems(jobs);
 
-    for (const item of items) {
+    // 🔥 jobId + day → unique
+    const unique = new Map<string, CalendarItem & { staffCount: number }>();
+
+    for (const item of allItems) {
       const empId = Number(item.employeeId);
 
       if (selectedStaff.length > 0 && !selectedStaff.includes(empId)) {
@@ -80,10 +84,27 @@ const MonthCalendarLayout: React.FC<Props> = ({
         item.start.getDate(),
       ).toDateString();
 
+      const key = `${item.jobId}-${dayKey}`;
+
+      if (!unique.has(key)) {
+        unique.set(key, { ...item, staffCount: 1 });
+      } else {
+        const existing = unique.get(key)!;
+        existing.staffCount += 1; // 🔥 count staff
+      }
+    }
+
+    unique.forEach((item) => {
+      const dayKey = new Date(
+        item.start.getFullYear(),
+        item.start.getMonth(),
+        item.start.getDate(),
+      ).toDateString();
+
       if (map[dayKey]) {
         map[dayKey].push(item);
       }
-    }
+    });
 
     return map;
   }, [jobs, days, selectedStaff]);
@@ -251,14 +272,11 @@ const MonthCalendarLayout: React.FC<Props> = ({
                         backgroundColor: item.color || "#faf7dc",
                       }}
                     >
-                      {item.status === "quote" && (
-                        <div className={styles.badgeQuote}>QUOTE</div>
-                      )}
-                      {item.status === "completed" && (
-                        <div className={styles.badgeCompleted}>COMPLETED</div>
-                      )}
-                      {item.status === "return" && (
-                        <div className={styles.badgeReturn}>NEED TO RETURN</div>
+                      {(item as any).staffCount > 1 && (
+                        <div className={styles.staffBadge}>
+                          <UsersIcon className={styles.staffIcon} />
+                          {(item as any).staffCount}
+                        </div>
                       )}
 
                       <div className={styles.jobTitle}>{item.title}</div>

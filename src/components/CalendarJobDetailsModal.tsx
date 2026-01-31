@@ -22,6 +22,7 @@ import {
 import { db } from "../firebase";
 import { toLocalISOString } from "../utils/date";
 import ConfirmModal from "./ConfirmModal";
+import { assignmentsCol, jobDoc, assignmentDoc } from "../lib/firestorePaths";
 
 interface Props {
   job?: CalendarJob;
@@ -277,7 +278,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setAssignmentsLoaded(false);
     setEditingEmployeeId(null);
 
-    const ref = collection(db, "jobs", String(activeJob.id), "assignments");
+    const ref = collection(db, assignmentsCol(String(activeJob.id)));
 
     const unsub = onSnapshot(ref, (snap) => {
       const list: Assignment[] = snap.docs.map((d) => {
@@ -296,8 +297,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       setAssignments(list);
       setAssignmentsLoaded(true);
 
-      if (list.length > 0 && editingEmployeeId == null) {
-        setEditingEmployeeId(list[0].employeeId);
+      if (list.length > 0) {
+        setEditingEmployeeId((prev) => prev ?? list[0].employeeId);
       }
     });
 
@@ -306,22 +307,29 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   /* ================= JOB CHANGE RESET ================= */
 
-  useEffect(() => {
-    setEditMode(false);
+  const initializedRef = useRef(false);
 
-    setTitle(activeJob.title);
-    setCustomer(activeJob.customer);
-    setLocation(activeJob.location || "");
-    setSiteContact(activeJob.siteContact || "");
-    setContactInfo(activeJob.contactInfo || "");
-    setNotes(activeJob.notes || "");
-    setJobColor(activeJob.color || "#fff9e6");
-    setStatus(activeJob.status || "active");
+  useEffect(() => {
+    if (!job || initializedRef.current) return;
+
+    initializedRef.current = true;
+
+    setTitle(job.title ?? "");
+    setCustomer(job.customer ?? "");
+    setLocation(job.location ?? "");
+    setSiteContact(job.siteContact ?? "");
+    setContactInfo(job.contactInfo ?? "");
+    setNotes(job.notes ?? "");
+    setJobColor(job.color ?? "#fff9e6");
+    setStatus(job.status ?? "active");
   }, [job]);
 
   // Helpers
   const assignedTo = useMemo(
-    () => assignments.map((a) => a.employeeId),
+    () =>
+      assignments
+        .map((a) => a.employeeId)
+        .filter((id, i, arr) => arr.indexOf(id) === i),
     [assignments],
   );
 
@@ -345,13 +353,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     const dayKey = toLocalISOString(start).slice(0, 10);
     const assignmentId = `${employeeId}_${dayKey}`;
 
-    const aRef = doc(
-      db,
-      "jobs",
-      String(activeJob.id),
-      "assignments",
-      assignmentId,
-    );
+    const aRef = doc(db, assignmentDoc(String(activeJob.id), assignmentId));
 
     await setDoc(
       aRef,
@@ -375,8 +377,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       .filter(Boolean)
       .join("\n");
 
-    // 1) update base job fields (no start/end, no assignedTo)
-    await updateDoc(doc(db, "jobs", String(activeJob.id)), {
+    // 1️⃣ Firestore update
+    await updateDoc(doc(db, jobDoc(String(activeJob.id))), {
       title,
       customer,
       location,
@@ -387,14 +389,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
       status,
     });
 
-    // 2) update local state for CalendarPage (TIME REMOVED => assignments unchanged)
+    // 2️⃣ Local state update
     const updatedLocal: CalendarJob = {
       ...activeJob,
       title,
       customer,
       location,
       siteContact,
-      contactInfo,
+      contactInfo: combined,
       notes,
       color: jobColor,
       status,
@@ -519,10 +521,10 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                                   deleteDoc(
                                     doc(
                                       db,
-                                      "jobs",
-                                      String(activeJob.id),
-                                      "assignments",
-                                      String(a.id),
+                                      assignmentDoc(
+                                        String(activeJob.id),
+                                        String(a.id),
+                                      ),
                                     ),
                                   ),
                                 ),
