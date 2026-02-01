@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import styles from "./LabourTimeEntrySection.module.css";
+import { employeesCol } from "../lib/firestorePaths";
 
 /* ================= TYPES ================= */
 
@@ -144,7 +145,7 @@ export default function LabourTimeEntrySection({ jobId }: { jobId: string }) {
 
   useEffect(() => {
     const load = async () => {
-      const snap = await getDocs(collection(db, "employees"));
+      const snap = await getDocs(collection(db, employeesCol()));
 
       setEmployees(
         snap.docs.map((d) => {
