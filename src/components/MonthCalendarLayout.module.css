@@ -157,39 +157,6 @@
   font-size: 12px;
 }
 
-/* BADGES (Week ile aynı) */
-
-.badgeQuote,
-.badgeCompleted,
-.badgeReturn {
-  position: absolute;
-  top: -4px;
-  right: 4px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-
-.badgeQuote {
-  background: #e8f2ff;
-  color: #0b4fa8;
-  border-color: #9ec3ff;
-}
-
-.badgeCompleted {
-  background: #e8f8e8;
-  color: #2e7d32;
-  border-color: #a4d4a4;
-}
-
-.badgeReturn {
-  background: #fff4e5;
-  color: #b26a00;
-  border-color: #f0c38c;
-}
-
 /* ADD BUTTON (Week ile aynı hexagon) */
 
 .slotAddButton {
