@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useEffect, useState } from "react";
 import styles from "./WeekCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
+import { getStartOfWeek } from "../utils/date";
 
 /* ========================================================= */
 /* TYPES */
@@ -56,9 +57,7 @@ const WeekCalendarLayout: React.FC<Props> = ({
 
   /* ================= WEEK RANGE ================= */
 
-  const startOfWeek = new Date(date);
-  startOfWeek.setHours(0, 0, 0, 0);
-  startOfWeek.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  const startOfWeek = useMemo(() => getStartOfWeek(date), [date]);
 
   const daysOfWeek = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {

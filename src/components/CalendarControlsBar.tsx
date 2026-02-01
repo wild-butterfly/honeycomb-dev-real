@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import styles from "./CalendarControlsBar.module.css";
 import CalendarPopup from "./CalendarPopup";
+import { getStartOfWeek } from "../utils/date";
 
 type Employee = { id: number; name: string };
 
@@ -38,7 +39,7 @@ const CalendarControlsBar: React.FC<Props> = ({
 
   const formatLabel = (d: Date) => {
     if (rangeMode === "day")
-      return d.toLocaleDateString("en-US", {
+      return d.toLocaleDateString("en-AU", {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -46,15 +47,15 @@ const CalendarControlsBar: React.FC<Props> = ({
       });
 
     if (rangeMode === "week") {
-      const start = new Date(d);
-      const end = new Date(d);
-      start.setDate(d.getDate() - d.getDay() + 1);
+      const start = getStartOfWeek(d);
+
+      const end = new Date(start);
       end.setDate(start.getDate() + 6);
 
-      return `${start.toLocaleDateString("en-US", {
+      return `${start.toLocaleDateString("en-AU", {
         month: "short",
         day: "numeric",
-      })} - ${end.toLocaleDateString("en-US", {
+      })} - ${end.toLocaleDateString("en-AU", {
         month: "short",
         day: "numeric",
         year: "numeric",

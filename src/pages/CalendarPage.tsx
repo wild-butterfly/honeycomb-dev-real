@@ -36,6 +36,7 @@ import { saveJobToFirestore } from "../utils/saveJobToFirestore";
 import { deleteJobFromFirestore } from "../services/calendarJobs";
 
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
+import { getStartOfWeek } from "../utils/date";
 
 import {
   jobsCol,
@@ -81,17 +82,6 @@ export type CalendarJob = {
 const jobsSeed: CalendarJob[] = [];
 
 /* HELPERS */
-
-// 🔥 SINGLE SOURCE OF TRUTH (Monday start)
-function getStartOfWeek(date: Date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-
-  const day = (d.getDay() + 6) % 7; // Monday based
-  d.setDate(d.getDate() - day);
-
-  return d;
-}
 
 function computeJobStatus(job: CalendarJob): "active" | "completed" {
   const scheduled = job.assignments.filter((a) => a.scheduled !== false);
