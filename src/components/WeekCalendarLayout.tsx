@@ -4,6 +4,7 @@ import styles from "./WeekCalendarLayout.module.css";
 import type { CalendarJob, Employee } from "../pages/CalendarPage";
 import { buildCalendarItems, type CalendarItem } from "../utils/calendarItems";
 import { getStartOfWeek } from "../utils/date";
+import StatusBadge from "../components/StatusBadge";
 
 /* ========================================================= */
 /* TYPES */
@@ -230,6 +231,8 @@ const WeekCalendarLayout: React.FC<Props> = ({
                       backgroundColor: item.color || "#faf7dc",
                     }}
                   >
+                    <StatusBadge status={item.status} />
+
                     <div className={styles.jobTitle}>{item.title}</div>
                     <div className={styles.jobCustomer}>{item.customer}</div>
 

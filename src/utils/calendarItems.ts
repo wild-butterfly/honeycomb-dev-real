@@ -1,5 +1,7 @@
 // utils/calendarItems.ts
 import type { CalendarJob } from "../pages/CalendarPage";
+import type { JobStatus } from "../types/JobStatus";
+
 
 /* ========================================================= */
 /* TYPES */
@@ -14,7 +16,8 @@ export type CalendarItem = {
   title: string;
   customer: string;
   color?: string;
-  status?: string;
+  status?: JobStatus;
+  
 };
 
 /* ========================================================= */

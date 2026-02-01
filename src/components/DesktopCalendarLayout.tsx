@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import styles from "./DesktopCalendarLayout.module.css";
 import type { Employee, CalendarJob } from "../pages/CalendarPage";
+import StatusBadge from "../components/StatusBadge";
 
 interface Props {
   date: Date;
@@ -804,6 +805,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                           onJobClick(job.id);
                         }}
                       >
+                        <StatusBadge status={job.status} />
                         <div className={styles.jobBlockTitle}>{job.title}</div>
                         <div className={styles.jobBlockCustomer}>
                           {job.customer}
