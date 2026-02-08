@@ -1,6 +1,6 @@
-/* ------------------------------------------------------ */
-/* Background + Page Shell */
-/* ------------------------------------------------------ */
+/* ------------------------------------------------------
+   PAGE BACKGROUND
+------------------------------------------------------ */
 
 .dashboardBg {
   background:
@@ -13,164 +13,129 @@
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
   min-height: 100vh;
-  padding-bottom: 46px;
   font-family: "Roboto", Arial, sans-serif;
   position: relative;
-  z-index: 1;
 }
 
-.calendarPageShell {
-  height: auto;
-  min-height: unset;
-  padding-bottom: 0;
-  margin-top: 60px;
-  margin-bottom: 0;
+/* ------------------------------------------------------
+   MAIN CALENDAR SHELL
+------------------------------------------------------ */
+
+.calendarShell {
   display: flex;
-  flex-direction: column;
-}
-
-/* ------------------------------------------------------ */
-/* Controls Bar */
-/* ------------------------------------------------------ */
-
-.controlsCard {
-  background: #fffdf0;
-  border: 1.5px solid #ffe066;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-
-  box-shadow: 0 2px 6px rgba(212, 184, 74, 0.12);
-}
-
-.controlsLeftGroup,
-.controlsCenterGroup,
-.controlsRightGroup {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* ------------------------------------------------------ */
-/* Desktop Layout Wrappers */
-/* ------------------------------------------------------ */
-
-.desktopMainAndSidebar {
-  display: flex;
-  align-items: stretch;
+  align-items: stretch; /* 🔑 Calendar & Jobs aynı yükseklik */
   gap: 20px;
+
   width: 100%;
   max-width: 100%;
-  height: calc(100vh - 220px);
+  padding: 16px 20px;
+
+  height: calc(100vh - 140px); /* navbar + controls */
+  box-sizing: border-box;
 }
 
-.timelineCardWrapper {
+/* ------------------------------------------------------
+   CALENDAR CENTER AREA
+------------------------------------------------------ */
+
+.calendarMain {
   flex: 1;
   min-width: 0;
+  height: 100%; /* 🔑 sidebar ile aynı yükseklik */
+
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto; /* scroll calendar içinde */
+  padding-bottom: 24px; /* Week & Month alt nefes */
 }
 
-.sidebarWrapper {
-  width: 280px;
-  min-width: 280px;
-  max-width: 280px;
+/* İç layout’ların yüksekliği zorlanmaz */
+.calendarMain > * {
+  flex: 0 0 auto;
 }
 
-/* ------------------------------------------------------ */
-/* Month Layout Desktop */
-/* ------------------------------------------------------ */
+/* ------------------------------------------------------
+   STAFF COLUMN (LEFT)
+------------------------------------------------------ */
 
-.monthLayoutWide {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 20px;
-  width: 100%;
+.staffColumn {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+
+  height: 100%;
+  overflow-y: auto;
+
+  background: #fffef6;
+  border: 1.5px solid #ffe066;
+  border-radius: 12px;
+
+  padding: 12px 10px;
+  box-shadow: 0 2px 8px rgba(212, 184, 74, 0.15);
 }
 
-.monthCalendarContainer {
-  width: 100%;
-  min-width: 0;
-}
-
-.monthCalendarContainer > * {
-  width: 100%;
-}
-
-/* ------------------------------------------------------ */
-/* MOBILE / DESKTOP VISIBILITY CONTROLS */
-/* ------------------------------------------------------ */
-
-.onlyMobile {
-  display: none;
-}
-
-.onlyDesktop {
-  display: block;
-}
-
-@media (max-width: 768px) {
-  .onlyMobile {
-    display: block;
-  }
-
-  .onlyDesktop {
-    display: none;
-  }
-  .sidebarWrapper {
-    display: none !important;
-  }
-
-  /* Sidebar full width under controls */
-  .sidebarWrapper {
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    margin-top: 20px;
-  }
-}
-
-/* --- MOBILE JOBS LIST PANEL --- */
-.mobileJobsPanel {
-  margin-top: 24px;
-  background: #fffef8;
-  border-radius: 16px 16px 0 0;
-  padding: 18px 14px 40px 14px;
-  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.08);
-}
-
-.mobileJobsPanel h3 {
-  font-size: 18px;
+.staffHeader {
   font-weight: 700;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   color: #6a5700;
 }
 
-.mobileJobsPanelDivider {
-  height: 1px;
-  background: #e6d9a8;
-  margin: 10px 0 20px 0;
+.staffItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 13px;
+  padding: 6px 4px;
+  cursor: pointer;
 }
 
-/* ------------------------------------------------------ */
-/* Mobile Wrapper (legacy fallback) */
-/* ------------------------------------------------------ */
+/* ------------------------------------------------------
+   JOBS SIDEBAR (RIGHT)
+------------------------------------------------------ */
 
-.mobileWrapper {
-  display: none;
+.jobsColumn {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+
+  height: 100%; /* 🔑 calendar ile birebir */
+  overflow-y: auto;
+
+  align-self: stretch; /* 🔑 alt hizayı kilitler */
 }
+
+/* ------------------------------------------------------
+   MOBILE / TABLET
+------------------------------------------------------ */
 
 @media (max-width: 1024px) {
-  .desktopWrapper {
-    display: none;
+  .calendarShell {
+    flex-direction: column;
+    height: auto;
   }
-  .mobileWrapper {
-    display: block;
+
+  .calendarMain {
+    height: auto;
+    overflow: visible;
+    padding-bottom: 20px;
   }
-  .sidebarWrapper {
-    display: none !important;
+
+  .staffColumn,
+  .jobsColumn {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* ------------------------------------------------------
+   VERY SMALL DEVICES
+------------------------------------------------------ */
+
+@media (max-width: 600px) {
+  .calendarShell {
+    padding: 12px;
   }
 }

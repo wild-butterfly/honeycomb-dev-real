@@ -1,34 +1,40 @@
 // Created by Clevermode © 2025. All rights reserved.
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import styles from "./SidebarJobs.module.css";
-import { CalendarJob } from "../pages/CalendarPage";
-import { getAssignedEmployeeIds } from "../utils/jobTime";
+
+import type { JobStatus } from "../types/calendar";
+import type { CalendarItem } from "../utils/calendarItems";
+
+type JobFilter = "all" | "unassigned" | JobStatus;
 
 type Props = {
-  jobs: CalendarJob[];
-  onJobClick: (jobId: string) => void;
-
-  jobFilter: "all" | "unassigned" | "active" | "completed" | "return" | "quote";
-  onJobFilterChange: (filter: any) => void;
+  items: CalendarItem[];
+  onJobClick: (jobId: number) => void;
+  jobFilter: JobFilter;
+  onJobFilterChange: (filter: JobFilter) => void;
 };
 
-const statusColors: Record<string, string> = {
+/* =========================================================
+   STATUS UI
+========================================================= */
+
+const statusColors: Record<JobStatus, string> = {
+  active: "#dff5f5",
   completed: "#d8f5d2",
   return: "#fff3cd",
   quote: "#e8ddff",
-  active: "#dff5f5",
 };
 
-const statusLabel: Record<string, string> = {
+const statusLabel: Record<JobStatus, string> = {
+  active: "ACTIVE",
   completed: "COMPLETED",
   return: "NEED TO RETURN",
   quote: "QUOTE",
-  active: "ACTIVE",
 };
 
-// ⭐ LABEL MAPPING FOR FILTER BUTTON
-const FILTER_LABELS: Record<string, string> = {
-  all: "Filter",
+const FILTER_LABELS: Record<JobFilter, string> = {
+  all: "All Jobs",
   unassigned: "Unassigned",
   active: "Active",
   completed: "Completed",
@@ -36,8 +42,12 @@ const FILTER_LABELS: Record<string, string> = {
   quote: "Quote",
 };
 
+/* =========================================================
+   COMPONENT
+========================================================= */
+
 const SidebarJobs: React.FC<Props> = ({
-  jobs,
+  items,
   onJobClick,
   jobFilter,
   onJobFilterChange,
@@ -46,7 +56,7 @@ const SidebarJobs: React.FC<Props> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  /* ----------- CLOSE DROPDOWN ON OUTSIDE CLICK ----------- */
+  /* ---------- close dropdown on outside click ---------- */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -57,36 +67,73 @@ const SidebarJobs: React.FC<Props> = ({
       }
     };
 
-    if (dropdownOpen)
+    if (dropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+    }
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
 
-  /* ---------------------- FILTER ---------------------- */
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchSearch =
-        job.title.toLowerCase().includes(search.toLowerCase()) ||
-        job.customer.toLowerCase().includes(search.toLowerCase());
+  /* =========================================================
+     GROUP ITEMS → JOBS
+  ========================================================== */
 
-      let matchFilter = true;
+  const jobsFromItems = useMemo(() => {
+    const map = new Map<
+      number,
+      {
+        jobId: number;
+        title: string;
+        client: string;
+        color?: string;
+        status?: JobStatus;
+        assignmentCount: number;
+      }
+    >();
 
-      if (jobFilter === "unassigned") {
-        matchFilter = getAssignedEmployeeIds(job).length === 0;
-      } else if (jobFilter !== "all") {
-        matchFilter = job.status === jobFilter;
+    for (const item of items) {
+      if (!map.has(item.jobId)) {
+        map.set(item.jobId, {
+          jobId: item.jobId,
+          title: item.title,
+          client: item.client,
+          color: item.color,
+          status: item.status,
+          assignmentCount: 0,
+        });
       }
 
-      return matchSearch && matchFilter;
-    });
-  }, [jobs, search, jobFilter]);
+      map.get(item.jobId)!.assignmentCount++;
+    }
 
-  /* ---------------------- FILTER SELECT ---------------------- */
-  const handleSelectFilter = (filter: any) => {
-    onJobFilterChange(filter);
-    setDropdownOpen(false);
-  };
+    return Array.from(map.values());
+  }, [items]);
+
+  /* =========================================================
+     FILTER + SEARCH
+  ========================================================== */
+
+  const filteredJobs = useMemo(() => {
+    return jobsFromItems.filter((job) => {
+      const matchSearch =
+        job.title.toLowerCase().includes(search.toLowerCase()) ||
+        job.client.toLowerCase().includes(search.toLowerCase());
+
+      if (jobFilter === "unassigned") {
+        return matchSearch && job.assignmentCount === 0;
+      }
+
+      if (jobFilter !== "all") {
+        return matchSearch && job.status === jobFilter;
+      }
+
+      return matchSearch;
+    });
+  }, [jobsFromItems, search, jobFilter]);
+
+  /* =========================================================
+     RENDER
+  ========================================================== */
 
   return (
     <div className={styles.sidebarCard}>
@@ -94,51 +141,34 @@ const SidebarJobs: React.FC<Props> = ({
         <div className={styles.sidebarTitle}>Jobs</div>
       </div>
 
-      {/* FILTER MENU */}
+      {/* FILTER */}
       <div className={styles.filterWrapper} ref={dropdownRef}>
         <button
           className={styles.filterButton}
-          onClick={() => setDropdownOpen((prev) => !prev)}
+          onClick={() => setDropdownOpen((p) => !p)}
         >
           {FILTER_LABELS[jobFilter]} ▾
         </button>
 
         {dropdownOpen && (
           <div className={styles.dropdownMenu}>
-            <div
-              className={styles.dropdownItem}
-              onClick={() => handleSelectFilter("all")}
-            >
-              All Jobs
-            </div>
-
-            <div className={styles.dropdownDivider} />
-            <div className={styles.dropdownHeader}>UNASSIGNED</div>
-
-            <div
-              className={styles.dropdownItem}
-              onClick={() => handleSelectFilter("unassigned")}
-            >
-              Unassigned
-            </div>
-
-            <div className={styles.dropdownDivider} />
-            <div className={styles.dropdownHeader}>STATUS</div>
-
-            {["active", "completed", "return", "quote"].map((s) => (
+            {(Object.keys(FILTER_LABELS) as JobFilter[]).map((f) => (
               <div
-                key={s}
+                key={f}
                 className={styles.dropdownItem}
-                onClick={() => handleSelectFilter(s)}
+                onClick={() => {
+                  onJobFilterChange(f);
+                  setDropdownOpen(false);
+                }}
               >
-                {statusLabel[s]}
+                {FILTER_LABELS[f]}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* SEARCH BAR */}
+      {/* SEARCH */}
       <div className={styles.sidebarSearchRow}>
         <input
           className={styles.sidebarSearchInput}
@@ -158,10 +188,12 @@ const SidebarJobs: React.FC<Props> = ({
         ) : (
           filteredJobs.map((job) => (
             <div
-              key={job.id}
+              key={job.jobId}
               className={styles.sidebarJobItem}
-              onClick={() => onJobClick(job.id)}
-              style={{ backgroundColor: job.color || "#fffdf0" }}
+              onClick={() => onJobClick(job.jobId)}
+              style={{ backgroundColor: job.color ?? "#fffdf0" }}
+              role="button"
+              tabIndex={0}
             >
               {job.status && (
                 <span
@@ -173,11 +205,7 @@ const SidebarJobs: React.FC<Props> = ({
               )}
 
               <div className={styles.sidebarJobTitle}>{job.title}</div>
-              <div className={styles.sidebarJobCustomer}>{job.customer}</div>
-
-              {job.location && (
-                <div className={styles.sidebarJobLocation}>{job.location}</div>
-              )}
+              <div className={styles.sidebarJobCustomer}>{job.client}</div>
             </div>
           ))
         )}

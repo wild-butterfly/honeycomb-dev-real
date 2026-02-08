@@ -1,105 +1,62 @@
-// src/services/tasks.ts
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  Timestamp,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../firebase";
+import { apiGet, apiPost, apiPut, apiDelete } from "./api";
 
-/* ───────── TYPES ───────── */
+/* ───────── Types ───────── */
 
 export type Task = {
-  id: string; // Firestore document id
-  desc: string;
-  assigned: number[];
-  due: string; // yyyy-mm-dd
-  status: "pending" | "completed";
-  completedBy?: number; // employeeId
-  createdAt?: Timestamp;
-};
-
-/* ───────── CREATE TASK ───────── */
-
-export async function createTask(input: {
-  desc: string;
+  id: string;
+  description: string;
   assigned: number[];
   due: string;
-}) {
-  const ref = await addDoc(collection(db, "tasks"), {
-    desc: input.desc,
-    assigned: input.assigned,
-    due: input.due,
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
+  status: "pending" | "completed";
+  completedBy?: number;
+  createdAt?: string;
+};
 
-  return ref;
-}
+/* ───────── Normalizer ───────── */
 
-/* ───────── REALTIME SUBSCRIBE ───────── */
+const normalizeTask = (t: any): Task => ({
+  id: String(t.id),
+  description: String(t.description ?? ""),
+  assigned: Array.isArray(t.assigned) ? t.assigned.map(Number) : [],
+  due: String(t.due ?? ""),
+  status: t.status === "completed" ? "completed" : "pending",
+  completedBy: t.completedBy ?? undefined,
+  createdAt: t.createdAt ?? undefined,
+});
 
-export function subscribeToTasks(onChange: (tasks: Task[]) => void) {
-  const q = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
+/* ───────── CREATE ───────── */
 
-  return onSnapshot(q, (snap) => {
-    const tasks: Task[] = snap.docs.map((d) => {
-      const data = d.data() as Omit<Task, "id">;
+export const createTask = async (input: {
+  description: string;
+  assigned: number[];
+  due: string;
+}): Promise<Task> => {
+  const res = await apiPost<any>("/tasks", input);
+  return normalizeTask(res);
+};
 
-      return {
-        id: d.id,
-        desc: data.desc,
-        assigned: Array.isArray(data.assigned) ? data.assigned : [],
-        due: data.due,
-        status: data.status ?? "pending",
-        completedBy: data.completedBy,
-        createdAt: data.createdAt,
-      };
-    });
+/* ───────── GET ───────── */
 
-    onChange(tasks);
-  });
-}
+export const getTasks = async (): Promise<Task[]> => {
+  const res = await apiGet<any[]>("/tasks");
+  return (Array.isArray(res) ? res : []).map(normalizeTask);
+};
 
-/* ───────── DELETE TASK ───────── */
+/* ───────── DELETE ───────── */
 
-export async function deleteTask(taskId: string) {
-  return deleteDoc(doc(db, "tasks", taskId));
-}
+export const deleteTask = async (taskId: string): Promise<void> => {
+  await apiDelete(`/tasks/${taskId}`);
+};
 
-/* ───────── COMPLETE TASK ───────── */
+/* ───────── COMPLETE ───────── */
 
-export async function completeTask(
-  taskId: string,
-  completedBy: number,
-) {
-  return updateDoc(doc(db, "tasks", taskId), {
-    status: "completed",
-    completedBy,
-  });
-}
+export const completeTask = async (taskId: string): Promise<Task> => {
+  const res = await apiPut<any>(`/tasks/${taskId}/complete`, {});
+  return normalizeTask(res);
+};
 
-/* ───────── DELETE ALL COMPLETED TASKS ───────── */
+/* ───────── CLEAN ───────── */
 
-export async function deleteAllCompletedTasks() {
-  const q = query(
-    collection(db, "tasks"),
-    where("status", "==", "completed"),
-  );
-
-  const snap = await getDocs(q);
-
-  const deletions = snap.docs.map((d) =>
-    deleteDoc(doc(db, "tasks", d.id)),
-  );
-
-  await Promise.all(deletions);
-}
+export const deleteAllCompletedTasks = async (): Promise<void> => {
+  await apiDelete(`/tasks/completed`);
+};

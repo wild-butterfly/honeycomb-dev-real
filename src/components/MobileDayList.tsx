@@ -1,6 +1,6 @@
 // Created by Clevermode © 2025
 import React from "react";
-import type { CalendarJob, Employee } from "../pages/CalendarPage";
+import type { CalendarJob, Employee } from "../types/calendar";
 import styles from "./MobileDayList.module.css";
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
 
@@ -8,7 +8,7 @@ interface Props {
   selectedDate: Date;
   jobs: CalendarJob[];
   employees: Employee[];
-  onJobClick: (id: string) => void;
+  onJobClick: (id: number) => void;
 }
 
 const MobileDayList: React.FC<Props> = ({
@@ -61,7 +61,7 @@ const MobileDayList: React.FC<Props> = ({
             </div>
 
             <div className={styles.title}>{job.title}</div>
-            <div className={styles.customer}>{job.customer}</div>
+            <div className={styles.customer}>{job.client}</div>
 
             {emp && <div className={styles.staffName}>👤 {emp.name}</div>}
 

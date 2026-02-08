@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "../firebase";
-import { employeesCol } from "../lib/firestorePaths";
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 export type TaskEmployee = {
   id: number;
@@ -9,27 +10,57 @@ export type TaskEmployee = {
   active?: boolean;
 };
 
+/* =========================================================
+   SMALL API HELPER
+========================================================= */
+
+async function api<T>(url: string): Promise<T> {
+  const res = await fetch(`/api${url}`, {
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch employees");
+  }
+
+  return res.json();
+}
+
+/* =========================================================
+   HOOK (POSTGRES VERSION)
+========================================================= */
+
 export function useTaskEmployees() {
   const [employees, setEmployees] = useState<TaskEmployee[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(
-        collection(db, employeesCol()),
-        orderBy("name") // 🔥 alfabetik garanti
-      ),
-      (snap) => {
-        const data = snap.docs.map(
-          (d) => ({ id: Number(d.id), ...d.data() }) as TaskEmployee
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const data = await api<TaskEmployee[]>("/employees");
+
+        // 🔥 alfabetik garanti (Firestore orderBy yerine burada sort)
+        const sorted = [...data].sort((a, b) =>
+          a.name.localeCompare(b.name)
         );
 
-        setEmployees(data);
-        setLoading(false);
+        if (mounted) {
+          setEmployees(sorted);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Failed to load employees:", err);
+        if (mounted) setLoading(false);
       }
-    );
+    };
 
-    return unsub;
+    load();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return { employees, loading };

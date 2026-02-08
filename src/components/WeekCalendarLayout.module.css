@@ -126,13 +126,23 @@
 
 .jobTitle {
   font-weight: 700;
+  font-size: 14px; /* ⬅ Day view ile birebir */
+  line-height: 1.2; /* ⬅ en kritik fark */
   color: #4d3e00;
-  font-size: 13px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .jobCustomer {
   font-size: 12px;
   color: #7d6a0a;
+  font-weight: 600;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .jobTime {
@@ -141,7 +151,6 @@
   margin-top: 4px;
   color: #a88705;
 }
-
 /* ========================================================= */
 /* ADD BUTTON (+) */
 /* ========================================================= */

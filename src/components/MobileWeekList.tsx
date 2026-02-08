@@ -1,14 +1,14 @@
 // Created by Clevermode © 2025
 import React, { useMemo } from "react";
 import styles from "./MobileWeekList.module.css";
-import type { CalendarJob, Employee } from "../pages/CalendarPage";
+import type { CalendarJob, Employee } from "../types/calendar";
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
 
 interface Props {
   jobs: CalendarJob[];
   employees: Employee[];
   selectedDate: Date;
-  onJobClick: (id: string) => void;
+  onJobClick: (id: number) => void;
 }
 
 const MobileWeekList: React.FC<Props> = ({
@@ -114,7 +114,7 @@ const MobileWeekList: React.FC<Props> = ({
 
                     {/* TITLE + CUSTOMER */}
                     <div className={styles.title}>{job.title}</div>
-                    <div className={styles.customer}>{job.customer}</div>
+                    <div className={styles.customer}>{job.client}</div>
 
                     {/* STAFF */}
                     {emp && (

@@ -3,9 +3,16 @@ import React from "react";
 import styles from "./AssignedEmployees.module.css";
 import { CalendarDaysIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
+import { parseLocalTimestamp } from "../utils/localDate";
+
+/* =========================================================
+   TYPES – ASSIGNMENT BASED 
+========================================================= */
+
 export interface AssignedEmployee {
   employeeId: string;
   name: string;
+
   schedules: {
     assignmentId: string;
     start: string;
@@ -13,12 +20,11 @@ export interface AssignedEmployee {
     hours: number;
     completed: boolean;
   }[];
+
   labour: {
     enteredHours: number;
     completed: boolean | null;
-    hasUnscheduled: boolean;
   };
-  unscheduledAssignmentId?: string;
 }
 
 interface Props {
@@ -29,6 +35,10 @@ interface Props {
     completed: boolean,
   ) => void;
 }
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 const AssignedEmployees: React.FC<Props> = ({
   employees,
@@ -81,74 +91,59 @@ const AssignedEmployees: React.FC<Props> = ({
 
             {/* ===== BODY ===== */}
             <div className={styles.employeeBody}>
-              {emp.schedules.map((s) => (
-                <div key={s.assignmentId} className={styles.scheduleRow}>
-                  <CalendarDaysIcon className={styles.icon} />
+              {emp.schedules.map((s) => {
+                const start = parseLocalTimestamp(s.start);
+                const end = parseLocalTimestamp(s.end);
 
-                  <span className={styles.scheduleText}>
-                    {new Date(s.start).toLocaleDateString()}{" "}
-                    {new Date(s.start).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    –{" "}
-                    {new Date(s.end).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    ({s.hours}h)
-                  </span>
+                if (!start || !end) return null;
 
-                  {onToggleAssignmentCompleted && (
-                    <button
-                      className={
-                        s.completed ? styles.undoBtn : styles.completeBtn
-                      }
-                      onClick={() =>
-                        onToggleAssignmentCompleted(
-                          s.assignmentId,
-                          !s.completed,
-                        )
-                      }
-                    >
-                      <CheckCircleIcon className={styles.btnIcon} />
-                      {s.completed ? "Undo completion" : "Mark completed"}
-                    </button>
-                  )}
+                return (
+                  <div key={s.assignmentId} className={styles.scheduleRow}>
+                    <CalendarDaysIcon className={styles.icon} />
 
-                  {onUnassign && (
-                    <button
-                      className={styles.removeBtn}
-                      title="Remove assignment"
-                      onClick={() => onUnassign(emp.employeeId, emp.name)}
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
+                    <span className={styles.scheduleText}>
+                      {start.toLocaleDateString("en-AU")}{" "}
+                      {start.toLocaleTimeString("en-AU", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      –{" "}
+                      {end.toLocaleTimeString("en-AU", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      ({s.hours}h)
+                    </span>
 
-              {emp.schedules.length === 0 && emp.unscheduledAssignmentId && (
-                <div className={styles.scheduleRow}>
-                  <CalendarDaysIcon className={styles.iconMuted} />
+                    {onToggleAssignmentCompleted && (
+                      <button
+                        className={
+                          s.completed ? styles.undoBtn : styles.completeBtn
+                        }
+                        onClick={() =>
+                          onToggleAssignmentCompleted(
+                            s.assignmentId,
+                            !s.completed,
+                          )
+                        }
+                      >
+                        <CheckCircleIcon className={styles.btnIcon} />
+                        {s.completed ? "Undo completion" : "Mark completed"}
+                      </button>
+                    )}
 
-                  <span className={styles.scheduleTextMuted}>
-                    Assigned – not scheduled yet (0h)
-                  </span>
-
-                  {onUnassign && (
-                    <button
-                      className={styles.removeBtn}
-                      title="Remove assignment"
-                      onClick={() =>
-                        onUnassign(emp.unscheduledAssignmentId!, emp.name)
-                      }
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              )}
+                    {onUnassign && (
+                      <button
+                        className={styles.removeBtn}
+                        title="Remove assignment"
+                        onClick={() => onUnassign(emp.employeeId, emp.name)}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
 
               <div className={styles.timeEntry}>
                 Time Entry:{" "}

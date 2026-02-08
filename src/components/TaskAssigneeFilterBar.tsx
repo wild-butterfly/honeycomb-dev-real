@@ -15,7 +15,9 @@ const TaskAssigneeFilterBar: React.FC<TaskAssigneeFilterBarProps> = ({
 }) => {
   return (
     <div className={styles.wrapper}>
-      <span className={styles.icon} aria-hidden="true">👥</span>
+      <span className={styles.icon} aria-hidden="true">
+        👥
+      </span>
 
       <select
         className={styles.select}

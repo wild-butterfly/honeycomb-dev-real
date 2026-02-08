@@ -1,4 +1,8 @@
+// src/pages/DashboardPage.tsx
+// ✅ POSTGRES VERSION (UI restored)
+
 import React, { useEffect, useMemo, useState } from "react";
+
 import StatusBoardChart from "../components/StatusBoardChart";
 import PaymentsPieChart from "../components/PaymentsPieChart";
 import JobsOverTimeChart from "../components/JobsOverTimeChart";
@@ -7,43 +11,22 @@ import NewJobModal from "../components/NewJobModal";
 import DashboardNavbar from "../components/DashboardNavbar";
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
 import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
-import styles from "./DashboardPage.module.css";
 import ConfirmModal from "../components/ConfirmModal";
+
+import styles from "./DashboardPage.module.css";
 import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
-import {
-  TrashIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import { TrashIcon } from "@heroicons/react/24/outline";
 
 import {
   createTask,
-  subscribeToTasks,
   deleteTask,
   completeTask,
   deleteAllCompletedTasks,
+  getTasks,
   Task,
 } from "../services/tasks";
 
-import {
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import {
-  jobsCol,
-  assignmentsCol,
-  jobDoc,
-  assignmentDoc,
-} from "../lib/firestorePaths";
-import { setCompanyId } from "../lib/firestorePaths";
+import { apiGet, apiPost } from "../services/api";
 
 /* ───────── Types ───────── */
 
@@ -63,13 +46,13 @@ type EmployeeType = {
 };
 
 type JobType = {
-  id: string; // Firestore doc id
+  id: string;
   title: string;
   jobType: "CHARGE UP" | "ESTIMATE";
   status: "Pending" | "Active" | "Complete";
   customer: string;
-  date: string; // dd/mm/yyyy (derived)
-  assignedEmployeeIds: number[]; // from assignments subcollection
+  date: string; // dd/mm/yyyy
+  assignedEmployeeIds: number[]; // ✅ backend should provide
 };
 
 /* ───────── Small UI bits ───────── */
@@ -127,27 +110,22 @@ const toDDMMYYYY = (d: Date) =>
     year: "numeric",
   });
 
-const safeNumber = (v: unknown, fallback = 0) => {
-  const n = typeof v === "string" ? Number(v) : (v as number);
-  return Number.isFinite(n) ? Number(n) : fallback;
+const safeDate = (v: any): Date => {
+  if (!v) return new Date();
+  if (v instanceof Date) return v;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? new Date() : d;
 };
 
-const tsToDate = (v: any): Date | null => {
+// Tasks date formatting
+const formatTaskDue = (due: string) => {
+  if (!due) return "—";
   try {
-    if (!v) return null;
-    if (v instanceof Timestamp) return v.toDate();
-    if (typeof v?.toDate === "function") return v.toDate();
-    if (typeof v === "number") return new Date(v);
-    if (typeof v === "string") {
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? null : d;
-    }
-    return null;
+    return toDDMMYYYY(safeDate(due));
   } catch {
-    return null;
+    return due;
   }
 };
-
 /* ───────── Component ───────── */
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -156,14 +134,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   customers,
   onAddCustomer,
 }) => {
-  // Employees (Firestore)
+  // Employees (Postgres)
   const [employees, setEmployees] = useState<EmployeeType[]>([]);
 
-  // Jobs (Firestore)
+  // Jobs (Postgres)
   const [jobs, setJobs] = useState<JobType[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
 
-  // Tasks (Firestore)
+  // Tasks (Postgres)
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openTasks, setOpenTasks] = useState<{ [id: string]: boolean }>({});
 
@@ -175,205 +153,110 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   const [showCleanConfirm, setShowCleanConfirm] = useState(false);
 
-  // Assignee filter for jobs
+  // Filters
   const [selectedAssignee, setSelectedAssignee] = useState<number | "all">(
     "all",
   );
-
-  // Assignee filter for tasks
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState<number | "all">(
     "all",
   );
 
-  // 🔥 STEP 4: TASKS (Firestore)
-  // --------------------
+  /* ───────── Loaders ───────── */
 
-  useEffect(() => {
-    // later you will get this from login / user profile
-    setCompanyId("a1testing");
-  }, []);
+  const loadEmployees = async () => {
+    // expects GET /api/employees -> [{id, name, avatar?}]
+    const list = await apiGet<EmployeeType[]>("/employees");
+    setEmployees(Array.isArray(list) ? list : []);
+  };
 
-  useEffect(() => {
-    const unsubscribe = subscribeToTasks((firestoreTasks) => {
-      setTasks(firestoreTasks);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  /* ───────── Firestore: Employees ───────── */
-
-  useEffect(() => {
-    const q = query(
-      collection(db, `companies/a1testing/employees`),
-      orderBy("name", "asc"),
-    );
-
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const list: EmployeeType[] = snap.docs.map((d) => {
-          const data = d.data() as any;
-
-          // support either doc id numeric OR stored id field
-          const id =
-            Number.isFinite(Number(d.id)) && d.id !== ""
-              ? Number(d.id)
-              : safeNumber(data.id, 0);
-
-          return {
-            id,
-            name: String(data.name ?? "Unknown"),
-            avatar: data.avatar ? String(data.avatar) : undefined,
-          };
-        });
-
-        // filter out invalid employee ids (0) if you don't want them
-        setEmployees(list.filter((e) => e.id !== 0));
-      },
-      (err) => {
-        console.error("employees snapshot error:", err);
-        setEmployees([]);
-      },
-    );
-
-    return () => unsub();
-  }, []);
-
-  /* ───────── Firestore: Jobs + Assignments ───────── */
-
-  useEffect(() => {
+  const loadJobs = async () => {
     setJobsLoading(true);
-
-    const q = query(collection(db, jobsCol()), orderBy("createdAt", "desc"));
-
-    const unsub = onSnapshot(
-      q,
-      async (snap) => {
-        try {
-          const jobDocs = snap.docs;
-
-          const jobsData: JobType[] = await Promise.all(
-            jobDocs.map(async (jobDoc) => {
-              const job = jobDoc.data() as any;
-
-              // assignments subcollection
-              const assignmentsSnap = await getDocs(
-                collection(db, assignmentsCol(jobDoc.id)),
-              );
-
-              const assignedEmployeeIds = Array.from(
-                new Set(
-                  assignmentsSnap.docs
-                    .map((doc) => doc.data() as any)
-                    .filter((a) => a && a.employeeId && a.scheduled !== false)
-                    .map((a) => safeNumber(a.employeeId, 0))
-                    .filter((n) => n !== 0),
-                ),
-              );
-
-              // pick a “display date”:
-              // 1) earliest assignment start
-              // 2) job.date / job.start
-              // 3) job.createdAt
-              const assignmentDates = assignmentsSnap.docs
-                .map((a) => tsToDate((a.data() as any).start))
-                .filter(Boolean) as Date[];
-
-              const earliestAssign =
-                assignmentDates.length > 0
-                  ? new Date(
-                      Math.min(...assignmentDates.map((d) => d.getTime())),
-                    )
-                  : null;
-
-              const jobDate =
-                tsToDate(job.date) ??
-                tsToDate(job.start) ??
-                tsToDate(job.createdAt);
-
-              const displayDate = earliestAssign ?? jobDate ?? new Date();
-
-              const rawJobType = String(job.jobType ?? "").toUpperCase();
-              const jobType: JobType["jobType"] =
-                rawJobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE UP";
-
-              const rawStatus = String(job.status ?? "");
-              const status: JobType["status"] =
-                rawStatus === "Pending" || rawStatus === "Active"
-                  ? rawStatus
-                  : rawStatus === "Complete"
-                    ? "Complete"
-                    : "Pending";
-
-              return {
-                id: jobDoc.id,
-                title: String(job.title ?? "Untitled"),
-                jobType,
-                status,
-                customer: String(job.customer ?? job.customerName ?? "Unknown"),
-                date: toDDMMYYYY(displayDate),
-                assignedEmployeeIds,
-              };
-            }),
-          );
-
-          setJobs(jobsData);
-        } catch (err) {
-          console.error("jobs snapshot mapping error:", err);
-          setJobs([]);
-        } finally {
-          setJobsLoading(false);
-        }
-      },
-      (err) => {
-        console.error("jobs snapshot error:", err);
-        setJobs([]);
-        setJobsLoading(false);
-      },
-    );
-
-    return () => unsub();
-  }, []);
-
-  /* ───────── Job logic ───────── */
-
-  const handleAddJob = async (
-    job: Omit<JobType, "id" | "status" | "date" | "assignedEmployeeIds">,
-  ) => {
     try {
-      // Create job doc
-      const jobRef = await addDoc(collection(db, jobsCol()), {
-        title: job.title,
-        jobType: job.jobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE_UP",
-        status: "Pending",
-        customerName: job.customer,
-        customer: job.customer, // keep both if your app is mid-migration
-        createdAt: serverTimestamp(),
+      // expects GET /api/jobs -> [{ id, title, jobType, status, customer, date, assignedEmployeeIds }]
+      const list = await apiGet<any[]>("/jobs");
+
+      const mapped: JobType[] = (Array.isArray(list) ? list : []).map((j) => {
+        const jobTypeRaw = String(j.jobType ?? "").toUpperCase();
+        const jobType: JobType["jobType"] =
+          jobTypeRaw === "ESTIMATE" ? "ESTIMATE" : "CHARGE UP";
+
+        const statusRaw = String(j.status ?? "Pending");
+        const status: JobType["status"] =
+          statusRaw === "Active" ||
+          statusRaw === "Complete" ||
+          statusRaw === "Pending"
+            ? statusRaw
+            : "Pending";
+
+        // date can be ISO or already dd/mm/yyyy
+        const date =
+          typeof j.date === "string" && j.date.includes("/")
+            ? j.date
+            : toDDMMYYYY(safeDate(j.date ?? j.start ?? j.createdAt));
+
+        const assignedEmployeeIds = Array.isArray(j.assignedEmployeeIds)
+          ? j.assignedEmployeeIds
+              .map((n: any) => Number(n))
+              .filter((n: number) => Number.isFinite(n))
+          : [];
+
+        return {
+          id: String(j.id),
+          title: String(j.title ?? "Untitled"),
+          jobType,
+          status,
+          customer: String(j.customer ?? j.customerName ?? "Unknown"),
+          date,
+          assignedEmployeeIds,
+        };
       });
 
-      // Add a default assignment (optional)
-      // If you have current user employee id, replace this with real value.
-      const defaultEmployeeId = 1;
-
-      const newAssignmentId = String(Date.now());
-
-      await setDoc(doc(db, assignmentDoc(jobRef.id, newAssignmentId)), {
-        employeeId: defaultEmployeeId,
-        start: Timestamp.fromDate(new Date()),
-        end: Timestamp.fromDate(new Date()),
-        scheduled: true,
-        createdAt: serverTimestamp(),
-      });
-
-      setShowNewJobModal(false);
-    } catch (err) {
-      console.error("add job error:", err);
-      // optionally show toast UI here
+      setJobs(mapped);
+    } finally {
+      setJobsLoading(false);
     }
   };
 
-  // Visible jobs = search AND assignee filter
+  const loadTasks = async () => {
+    const list = await getTasks();
+    setTasks(Array.isArray(list) ? list : []);
+  };
+
+  const loadAll = async () => {
+    await Promise.all([loadEmployees(), loadJobs(), loadTasks()]);
+  };
+
+  useEffect(() => {
+    loadAll().catch((e) => console.error("Dashboard loadAll error:", e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ───────── Job create ───────── */
+
+  const handleAddJob = async (job: {
+    title: string;
+    jobType: "CHARGE UP" | "ESTIMATE";
+    customer: string;
+  }) => {
+    try {
+      // expects POST /api/jobs
+      // backend should set createdAt + default status
+      await apiPost("/jobs", {
+        title: job.title,
+        jobType: job.jobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE_UP",
+        customer: job.customer,
+        status: "Pending",
+      });
+
+      setShowNewJobModal(false);
+      await loadJobs();
+    } catch (err) {
+      console.error("add job error:", err);
+    }
+  };
+
+  /* ───────── Jobs filtering + chart data ───────── */
+
   const visibleJobs = useMemo(() => {
     const q = search.toLowerCase();
 
@@ -390,7 +273,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     });
   }, [jobs, search, selectedAssignee]);
 
-  // Data for StatusBoardChart
   const statusBuckets = ["Pending", "Active", "Complete"] as const;
 
   const statusBoardData = useMemo(() => {
@@ -398,12 +280,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       const jobsInThisStatus = visibleJobs.filter(
         (j) => j.status === statusName,
       );
-
-      return {
-        name: statusName,
-        jobs: jobsInThisStatus.length,
-        value: 0, // placeholder for money/revenue/etc
-      };
+      return { name: statusName, jobs: jobsInThisStatus.length, value: 0 };
     });
   }, [visibleJobs]);
 
@@ -414,7 +291,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return task.assigned.includes(assignee);
   };
 
-  const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+  const today = new Date().toISOString().slice(0, 10);
 
   const overdueTasksRaw = tasks.filter(
     (t) => t.status === "pending" && t.due < today,
@@ -439,38 +316,54 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   );
 
   const handleSaveTask = async (task: {
-    desc: string;
+    description: string;
     assigned: number[];
     due: string;
   }) => {
     try {
+      // AddTask returns {desc}, but API expects description
       await createTask({
-        desc: task.desc,
+        description: task.description,
         assigned: task.assigned,
         due: task.due,
       });
 
       setShowAddTask(false);
+      await loadTasks();
     } catch (err) {
       console.error("Failed to create task:", err);
     }
   };
 
-  // ✅ COMPLETE TASK (Firestore)
   const currentEmployeeId = employees[0]?.id ?? 0;
 
   const handleCompleteTask = async (taskId: string) => {
+    // optimistic UI
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: "completed" } : t)),
+    );
+
     try {
-      await completeTask(taskId, currentEmployeeId);
+      await completeTask(taskId);
     } catch (err) {
       console.error("Failed to complete task:", err);
+
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: "pending" } : t)),
+      );
     }
   };
 
-  // ✅ DELETE TASK (Firestore)
-  const handleDeleteTask = async (id: string) => {
+  const handleDeleteTask = async (id: number) => {
     try {
-      await deleteTask(id);
+      setTasks((prev) => prev.filter((t) => Number(t.id) !== id));
+
+      try {
+        await deleteTask(String(id));
+      } catch (err) {
+        console.error("Failed to delete task:", err);
+        loadTasks();
+      }
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
@@ -497,7 +390,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       >
         <div className={styles.taskTitleRow}>
           <BeeIcon />
-          <span>{task.desc}</span>
+          <span>{task.description}</span>
 
           {showButtons && !isCompleted && (
             <button
@@ -517,7 +410,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
         <div className={styles.taskDetailRow}>
           <span className={styles.taskLabel}>Due:</span>
-          <span>{task.due}</span>
+          <span>{formatTaskDue(task.due)}</span>
         </div>
 
         {showButtons && !isCompleted && open && (
@@ -531,7 +424,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </button>
             <button
               className={styles.taskDeleteBtn}
-              onClick={() => handleDeleteTask(task.id)}
+              onClick={() => handleDeleteTask(Number(task.id))}
               type="button"
             >
               ✗
@@ -547,7 +440,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div className={styles.dashboardShell}>
       <div className={styles.dashboardBg}>
-        {/* NAVBAR */}
         <DashboardNavbar
           searchValue={search}
           onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -556,7 +448,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           onNewJob={() => setShowNewJobModal(true)}
         />
 
-        {/* FILTER + CHARTS SECTION */}
         <div className={styles.chartsSection}>
           <AssigneeFilterBar
             employees={employees}
@@ -577,9 +468,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </div>
 
-        {/* MAIN GRID BELOW CHARTS */}
         <div className={styles.bottomGrid}>
-          {/* JOBS TABLE */}
           <div className={styles.tableCard}>
             <div className={styles.cardTitleRow}>
               <h3 className={styles.cardTitle}>Job List</h3>
@@ -647,10 +536,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
                     return (
                       <tr key={job.id}>
-                        {/* JOB TYPE */}
                         <td>{jobTypeChip}</td>
 
-                        {/* STATUS */}
                         <td>
                           <span
                             className={
@@ -665,19 +552,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                           </span>
                         </td>
 
-                        {/* JOB TITLE */}
                         <td>{job.title}</td>
-
-                        {/* CUSTOMER */}
                         <td>{job.customer}</td>
-
-                        {/* DATE */}
                         <td>{job.date}</td>
-
-                        {/* ASSIGNED TO */}
                         <td>{assignedNames}</td>
 
-                        {/* ACTIONS */}
                         <td>
                           <button
                             className={styles.detailsBtn}
@@ -695,9 +574,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </table>
           </div>
 
-          {/* SIDE COLUMN */}
           <div className={styles.sideColumn}>
-            {/* QUICK ACTIONS */}
             <div className={styles.quickActionsCard}>
               <div className={styles.quickTitle}>Quick Actions</div>
 
@@ -734,13 +611,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </button>
             </div>
 
-            {/* TASKS CARD */}
             <div className={styles.tasksCard}>
               <div className={styles.tasksHeaderRow}>
                 <h4 className={styles.tasksTitle}>Tasks</h4>
               </div>
 
-              {/* Task filter (small card) */}
               <TaskAssigneeFilterBar
                 employees={employees}
                 value={taskAssigneeFilter}
@@ -784,7 +659,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </div>
 
-        {/* MODAL: Add Task */}
         {showAddTask && (
           <AddTask
             employees={employees}
@@ -793,7 +667,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           />
         )}
 
-        {/* PANEL: View All Tasks */}
         {showTaskPanel && (
           <div className={styles.taskPanelOverlay}>
             <div className={styles.taskPanel} role="dialog" aria-modal="true">
@@ -809,7 +682,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </button>
               </div>
 
-              {/* Task filter (panel) */}
               <div style={{ padding: "16px 26px 0 26px" }}>
                 <TaskAssigneeFilterBar
                   employees={employees}
@@ -906,7 +778,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         )}
 
-        {/* MODAL: New Job */}
         <NewJobModal
           show={showNewJobModal}
           onClose={() => setShowNewJobModal(false)}
@@ -930,6 +801,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             onConfirm={async () => {
               await deleteAllCompletedTasks();
               setShowCleanConfirm(false);
+              await loadTasks();
             }}
           />
         )}

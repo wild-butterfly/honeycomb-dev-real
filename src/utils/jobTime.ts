@@ -1,63 +1,95 @@
-import type { CalendarJob } from "../pages/CalendarPage";
+import type { CalendarJob, Assignment } from "../types/calendar";
 
-/* ================= ASSIGNMENT HELPERS (NEW CORE) ================= */
+/* =========================================================
+   INTERNAL HELPERS
+========================================================= */
 
-export function getAssignmentForEmployee(
-  job: CalendarJob,
-  employeeId: number
-) {
-  return job.assignments?.find(a => a.employeeId === employeeId) || null;
+function normalizeOvernight(start: Date, end: Date): Date {
+  if (end <= start) {
+    const fixed = new Date(end);
+    fixed.setDate(fixed.getDate() + 1);
+    return fixed;
+  }
+  return end;
 }
+
+function getAssignmentForEmployee(
+  job: CalendarJob,
+  employeeId: number,
+): Assignment | undefined {
+  return job.assignments?.find(
+    (a) => Number(a.employee_id) === Number(employeeId),
+  );
+}
+
+/* =========================================================
+   ASSIGNMENT TIMES (PER EMPLOYEE)
+========================================================= */
 
 export function getAssignmentStart(
   job: CalendarJob,
-  employeeId: number
+  employeeId: number,
 ): Date | null {
   const a = getAssignmentForEmployee(job, employeeId);
-  if (!a?.start) return null;
-  const d = new Date(a.start);
-  return isNaN(d.getTime()) ? null : d;
+  return a?.start ?? null;
 }
 
 export function getAssignmentEnd(
   job: CalendarJob,
-  employeeId: number
+  employeeId: number,
 ): Date | null {
   const a = getAssignmentForEmployee(job, employeeId);
-  if (!a?.end) return null;
-  const d = new Date(a.end);
-  return isNaN(d.getTime()) ? null : d;
+  if (!a?.start || !a?.end) return null;
+
+  return normalizeOvernight(a.start, a.end);
 }
 
-/* ================= LEGACY COMPAT (DO NOT REMOVE YET) ================= */
+/* =========================================================
+   JOB TIMES (PRIMARY ASSIGNMENT = EARLIEST START)
+========================================================= */
 
-/**
- * 🔁 Legacy fallback:
- * Returns earliest assignment start
- * Used by Month / Week / Mobile views
- */
-export function getJobStart(job: CalendarJob): Date {
-  const first = job.assignments?.[0];
-  if (!first?.start) return new Date(0);
-  const d = new Date(first.start);
-  return isNaN(d.getTime()) ? new Date(0) : d;
+function getPrimaryAssignment(job: CalendarJob): Assignment | null {
+  if (!job.assignments?.length) return null;
+
+  return job.assignments.reduce((earliest, a) =>
+    a.start < earliest.start ? a : earliest,
+  );
 }
 
-/**
- * 🔁 Legacy fallback:
- * Returns latest assignment end
- */
-export function getJobEnd(job: CalendarJob): Date {
-  const last = job.assignments?.[job.assignments.length - 1];
-  if (!last?.end) return new Date(0);
-  const d = new Date(last.end);
-  return isNaN(d.getTime()) ? new Date(0) : d;
+export function getJobStart(job: CalendarJob): Date | null {
+  const a = getPrimaryAssignment(job);
+  return a?.start ?? null;
 }
 
-/**
- * 🔁 Legacy helper:
- * Used everywhere for filtering
- */
+export function getJobEnd(job: CalendarJob): Date | null {
+  const a = getPrimaryAssignment(job);
+  if (!a?.start || !a?.end) return null;
+
+  return normalizeOvernight(a.start, a.end);
+}
+
+/* =========================================================
+   JOB DURATION (SAME AS CALENDAR MODAL)
+========================================================= */
+
+export function getJobDurationHours(job: CalendarJob): number {
+  const start = getJobStart(job);
+  const end = getJobEnd(job);
+
+  if (!start || !end) return 0;
+
+  const diffMs = end.getTime() - start.getTime();
+  return Math.round((diffMs / (1000 * 60 * 60)) * 10) / 10;
+}
+
+/* =========================================================
+   STAFF
+========================================================= */
+
 export function getAssignedEmployeeIds(job: CalendarJob): number[] {
-  return job.assignments?.map(a => a.employeeId) || [];
+  return (
+    job.assignments
+      ?.map((a) => Number(a.employee_id))
+      .filter((id) => Number.isFinite(id)) ?? []
+  );
 }

@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
@@ -14,33 +12,34 @@ import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
 import JobPage from "./pages/JobPage";
 import TaskPage from "./pages/TaskPage";
-
 import FeaturesPage from "./pages/FeaturesPage";
 import PricingPage from "./pages/PricingPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import HelpPage from "./pages/HelpPage";
 
-import { setCompanyId } from "./lib/firestorePaths";
 import { NewJobModalProvider } from "./components/NewJobModalContext";
-import type { CustomerType } from "./pages/DashboardPage";
 
 /* ======================================================
-   🔥 CRITICAL — SET COMPANY BEFORE ANY COMPONENT RENDERS
-   MUST be outside React component
+   TYPES
 ====================================================== */
 
-setCompanyId("a1testing"); // later → from login user.profile.companyId
+type CustomerType = {
+  id: number;
+  name: string;
+};
 
 /* ======================================================
-   APP
+   APP (ROUTED)
 ====================================================== */
 
 const App: React.FC = () => {
+  // ✅ SADECE ROUTE / PATH KONTROLÜ İÇİN
   const location = useLocation();
 
   const [search, setSearch] = useState("");
   const [customers, setCustomers] = useState<CustomerType[]>([]);
 
+  // ✅ Footer / Navbar kontrolü
   const isDashboard = location.pathname.startsWith("/dashboard");
 
   const handleAddCustomer = (customer: Omit<CustomerType, "id">) => {
@@ -58,7 +57,7 @@ const App: React.FC = () => {
 
       <main id="app-content">
         <Routes>
-          {/* Public */}
+          {/* ================= PUBLIC ================= */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -72,7 +71,7 @@ const App: React.FC = () => {
           <Route path="/tasks" element={<TaskPage />} />
           <Route path="/jobs/:id" element={<JobPage />} />
 
-          {/* Dashboard */}
+          {/* ================= DASHBOARD ================= */}
           <Route
             path="/dashboard"
             element={
@@ -90,6 +89,7 @@ const App: React.FC = () => {
             }
           />
 
+          {/* ================= CALENDAR ================= */}
           <Route
             path="/dashboard/calendar"
             element={
@@ -113,7 +113,7 @@ const App: React.FC = () => {
    ROOT WRAPPER
 ====================================================== */
 
-const RootApp = () => (
+const RootApp: React.FC = () => (
   <BrowserRouter>
     <App />
   </BrowserRouter>

@@ -1,0 +1,180 @@
+import { Request, Response } from "express";
+import { pool } from "../db";
+
+/* ===============================
+   GET ALL JOBS + ASSIGNMENTS
+================================ */
+export const getAll = async (_req: Request, res: Response) => {
+  const result = await pool.query(`
+    SELECT
+      j.*,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', a.id,
+            'employee_id', a.employee_id,
+            'start_time', to_char(a.start_time, 'YYYY-MM-DD HH24:MI:SS'),
+            'end_time',   to_char(a.end_time,   'YYYY-MM-DD HH24:MI:SS'),
+            'completed', a.completed
+          )
+        ) FILTER (WHERE a.id IS NOT NULL),
+        '[]'
+      ) AS assignments
+    FROM jobs j
+    LEFT JOIN assignments a ON a.job_id = j.id
+    GROUP BY j.id
+    ORDER BY j.created_at DESC
+  `);
+
+  res.json(result.rows);
+};
+
+/* ===============================
+   GET ONE JOB
+================================ */
+export const getOne = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        j.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', a.id,
+              'employee_id', a.employee_id,
+              'start_time', to_char(a.start_time, 'YYYY-MM-DD"T"HH24:MI:SS'),
+'end_time',   to_char(a.end_time,   'YYYY-MM-DD"T"HH24:MI:SS'),
+              'completed', a.completed
+            )
+          ) FILTER (WHERE a.id IS NOT NULL),
+          '[]'
+        ) AS assignments
+      FROM jobs j
+      LEFT JOIN assignments a ON a.job_id = j.id
+      WHERE j.id = $1
+      GROUP BY j.id
+      `,
+      [id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("GET job error", err);
+    res.status(500).json({ error: "Job load failed" });
+  }
+};
+
+/* ===============================
+   CREATE JOB
+================================ */
+export const create = async (req: Request, res: Response) => {
+  try {
+    const { title, company_id, status = "active" } = req.body;
+
+    if (!company_id) {
+      return res.status(400).json({ error: "company_id is required" });
+    }
+
+    const result = await pool.query(
+      `
+      INSERT INTO jobs (title, company_id, status)
+      VALUES ($1, $2, $3)
+      RETURNING *
+      `,
+      [title, company_id, status]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("CREATE job error", err);
+    res.status(500).json({ error: "Job create failed" });
+  }
+};
+
+/* ===============================
+   UPDATE JOB
+================================ */
+export const update = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      title,
+      client,
+      address,
+      notes,
+      status,
+      color,
+      contact_name,
+      contact_email,
+      contact_phone,
+    } = req.body;
+
+    const result = await pool.query(
+      `
+      UPDATE jobs
+SET
+  title = COALESCE($1, title),
+  client = COALESCE($2, client),
+  address = COALESCE($3, address),
+  notes = COALESCE($4, notes),
+  status = COALESCE($5, status),
+  color = COALESCE($6, color),
+  contact_name = COALESCE($7, contact_name),
+  contact_email = COALESCE($8, contact_email),
+  contact_phone = COALESCE($9, contact_phone)
+WHERE id = $10
+RETURNING *;
+      `,
+      [
+        title,
+        client,
+        address,
+        notes,
+        status,
+        color,
+        contact_name,
+        contact_email,
+        contact_phone,
+        id,
+      ]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("UPDATE job error", err);
+    res.status(500).json({ error: "Job update failed" });
+  }
+};
+
+/* ===============================
+   DELETE JOB
+================================ */
+export const remove = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query(`DELETE FROM assignments WHERE job_id = $1`, [id]);
+    const result = await pool.query(`DELETE FROM jobs WHERE id = $1`, [id]);
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE job error", err);
+    res.status(500).json({ error: "Job delete failed" });
+  }
+};

@@ -3,7 +3,7 @@ import React from "react";
 import styles from "./JobPhaseSection.module.css";
 
 interface Props {
-  jobId: string;
+  jobId: number;
 }
 
 const JobPhaseSection: React.FC<Props> = ({ jobId }) => {

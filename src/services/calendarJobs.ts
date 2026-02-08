@@ -1,26 +1,16 @@
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { assignmentsCol, jobDoc } from "../lib/firestorePaths";
+// src/services/calendarJobs.ts
 
-export async function deleteJobFromFirestore(jobId: number | string) {
-  const jobIdStr = String(jobId);
+import { apiDelete } from "./api";
 
-  // ✅ correct tenant path
-  const assignmentsSnap = await getDocs(
-    collection(db, assignmentsCol(jobIdStr))
-  );
+/* =========================================================
+   DELETE JOB (Postgres version)
+   - DB tarafında CASCADE ile assignments da silinir
+========================================================= */
 
-  await Promise.all(
-    assignmentsSnap.docs.map((d) => deleteDoc(d.ref))
-  );
+export async function deleteJob(jobId: number | string) {
+  const id = String(jobId);
 
-  // ✅ correct tenant path
-  await deleteDoc(doc(db, jobDoc(jobIdStr)));
+  await apiDelete(`/jobs/${id}`);
 
-  console.log("🧨 Job HARD deleted:", jobIdStr);
+  console.log("🧨 Job HARD deleted:", id);
 }

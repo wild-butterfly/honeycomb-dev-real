@@ -1,224 +1,171 @@
 // Created by Honeycomb © 2025
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  doc,
-  getDocs,
-  onSnapshot,
-  deleteDoc,
-  updateDoc,
-  Timestamp,
-} from "firebase/firestore";
-import { addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../firebase";
 
+import React, { useEffect, useState, useMemo } from "react";
 import styles from "./AssignmentSchedulingSection.module.css";
-import { useNavigate } from "react-router-dom";
-import AssignedEmployees, { AssignedEmployee } from "./AssignedEmployees";
-import ConfirmModal from "./ConfirmModal";
-import {
-  jobsCol,
-  employeesCol,
-  assignmentsCol,
-  jobDoc,
-  assignmentDoc,
-} from "../lib/firestorePaths";
+import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
+
+/* ================= TYPES ================= */
+type Employee = {
+  id: number;
+  name: string;
+};
+
+type Assignment = {
+  id: number;
+  employee_id: number;
+  start_time: string; // DB string "YYYY-MM-DD HH:mm:ss"
+  end_time: string;
+};
 
 /* ================= HELPERS ================= */
-
-function toIsoSafe(v: any): string | undefined {
-  if (!v) return;
-  if (v instanceof Timestamp) return v.toDate().toISOString();
-  if (typeof v?.toDate === "function") return v.toDate().toISOString();
-  if (typeof v === "string") return new Date(v).toISOString();
+function toInputDate(value?: string | null) {
+  return value ? value.slice(0, 10) : "";
 }
 
-function calcHours(startIso?: string, endIso?: string): number {
-  if (!startIso || !endIso) return 0;
-  const diff = Date.parse(endIso) - Date.parse(startIso);
-  return diff > 0 ? Math.round((diff / 36e5) * 4) / 4 : 0;
+function toInputTime(value?: string | null) {
+  return value ? value.slice(11, 16) : "";
+}
+
+function calcHours(start?: string | null, end?: string | null) {
+  if (!start || !end) return 0;
+  const sh = Number(start.slice(11, 13));
+  const sm = Number(start.slice(14, 16));
+  const eh = Number(end.slice(11, 13));
+  const em = Number(end.slice(14, 16));
+  if ([sh, sm, eh, em].some((v) => isNaN(v))) return 0;
+
+  let startMin = sh * 60 + sm;
+  let endMin = eh * 60 + em;
+
+  if (endMin <= startMin) endMin += 24 * 60;
+
+  return Math.round(((endMin - startMin) / 60) * 4) / 4;
 }
 
 /* ================= COMPONENT ================= */
+type Props = {
+  jobId: number;
+  onSelectAssignment?: (a: { start_time: string; end_time: string }) => void;
+};
 
-const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
+const AssignmentSchedulingSection: React.FC<Props> = ({
   jobId,
+  onSelectAssignment,
 }) => {
-  const navigate = useNavigate();
-  const safeJobId = String(jobId);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
 
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [assignedEmployees, setAssignedEmployees] = useState<
-    AssignedEmployee[]
-  >([]);
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState<number | null>(null);
+  const [date, setDate] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  const [confirmUnassign, setConfirmUnassign] = useState<{
-    assignmentId: string;
-    employeeName: string;
-  } | null>(null);
+  /* ================= LOAD ================= */
+  const loadAll = async () => {
+    const [emps, rawAssignments] = await Promise.all([
+      apiGet<Employee[]>("/employees"),
+      apiGet<any[]>(`/assignments?job_id=${jobId}`),
+    ]);
 
-  /* ================= LOAD EMPLOYEES ================= */
+    setEmployees(emps ?? []);
 
-  useEffect(() => {
-    getDocs(collection(db, employeesCol())).then((snap) =>
-      setEmployees(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    );
-  }, []);
+    const normalized: Assignment[] = (rawAssignments ?? []).map((a) => ({
+      id: Number(a.id),
+      employee_id: Number(a.employee_id),
+      start_time:
+        a.start_time ?? a.start ?? a.startTime ?? "1970-01-01 00:00:00",
+      end_time: a.end_time ?? a.end ?? a.endTime ?? "1970-01-01 00:00:00",
+    }));
 
-  const employeeNameById = useMemo(() => {
-    const map = new Map<string, string>();
-    employees.forEach((e) =>
-      map.set(e.id, e.name || e.fullName || e.displayName || "Employee"),
-    );
-    return map;
-  }, [employees]);
-
-  /* ================= LOAD ASSIGNMENTS ================= */
+    setAssignments(normalized);
+  };
 
   useEffect(() => {
-    if (!safeJobId) return;
+    loadAll();
+  }, [jobId]);
 
-    const unsub = onSnapshot(
-      collection(db, assignmentsCol(safeJobId)),
-      (snap) => {
-        const grouped = new Map<string, AssignedEmployee>();
+  /* ================= SAVE ================= */
+  const handleSave = async () => {
+    if (!selectedEmployee || !date || !start || !end) return;
 
-        snap.docs.forEach((d) => {
-          const a = d.data();
-          const empId = String(a.employeeId);
-
-          if (!grouped.has(empId)) {
-            grouped.set(empId, {
-              employeeId: empId,
-              name: employeeNameById.get(empId) || "Loading...",
-              schedules: [],
-              labour: {
-                enteredHours: 0,
-                completed: false,
-                hasUnscheduled: false,
-              },
-              unscheduledAssignmentId: undefined,
-            });
-          }
-
-          const target = grouped.get(empId)!;
-
-          const startIso = toIsoSafe(a.start);
-          const endIso = toIsoSafe(a.end);
-
-          if (a.scheduled === false) {
-            if (!target.unscheduledAssignmentId) {
-              target.unscheduledAssignmentId = d.id;
-            }
-
-            target.labour.hasUnscheduled = true;
-
-            return;
-          }
-
-          if (!startIso || !endIso) return;
-
-          target.schedules.push({
-            assignmentId: d.id,
-            start: startIso,
-            end: endIso,
-            hours: calcHours(startIso, endIso),
-            completed: a.labourCompleted === true,
-          });
-        });
-
-        // ✅ LABOUR COMPLETED badge logic
-        grouped.forEach((emp) => {
-          const hasSchedules = emp.schedules.length > 0;
-          const allCompleted = emp.schedules.every((s) => s.completed === true);
-
-          if (!hasSchedules && emp.labour.hasUnscheduled) {
-            emp.labour.completed = null; // ⭐ ASSIGNED
-          } else {
-            emp.labour.completed = hasSchedules && allCompleted;
-          }
-        });
-        setAssignedEmployees(Array.from(grouped.values()));
-      },
-    );
-
-    return () => unsub();
-  }, [safeJobId, employeeNameById]);
-
-  /* ================= ASSIGN ================= */
-
-  const handleAssign = async () => {
-    if (!selectedEmployee) return;
-
-    const snap = await getDocs(collection(db, assignmentsCol(safeJobId)));
-
-    const exists = snap.docs.find(
-      (d) =>
-        String(d.data().employeeId) === selectedEmployee &&
-        d.data().scheduled === false,
-    );
-
-    if (exists) {
-      setSelectedEmployee("");
-      return;
+    let endTimeStr = `${date} ${end}:00`;
+    if (end <= start) {
+      const [y, m, d] = date.split("-").map(Number);
+      const dd = String(d + 1).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const yyyy = y;
+      endTimeStr = `${yyyy}-${mm}-${dd} ${end}:00`;
     }
 
-    await addDoc(collection(db, assignmentsCol(safeJobId)), {
-      employeeId: selectedEmployee,
-      scheduled: false,
-      labourCompleted: false,
-      createdAt: serverTimestamp(),
-    });
+    const payload = {
+      employee_id: selectedEmployee,
+      start_time: `${date} ${start}:00`,
+      end_time: endTimeStr,
+    };
 
-    setSelectedEmployee("");
+    if (editingId) {
+      await apiPut(`/assignments/${editingId}`, payload);
+    } else {
+      await apiPost(`/assignments`, { job_id: jobId, ...payload });
+    }
+
+    resetForm();
+    loadAll();
   };
 
-  /* ================= TOGGLE ASSIGNMENT COMPLETED ================= */
-
-  const handleToggleAssignmentCompleted = async (
-    assignmentId: string,
-    completed: boolean,
-  ) => {
-    await updateDoc(doc(db, assignmentDoc(safeJobId, assignmentId)), {
-      labourCompleted: completed,
-      labourCompletedAt: completed ? serverTimestamp() : null,
-    });
-
-    const snap = await getDocs(collection(db, assignmentsCol(safeJobId)));
-
-    const scheduledAssignments = snap.docs
-      .map((d) => d.data())
-      .filter((a) => a.scheduled !== false);
-
-    const hasIncomplete = scheduledAssignments.some(
-      (a) => a.labourCompleted !== true,
-    );
-
-    await updateDoc(doc(db, jobDoc(safeJobId)), {
-      status:
-        !hasIncomplete && scheduledAssignments.length > 0
-          ? "completed"
-          : "active",
-      completedAt:
-        !hasIncomplete && scheduledAssignments.length > 0
-          ? serverTimestamp()
-          : null,
-    });
+  const handleEdit = (a: Assignment) => {
+    setEditingId(a.id);
+    setSelectedEmployee(a.employee_id);
+    setDate(toInputDate(a.start_time));
+    setStart(toInputTime(a.start_time));
+    setEnd(toInputTime(a.end_time));
   };
 
-  /* ================= RENDER ================= */
+  const handleDelete = async (id: number) => {
+    await apiDelete(`/assignments/${id}`);
+    loadAll();
+  };
 
+  const resetForm = () => {
+    setEditingId(null);
+    setSelectedEmployee(null);
+    setDate("");
+    setStart("");
+    setEnd("");
+  };
+
+  /* ================= GROUP ================= */
+  const grouped = useMemo(
+    () =>
+      employees.map((emp) => ({
+        employee: emp,
+        entries: assignments.filter((a) => a.employee_id === emp.id),
+      })),
+    [employees, assignments],
+  );
+
+  const totalHours = useMemo(
+    () =>
+      assignments.reduce(
+        (sum, a) => sum + calcHours(a.start_time, a.end_time),
+        0,
+      ),
+    [assignments],
+  );
+
+  /* ================= UI ================= */
   return (
     <div className={styles.wrapper}>
-      <h3>Assignment & Scheduling</h3>
+      <h3>Scheduling</h3>
 
+      {/* CREATE / EDIT */}
       <div className={styles.assignRow}>
         <select
-          value={selectedEmployee}
-          onChange={(e) => setSelectedEmployee(e.target.value)}
+          value={selectedEmployee ?? ""}
+          onChange={(e) => setSelectedEmployee(Number(e.target.value))}
         >
-          <option value="">Select Employee</option>
+          <option value="">Select employee</option>
           {employees.map((e) => (
             <option key={e.id} value={e.id}>
               {e.name}
@@ -226,102 +173,89 @@ const AssignmentSchedulingSection: React.FC<{ jobId: string }> = ({
           ))}
         </select>
 
-        <button className={styles.assignBtn} onClick={handleAssign}>
-          Assign
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <input
+          type="time"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+        />
+        <input
+          type="time"
+          value={end}
+          onChange={(e) => setEnd(e.target.value)}
+        />
+
+        <button className={styles.primaryBtn} onClick={handleSave}>
+          {editingId ? "Update" : "Schedule"}
         </button>
-
-        <button
-          className={styles.primaryBtn}
-          disabled={!selectedEmployee}
-          onClick={async () => {
-            if (!selectedEmployee) return;
-
-            const snap = await getDocs(
-              collection(db, assignmentsCol(safeJobId)),
-            );
-
-            let scheduledId: string | null = null;
-            let unscheduledId: string | null = null;
-
-            snap.docs.forEach((d) => {
-              const a = d.data();
-              if (String(a.employeeId) !== selectedEmployee) return;
-
-              // scheduled doc (start/end veya scheduled !== false)
-              if (a.scheduled !== false) scheduledId = d.id;
-              // unscheduled doc
-              if (a.scheduled === false) unscheduledId = d.id;
-            });
-
-            // 1) scheduled varsa onu kullan
-            let assignmentId: string | null = scheduledId ?? unscheduledId;
-
-            // 2) hiç yoksa create
-            if (!assignmentId) {
-              const ref = await addDoc(
-                collection(db, assignmentsCol(safeJobId)),
-                {
-                  employeeId: selectedEmployee,
-                  scheduled: false,
-                  labourCompleted: false,
-                  createdAt: serverTimestamp(),
-                },
-              );
-              assignmentId = ref.id;
-            }
-
-            navigate(
-              `/dashboard/calendar?mode=schedule&jobId=${safeJobId}&employeeId=${selectedEmployee}&assignmentId=${assignmentId}`,
-            );
-          }}
-        >
-          Schedule
-        </button>
+        {editingId && (
+          <button className={styles.assignBtn} onClick={resetForm}>
+            Cancel
+          </button>
+        )}
       </div>
 
-      <AssignedEmployees
-        employees={assignedEmployees}
-        onUnassign={(assignmentId, name) =>
-          setConfirmUnassign({
-            assignmentId,
-            employeeName: name,
-          })
-        }
-        onToggleAssignmentCompleted={handleToggleAssignmentCompleted}
-      />
+      {/* LIST */}
+      {grouped.map(({ employee, entries }) =>
+        entries.length ? (
+          <div key={employee.id} className={styles.employeeBlock}>
+            <h4>{employee.name}</h4>
 
-      {confirmUnassign && (
-        <ConfirmModal
-          title="Remove assignment?"
-          description={
-            <>
-              This will remove <strong>{confirmUnassign.employeeName}</strong>{" "}
-              from this scheduled day.
-              <br />
-              This action cannot be undone.
-            </>
-          }
-          onCancel={() => setConfirmUnassign(null)}
-          onConfirm={async () => {
-            const snap = await getDocs(
-              collection(db, assignmentsCol(safeJobId)),
-            );
+            <div className={styles.headerRow}>
+              <div>Date</div>
+              <div>Start</div>
+              <div>End</div>
+              <div>Hours</div>
+              <div />
+            </div>
 
-            const deletes = snap.docs
-              .filter(
-                (d) =>
-                  String(d.data().employeeId) ===
-                    String(confirmUnassign.assignmentId.split("_")[0]) ||
-                  d.id === confirmUnassign.assignmentId,
-              )
-              .map((d) => deleteDoc(d.ref));
+            {entries.map((a) => (
+              <div
+                key={a.id}
+                className={styles.entryRow}
+                onClick={() =>
+                  onSelectAssignment?.({
+                    start_time: a.start_time,
+                    end_time: a.end_time,
+                  })
+                }
+              >
+                <div>{toInputDate(a.start_time)}</div>
+                <div>{toInputTime(a.start_time)}</div>
+                <div>{toInputTime(a.end_time)}</div>
+                <div>{calcHours(a.start_time, a.end_time)}</div>
 
-            await Promise.all(deletes);
-
-            setConfirmUnassign(null);
-          }}
-        />
+                <div className={styles.actions}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(a);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(a.id);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null,
       )}
+
+      <div className={styles.totalRow}>Total Scheduled Hours: {totalHours}</div>
     </div>
   );
 };

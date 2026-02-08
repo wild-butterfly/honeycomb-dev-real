@@ -1,14 +1,14 @@
 // Created by Clevermode © 2025. All rights reserved.
 import React, { useMemo } from "react";
 import styles from "./MobileMonthList.module.css";
-import type { CalendarJob, Employee } from "../pages/CalendarPage";
+import type { CalendarJob, Employee } from "../types/calendar";
 import { getJobStart, getAssignedEmployeeIds } from "../utils/jobTime";
 
 interface Props {
   selectedDate: Date;
   monthGroups: { [day: number]: CalendarJob[] };
   employees: Employee[];
-  onJobClick: (id: string) => void;
+  onJobClick: (id: number) => void;
 }
 
 const MobileMonthList: React.FC<Props> = ({
@@ -83,7 +83,7 @@ const MobileMonthList: React.FC<Props> = ({
 
                     {/* TITLE + CUSTOMER */}
                     <div className={styles.title}>{job.title}</div>
-                    <div className={styles.customer}>{job.customer}</div>
+                    <div className={styles.customer}>{job.client}</div>
 
                     {/* STAFF */}
                     {emp && (

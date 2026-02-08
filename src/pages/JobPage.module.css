@@ -5,17 +5,17 @@
 .pageWrapper {
   display: flex;
   min-height: 100vh;
-  background: #fefbf3;
+  background: linear-gradient(180deg, #fffdf5 0%, #fff9e6 100%);
   padding: 30px 20px;
 }
 
 .mainCard {
   flex: 1;
-  background: #fffdf5;
-  border-radius: 16px;
+  background: #ffffff; /* ⬅️ net ana kart */
+  border-radius: 18px;
   border: 1px solid #f0e6c2;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  padding: 40px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  padding: 36px 40px;
   margin-left: 20px;
 }
 
@@ -31,16 +31,11 @@
 }
 
 /* =====================================================
-   GENERIC SECTION (SADE + TEMİZ)
-   ⭐ artık override yok
+   GENERIC SECTION (ARTIK KART DEĞİL)
 ===================================================== */
 
 .section {
-  margin-top: 22px;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #eadfba;
-  padding: 20px;
+  margin-top: 28px;
 }
 
 /* =====================================================
@@ -55,19 +50,19 @@
 }
 
 /* =====================================================
-   DESCRIPTION BOX
+   NOTES / DESCRIPTION CARD
 ===================================================== */
 
 .detailBox {
   background: #fffefa;
   border: 1px solid #e8dfc8;
-  padding: 14px;
-  border-radius: 10px;
+  padding: 18px;
+  border-radius: 14px;
   white-space: pre-wrap;
 }
 
 /* =====================================================
-   CLICK TO EDIT
+   CLICK TO EDIT (READ MODE)
 ===================================================== */
 
 .clickToEdit {
@@ -75,34 +70,48 @@
   padding: 14px 16px;
   border-radius: 10px;
   background: #fffdf6;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .clickToEdit:hover {
   background: #fff7dd;
-  border: 1px solid #f7b500;
 }
 
 /* =====================================================
-   EDIT MODE
+   EDIT MODE (NO MORE INNER CARD)
 ===================================================== */
 
 .editBox {
-  padding: 16px;
-  border-radius: 12px;
-  background: #fffefa;
-  border: 1px solid #f1e2b8;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .textarea {
   width: 100%;
-  min-height: 90px;
+  min-height: 140px;
   resize: vertical;
-  border: none;
-  outline: none;
-  background: transparent;
+
+  padding: 14px 16px;
+
+  border-radius: 10px;
+  border: 1px solid #e8dfc8;
+  background: #fffefa;
+
   font-family: inherit;
   font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =====================================================
+   EDIT ACTIONS
+===================================================== */
+
+.editActionsInline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
 }
 
 /* =====================================================
@@ -111,7 +120,7 @@
 
 .saveBtn {
   background: #e6c15a;
-  color: white;
+  color: #ffffff;
   border: 2px solid #d4b84a;
   border-radius: 8px;
   padding: 8px 16px;
@@ -124,35 +133,29 @@
 }
 
 .cancelBtn {
-  background: #fffdf6;
+  background: transparent;
   border: 2px solid #d4b84a;
   border-radius: 8px;
   padding: 8px 16px;
   font-weight: 600;
   cursor: pointer;
+  color: #6b560f;
 }
 
 .cancelBtn:hover {
   background: #fff2c2;
 }
 
-.editActionsInline {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 10px;
-}
-
 /* =====================================================
-   TABS BAR (HONEYCOMB STYLE)
+   TABS BAR (CLEAN + STABLE)
 ===================================================== */
 
 .sectionTabs {
   display: flex;
-  gap: 6px;
-  padding: 12px 14px 0 14px;
-  margin-bottom: -2px;
-  border-bottom: 1px solid #eee;
+  gap: 8px;
+  padding: 0 6px;
+  margin-bottom: 14px;
+  border-bottom: 2px solid #f0e6c2;
 }
 
 /* base tab */
@@ -172,7 +175,7 @@
   transition: all 0.15s ease;
 }
 
-/* normal */
+/* inactive */
 
 .sectionTab {
   opacity: 0.85;
@@ -186,12 +189,14 @@
 
 .sectionTabActive {
   background: linear-gradient(110deg, #ffe066 60%, #ffc400 120%);
-  border: 2px solid #ffb800;
+  border-color: #ffb800;
   transform: translateY(-1px);
 }
 
-/* content padding */
+/* =====================================================
+   TAB CONTENT WRAPPER
+===================================================== */
 
-.section > *:not(.sectionTabs) {
-  padding: 16px;
+.sectionContent {
+  padding: 8px 6px 6px 6px;
 }

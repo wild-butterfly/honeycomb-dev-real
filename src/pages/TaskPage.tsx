@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { createTask, subscribeToTasks, Task } from "../services/tasks";
+import { createTask, getTasks, Task } from "../services/tasks";
 import { useTaskEmployees } from "../services/taskEmployees";
 
 // ---------- AddTaskModal ----------
@@ -24,7 +24,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ employees, onClose }) => {
 
     try {
       await createTask({
-        desc,
+        description: desc,
         assigned,
         due,
       });
@@ -84,8 +84,13 @@ const TaskPage: React.FC = () => {
   const { employees, loading } = useTaskEmployees();
 
   useEffect(() => {
-    return subscribeToTasks(setTasks);
+    loadTasks();
   }, []);
+
+  const loadTasks = async () => {
+    const data = await getTasks();
+    setTasks(data);
+  };
 
   if (loading) return <p>Loading…</p>;
 
@@ -106,7 +111,7 @@ const TaskPage: React.FC = () => {
         <ul>
           {tasks.map((t) => (
             <li key={t.id}>
-              <b>{t.desc}</b> — due {t.due}
+              <b>{t.description}</b> — due {t.due}
             </li>
           ))}
         </ul>

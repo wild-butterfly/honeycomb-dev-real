@@ -4,18 +4,21 @@
 
 .wrapper {
   margin-top: 24px;
+  background: linear-gradient(180deg, #fffefa 0%, #fff8e1 100%);
+  padding: 18px;
+  border-radius: 16px;
 }
 
 .wrapper h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   margin-bottom: 14px;
   color: #2b2b2b;
 }
 
 /* =================================================
-   ASSIGN BAR (inner bar → senin dediğin kısım)
-   hafif border + radius + soft bg
+   ASSIGN BAR
+   (premium ama sade)
 ================================================= */
 
 .assignRow {
@@ -23,179 +26,155 @@
   align-items: center;
   gap: 12px;
 
-  padding: 12px 14px;
-  margin-bottom: 20px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
 
-  background: #fffdf7;
-
-  /* ⭐ hafif iç border */
-  border: 1px solid #e9e3d3;
-
-  /* ⭐ istediğin radius */
-  border-radius: 14px;
-
-  transition:
-    border 0.15s ease,
-    box-shadow 0.15s ease;
-}
-
-.assignRow:hover {
-  border-color: #e2c56b;
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
 }
 
 /* =================================================
-   SELECT  (class kullanmadan direkt target)
+   INPUTS / SELECTS
 ================================================= */
+
+.assignRow select,
+.assignRow input[type="date"],
+.assignRow input[type="time"] {
+  padding: 9px 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+
+  font-size: 13px;
+
+  transition: border-color 0.15s ease;
+}
 
 .assignRow select {
   flex: 1;
-
-  padding: 10px 14px;
-
-  background: white;
-
-  border: 1px solid #e6e2d6;
-  border-radius: 12px;
-
-  font-size: 14px;
-
-  transition:
-    border 0.15s ease,
-    box-shadow 0.15s ease;
 }
 
-.assignRow select:hover {
-  border-color: #e2c56b;
-}
-
-.assignRow select:focus {
+.assignRow select:focus,
+.assignRow input:focus {
   outline: none;
-
   border-color: #ffcc00;
-
-  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
 }
 
 /* =================================================
    BUTTONS
 ================================================= */
 
-/* Secondary (Assign) */
+/* Primary */
+
+.primaryBtn {
+  background: linear-gradient(180deg, #ffe066, #ffd43b);
+  color: #2b2b2b;
+
+  border: 1px solid #f0c419;
+  border-radius: 8px;
+
+  padding: 9px 16px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(180deg, #ffd43b, #ffcc00);
+}
+
+/* Secondary */
 
 .assignBtn {
   background: #ffffff;
   color: #333;
 
-  border: 1px solid #e3e3e3;
-  border-radius: 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
 
-  padding: 9px 16px;
+  padding: 9px 14px;
 
+  font-size: 13px;
   font-weight: 600;
 
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .assignBtn:hover {
   background: #f7f7f7;
 }
 
-/* Primary (Schedule) */
-
-.primaryBtn {
-  background: linear-gradient(110deg, #ffe066 40%, #ffd43b 120%);
-  color: #2b2b2b;
-
-  border: 1px solid #f0c419;
-  border-radius: 12px;
-
-  padding: 9px 18px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  box-shadow: 0 2px 6px rgba(245, 197, 66, 0.25);
-
-  transition: all 0.15s ease;
-}
-
-.primaryBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(245, 197, 66, 0.35);
-}
-
 /* =================================================
-   EMPLOYEE CARDS (modern, not paper-white)
+   EMPLOYEE SECTION (ESKİYE YAKIN)
 ================================================= */
 
 .employeeBlock {
-  margin-top: 14px;
+  margin-top: 18px;
+  padding-top: 12px;
 
-  padding: 16px 18px;
-
-  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
-
-  border: 1px solid #ffcc00;
-  border-radius: 14px;
-
-  transition:
-    box-shadow 0.15s ease,
-    transform 0.12s ease;
+  border-top: 1px solid #ececec;
 }
 
-.employeeBlock:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+.employeeBlock:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
+
+/* Employee name */
 
 .employeeBlock h4 {
   margin: 0 0 8px 0;
-  font-size: 15px;
+
+  font-size: 14px;
   font-weight: 700;
-  color: #222;
+  color: #333;
 }
 
 /* =================================================
-   GRID TABLE
+   GRID TABLE (LIST FEEL)
 ================================================= */
 
 .headerRow,
-.entryRow,
-.totalRow {
+.entryRow {
   display: grid;
 
   grid-template-columns:
     120px
     160px
     80px
-    110px
-    110px
-    120px
-    60px;
+    80px
+    80px
+    100px;
 
   align-items: center;
   gap: 8px;
 }
 
-.headerRow {
-  padding: 8px 6px;
+/* Header */
 
-  font-size: 12px;
+.headerRow {
+  padding: 6px 0;
+
+  font-size: 11px;
   font-weight: 600;
 
   color: #777;
-
-  border-bottom: 1px solid #f0ead7;
+  border-bottom: 1px solid #eaeaea;
 }
 
+/* Rows */
+
 .entryRow {
-  padding: 10px 6px;
+  padding: 8px 0;
 
   font-size: 13px;
 
-  border-bottom: 1px solid #f4f1e6;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .entryRow:last-child {
@@ -212,20 +191,19 @@
 }
 
 .actions button {
-  padding: 5px 8px;
+  padding: 4px 8px;
 
-  border-radius: 8px;
+  font-size: 12px;
 
-  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
   background: #ffffff;
 
   cursor: pointer;
-
-  transition: all 0.15s ease;
 }
 
 .actions button:hover {
-  background: #f7f7f7;
+  background: #f5f5f5;
 }
 
 /* =================================================
@@ -233,15 +211,13 @@
 ================================================= */
 
 .totalRow {
-  margin-top: 6px;
+  margin-top: 14px;
+  padding-top: 10px;
 
-  padding: 10px 6px;
-
+  font-size: 13px;
   font-weight: 700;
 
-  background: #fafafa;
-
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e6e6e6;
 }
 
 /* =================================================
@@ -253,9 +229,12 @@
     display: none;
   }
 
-  .entryRow,
-  .totalRow {
+  .entryRow {
     grid-template-columns: 1fr 1fr;
     row-gap: 6px;
+  }
+
+  .actions {
+    justify-content: flex-end;
   }
 }

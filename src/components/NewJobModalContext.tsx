@@ -5,7 +5,9 @@ type NewJobModalContextType = {
   open: () => void;
 };
 
-const NewJobModalContext = createContext<NewJobModalContextType>({ open: () => {} });
+const NewJobModalContext = createContext<NewJobModalContextType>({
+  open: () => {},
+});
 
 export const useNewJobModal = () => useContext(NewJobModalContext);
 
@@ -20,12 +22,14 @@ export const NewJobModalProvider = ({
   children,
   customers,
   onAddCustomer,
-  onNewJobSubmit
+  onNewJobSubmit,
 }: ProviderProps) => {
   const [show, setShow] = useState(false);
 
-  const handleSubmit = (job: any) => {
-    if (onNewJobSubmit) onNewJobSubmit(job);
+  const handleSubmit = async (job: any) => {
+    if (onNewJobSubmit) {
+      await onNewJobSubmit(job);
+    }
     setShow(false);
   };
 

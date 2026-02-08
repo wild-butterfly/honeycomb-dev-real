@@ -1,44 +1,19 @@
-// src/services/employees.ts
-
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-} from "firebase/firestore";
-
-import { db } from "../firebase";
-import { employeesCol } from "../lib/firestorePaths";
-
-/* ================= TYPES ================= */
+import { apiGet, apiPost } from "./api";
 
 export type Employee = {
-  id: string;
+  id: number;
   name: string;
-  active: boolean;
+  hourly_rate: number;
 };
 
-/* ================= FETCH ================= */
-
 export async function fetchEmployees(): Promise<Employee[]> {
-  // 🔥 Multi-tenant + alphabetical (Firestore side)
-  const q = query(
-    collection(db, employeesCol()),
-    orderBy("name", "asc")
-  );
+  const data = await apiGet<Employee[]>("/employees");
+  return data ?? [];
+}
 
-  const snapshot = await getDocs(q);
-
-  const list = snapshot.docs.map((doc) => {
-    const data = doc.data() as Omit<Employee, "id">;
-
-    return {
-      id: doc.id,
-      name: data.name ?? "",
-      active: data.active ?? true,
-    };
-  });
-
-  // 🔥 EXTRA SAFETY (frontend sort – always alphabetical)
-  return list.sort((a, b) => a.name.localeCompare(b.name));
+export async function createEmployee(data: {
+  name: string;
+  hourly_rate: number;
+}) {
+  return apiPost("/employees", data);
 }
