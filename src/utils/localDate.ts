@@ -1,17 +1,22 @@
-// src/utils/localDate.ts
-
 /**
- * Parses "YYYY-MM-DD HH:mm:ss" as LOCAL time
- * No UTC conversion
- * No timezone shift
+ * Parses timestamps as LOCAL time
+ * Supports:
+ * - "YYYY-MM-DD HH:mm:ss"
+ * - "YYYY-MM-DDTHH:mm:ss"
+ * - "YYYY-MM-DDTHH:mm:ss.SSSZ"
  */
 export function parseLocalTimestamp(
   value?: string | null,
 ): Date | null {
   if (!value) return null;
 
-  // Expected: "2026-02-08 23:00:00"
-  const [datePart, timePart = "00:00:00"] = value.split(" ");
+  // Normalize ISO → space-separated local format
+  const normalized = value
+    .replace("T", " ")
+    .replace("Z", "")
+    .split(".")[0]; // strip milliseconds
+
+  const [datePart, timePart = "00:00:00"] = normalized.split(" ");
 
   const [year, month, day] = datePart.split("-").map(Number);
   const [hour, minute, second = 0] = timePart.split(":").map(Number);
@@ -26,7 +31,7 @@ export function parseLocalTimestamp(
     return null;
   }
 
-  // 🔒 CRITICAL: numeric constructor = local time
+  // 🔒 LOCAL time constructor (no timezone conversion)
   return new Date(
     year,
     month - 1,

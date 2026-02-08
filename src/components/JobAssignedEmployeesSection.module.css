@@ -1,0 +1,105 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.employeeCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #e6f1f7;
+}
+
+.employeeInfo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.labourBadge {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.notCompleted {
+  background: #f59e0b;
+  color: white;
+}
+
+.completed {
+  background: #16a34a;
+  color: white;
+}
+
+.completeBtn {
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+}
+
+.summary {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.assignmentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.calendarIcon {
+  font-size: 1.1rem;
+}
+
+.assignmentText {
+  font-weight: 500;
+}
+
+.subText {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.menuBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+}

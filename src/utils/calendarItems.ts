@@ -22,7 +22,6 @@ export type CalendarItem = {
 
 /* ================= HELPERS ================= */
 
-// 🔒 PostgreSQL local timestamp → JS Date (NO UTC SHIFT)
 function parseLocal(v: unknown): Date | null {
   if (!v) return null;
 
@@ -31,9 +30,14 @@ function parseLocal(v: unknown): Date | null {
   }
 
   if (typeof v === "string") {
-    // "YYYY-MM-DD HH:mm:ss" → "YYYY-MM-DDTHH:mm:ss"
-    const d = new Date(v.replace(" ", "T"));
-    return isNaN(d.getTime()) ? null : d;
+    // "YYYY-MM-DD HH:mm:ss"
+    const [datePart, timePart] = v.split(" ");
+    if (!datePart || !timePart) return null;
+
+    const [y, m, d] = datePart.split("-").map(Number);
+    const [hh, mm, ss = 0] = timePart.split(":").map(Number);
+
+    return new Date(y, m - 1, d, hh, mm, ss);
   }
 
   return null;
@@ -60,7 +64,7 @@ export function buildCalendarItems(
         !end ||
         end <= start
       ) {
-        return; // ❗ sadece bu assignment skip
+        return; 
       }
 
       items.push({

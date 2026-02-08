@@ -6,12 +6,15 @@ import { useParams } from "react-router-dom";
 
 import styles from "./JobPage.module.css";
 import LeftSidebar from "../components/LeftSidebar";
-import AssignmentSchedulingSection from "../components/AssignmentSchedulingSection";
-import LabourTimeEntrySection from "../components/LabourTimeEntrySection";
 
+import LabourTimeEntrySection from "../components/LabourTimeSection";
+import JobAssignedEmployeesSection from "../components/JobAssignedEmployeesSection";
+
+import type { Assignment, Employee } from "../types/calendar";
 import { apiGet, apiPut } from "../services/api";
 
 /* ================= TYPES ================= */
+
 interface JobDoc {
   id: string;
   title?: string;
@@ -21,11 +24,12 @@ interface JobDoc {
 type TabType = "scheduling" | "labour";
 
 type AssignmentRange = {
-  start_time: string;
-  end_time: string;
+  start: Date;
+  end: Date;
 };
 
 /* ================= COMPONENT ================= */
+
 const JobPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
@@ -34,16 +38,21 @@ const JobPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabType>("scheduling");
 
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
   /* 🔑 ACTIVE ASSIGNMENT (SOURCE OF TRUTH) */
   const [activeAssignment, setActiveAssignment] =
     useState<AssignmentRange | null>(null);
 
   /* ================= NOTES ================= */
+
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
 
   /* ================= LOAD JOB ================= */
+
   useEffect(() => {
     if (!id) return;
 
@@ -60,30 +69,79 @@ const JobPage: React.FC = () => {
       } catch (err) {
         console.error("Failed to load job:", err);
         setJob(null);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadJob();
   }, [id]);
 
+  /* ================= LOAD ASSIGNMENTS + EMPLOYEES ================= */
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadRelations = async () => {
+      try {
+        const [aRes, eRes] = await Promise.all([
+          apiGet<any[]>(`/assignments?job_id=${id}`),
+          apiGet<Employee[]>(`/employees`),
+        ]);
+
+        setAssignments(
+          (aRes ?? []).map((a) => ({
+            id: Number(a.id),
+            employee_id: Number(a.employee_id),
+            start: new Date(a.start_time.replace(" ", "T")),
+            end: new Date(a.end_time),
+            completed: Boolean(a.completed),
+          })),
+        );
+
+        setEmployees(eRes ?? []);
+      } catch (err) {
+        console.error("Failed to load assignments/employees", err);
+      }
+    };
+
+    loadRelations();
+  }, [id]);
+
+  useEffect(() => {
+    if (assignments.length > 0 && !activeAssignment) {
+      setActiveAssignment({
+        start: assignments[0].start,
+        end: assignments[0].end,
+      });
+    }
+  }, [assignments]);
+
   /* ================= SAVE NOTES ================= */
+
   const handleSaveNotes = async () => {
     if (!id) return;
 
     setSavingNotes(true);
     await apiPut(`/jobs/${id}`, { notes: notesDraft });
+
     setJob((prev) => (prev ? { ...prev, notes: notesDraft } : prev));
     setSavingNotes(false);
     setIsEditingNotes(false);
   };
 
   /* ================= UI STATES ================= */
-  if (loading) return <div className={styles.pageWrapper}>Loading…</div>;
-  if (!job) return <div className={styles.pageWrapper}>Job not found</div>;
+
+  if (loading) {
+    return <div className={styles.pageWrapper}>Loading…</div>;
+  }
+
+  if (!job) {
+    return <div className={styles.pageWrapper}>Job not found</div>;
+  }
 
   /* ================= UI ================= */
+
   return (
     <div className={styles.pageWrapper}>
       <LeftSidebar />
@@ -168,16 +226,19 @@ const JobPage: React.FC = () => {
           <div className={styles.sectionContent}>
             {/* SCHEDULING */}
             {activeTab === "scheduling" && (
-              <AssignmentSchedulingSection
-                jobId={Number(job.id)}
-                onSelectAssignment={(range) => {
-                  setActiveAssignment(range);
-                  setActiveTab("labour");
-                }}
-              />
+              <>
+                <JobAssignedEmployeesSection
+                  assignments={assignments}
+                  employees={employees}
+                  onSelectAssignment={(range) => {
+                    setActiveAssignment(range);
+                    setActiveTab("labour");
+                  }}
+                />
+              </>
             )}
 
-            {/* LABOUR */}
+            {/* ================= LABOUR ================= */}
             {activeTab === "labour" && activeAssignment && (
               <LabourTimeEntrySection
                 jobId={Number(job.id)}

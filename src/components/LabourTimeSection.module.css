@@ -1,0 +1,169 @@
+/* LabourTimeEntrySection.module.css */
+/* Created by Honeycomb © 2025 */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e1e6eb;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.card h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* ---------- Rows ---------- */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.row span {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ---------- Inputs ---------- */
+
+select,
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+select {
+  min-width: 220px;
+}
+
+input[type="number"] {
+  width: 90px;
+}
+
+input[type="date"] {
+  width: 150px;
+}
+
+input[type="time"] {
+  width: 110px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+/* ---------- Summary ---------- */
+
+.summary {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: #374151;
+  margin: 10px 0;
+}
+
+.summary div {
+  white-space: nowrap;
+}
+
+.total {
+  font-weight: 700;
+  color: #047857;
+}
+
+/* ---------- Uncharged ---------- */
+
+.unchargedRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.unchargedRow input[type="number"] {
+  width: 80px;
+}
+
+/* ---------- Buttons ---------- */
+
+.primaryBtn {
+  background: #0077c8;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.primaryBtn:hover {
+  background: #005fa3;
+}
+
+button {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e5e7eb;
+}
+
+/* ---------- List ---------- */
+
+.listRow {
+  display: grid;
+  grid-template-columns: 1fr 120px 120px 80px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.listRow:first-child {
+  border-top: none;
+}
+
+.listRow span {
+  color: #374151;
+}
+
+.listRow button {
+  justify-self: end;
+}
+
+/* ---------- Empty ---------- */
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}

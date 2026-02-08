@@ -4,10 +4,15 @@ import * as controller from "../controllers/jobs.controller";
 
 const router = Router();
 
+/* JOB CRUD */
 router.get("/", controller.getAll);
 router.get("/:id", controller.getOne);
 router.post("/", controller.create);
 router.put("/:id", controller.update);
 router.delete("/:id", controller.remove);
+
+/* 🔥 JOB → LABOUR */
+router.get("/:id/labour", controller.getLabour);
+router.post("/:id/labour", controller.addLabour);
 
 export default router;

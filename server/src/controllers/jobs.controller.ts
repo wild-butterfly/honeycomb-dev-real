@@ -178,3 +178,82 @@ export const remove = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Job delete failed" });
   }
 };
+
+/* ===============================
+   GET JOB LABOUR
+================================ */
+export const getLabour = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        l.id,
+        e.name AS employee_name,
+        l.chargeable_hours,
+        l.total
+      FROM labour_entries l
+      JOIN employees e ON e.id = l.employee_id
+      WHERE l.job_id = $1
+      ORDER BY l.created_at DESC
+      `,
+      [id],
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("GET job labour error", err);
+    res.status(500).json({ error: "Labour load failed" });
+  }
+};
+
+/* ===============================
+   ADD JOB LABOUR
+================================ */
+export const addLabour = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      employee_id,
+      assignment_start,
+      assignment_end,
+      worked_hours,
+      uncharged_hours,
+      chargeable_hours,
+      rate,
+      total,
+      description,
+    } = req.body;
+
+    const result = await pool.query(
+      `
+      INSERT INTO labour_entries
+        (job_id, employee_id,
+         assignment_start, assignment_end,
+         worked_hours, uncharged_hours,
+         chargeable_hours, rate, total, description)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *
+      `,
+      [
+        id,
+        employee_id,
+        assignment_start,
+        assignment_end,
+        worked_hours,
+        uncharged_hours,
+        chargeable_hours,
+        rate,
+        total,
+        description,
+      ],
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("ADD job labour error", err);
+    res.status(500).json({ error: "Labour add failed" });
+  }
+};
