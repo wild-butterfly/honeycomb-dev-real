@@ -5,6 +5,31 @@ import { Request, Response } from "express";
 import { pool } from "../db";
 
 /* ===============================
+   INTERNAL: Recalculate job status
+================================ */
+const recalcJobStatus = async (jobId: number) => {
+  const result = await pool.query(
+    `
+    SELECT COUNT(*) FILTER (WHERE completed = false) AS incomplete
+    FROM assignments
+    WHERE job_id = $1
+    `,
+    [jobId]
+  );
+
+  const incompleteCount = Number(result.rows[0]?.incomplete ?? 0);
+
+  await pool.query(
+    `
+    UPDATE jobs
+    SET status = $2
+    WHERE id = $1
+    `,
+    [jobId, incompleteCount === 0 ? "completed" : "active"]
+  );
+};
+
+/* ===============================
    GET ASSIGNMENTS
    - /assignments              → ALL
    - /assignments?job_id=123   → ONLY that job
@@ -100,7 +125,7 @@ export const createAssignment = async (req: Request, res: Response) => {
 export const updateAssignment = async (req: Request, res: Response) => {
   try {
     const assignmentId = Number(req.params.id);
-    const { employee_id, start_time, end_time } = req.body;
+    const { employee_id, start_time, end_time, completed } = req.body;
 
     if (!Number.isInteger(assignmentId)) {
       return res.status(400).json({ error: "Invalid assignment id" });
@@ -110,20 +135,26 @@ export const updateAssignment = async (req: Request, res: Response) => {
       `
       UPDATE assignments
       SET
-        employee_id = $1,
-        start_time  = $2,
-        end_time    = $3
-      WHERE id = $4
+        employee_id = COALESCE($1, employee_id),
+        start_time  = COALESCE($2, start_time),
+        end_time    = COALESCE($3, end_time),
+        completed   = COALESCE($4, completed)
+      WHERE id = $5
       RETURNING *
       `,
-      [employee_id, start_time, end_time, assignmentId]
+      [employee_id, start_time, end_time, completed, assignmentId]
     );
 
     if (!result.rows.length) {
       return res.status(404).json({ error: "Assignment not found" });
     }
 
-    res.json(result.rows[0]);
+    const assignment = result.rows[0];
+
+    // 🔥 JOB STATUS RECALC
+    await recalcJobStatus(assignment.job_id);
+
+    res.json(assignment);
   } catch (err) {
     console.error("assignments.update", err);
     res.status(500).json({ error: "Assignment update failed" });
@@ -152,7 +183,7 @@ export const completeAssignments = async (req: Request, res: Response) => {
       UPDATE assignments
       SET completed = TRUE
       WHERE id = ANY($1::int[])
-      RETURNING id, completed
+      RETURNING job_id
       `,
       [assignmentIds]
     );
@@ -161,10 +192,14 @@ export const completeAssignments = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "No assignments updated" });
     }
 
-    res.json({
-      updated: result.rows.length,
-      assignments: result.rows,
-    });
+    // 🔥 Affected jobs (unique)
+    const jobIds = [...new Set(result.rows.map((r) => r.job_id))];
+
+    for (const jobId of jobIds) {
+      await recalcJobStatus(jobId);
+    }
+
+    res.json({ updated: result.rows.length });
   } catch (err) {
     console.error("assignments.complete", err);
     res.status(500).json({ error: "Assignment completion failed" });
@@ -193,20 +228,24 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       UPDATE assignments
       SET completed = FALSE
       WHERE id = ANY($1::int[])
-      RETURNING id, completed
+      RETURNING job_id
       `,
       [assignmentIds]
     );
 
-    res.json({
-      updated: result.rows.length,
-      assignments: result.rows,
-    });
+    const jobIds = [...new Set(result.rows.map((r) => r.job_id))];
+
+    for (const jobId of jobIds) {
+      await recalcJobStatus(jobId);
+    }
+
+    res.json({ updated: result.rows.length });
   } catch (err) {
     console.error("assignments.reopen", err);
     res.status(500).json({ error: "Assignment reopen failed" });
   }
 };
+
 
 
 /* ===============================
@@ -216,18 +255,16 @@ export const deleteAssignment = async (req: Request, res: Response) => {
   try {
     const assignmentId = Number(req.params.id);
 
-    if (!Number.isInteger(assignmentId)) {
-      return res.status(400).json({ error: "Invalid assignment id" });
-    }
-
     const result = await pool.query(
-      `DELETE FROM assignments WHERE id = $1`,
+      `DELETE FROM assignments WHERE id = $1 RETURNING job_id`,
       [assignmentId]
     );
 
-    if (!result.rowCount) {
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Assignment not found" });
     }
+
+    await recalcJobStatus(result.rows[0].job_id);
 
     res.status(204).send();
   } catch (err) {
