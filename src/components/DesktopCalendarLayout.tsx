@@ -131,6 +131,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   onAssignmentMove,
   onAddJobAt,
 }) => {
+  const didInitialScrollRef = useRef(false);
+
   const visibleEmployees = useMemo(
     () =>
       selectedStaff.length
@@ -359,15 +361,18 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   /* =========================================================
    INITIAL HORIZONTAL SCROLL (CENTER 6AM–6PM)
   ========================================================= */
-  const didInitialScrollRef = useRef(false);
 
   useEffect(() => {
     const body = bodyScrollRef.current;
     if (!body) return;
-    if (didInitialScrollRef.current) return;
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    // her mount'ta reset
+    didInitialScrollRef.current = false;
+
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        if (didInitialScrollRef.current) return;
+
         const firstRow = body.querySelector(
           `.${styles.timeSlotsRow}`,
         ) as HTMLElement | null;
@@ -383,7 +388,9 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
         const zeroHourOffset = firstCell.offsetLeft;
 
+        // 🎯 her zaman bu saate odaklan
         const targetHour = 13;
+
         const targetX =
           zeroHourOffset + targetHour * HOUR_WIDTH_PX + HOUR_WIDTH_PX / 2;
 
@@ -396,7 +403,11 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
         didInitialScrollRef.current = true;
       });
+
+      return () => cancelAnimationFrame(raf2);
     });
+
+    return () => cancelAnimationFrame(raf1);
   }, []);
 
   /* =========================================================
@@ -701,14 +712,14 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                       <div className={styles.jobBlockTitle}>{item.title}</div>
 
-                      {/* 1 saat ve altı → title + customer */}
+                      {/* Less than 1 hour → title + customer */}
                       {item.client && (
                         <div className={styles.jobBlockCustomer}>
                           {item.client}
                         </div>
                       )}
 
-                      {/* 1 saatten uzun → address de ekle */}
+                      {/* Mora than 1 hour → add address */}
                       {isLongJob && item.address && (
                         <div className={styles.jobBlockAddress}>
                           {item.address}

@@ -61,6 +61,9 @@ const safeDate = (v: any): Date | null => {
 ========================================================= */
 
 const CalendarPage: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
   /* ================= STATE ================= */
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -263,7 +266,7 @@ const CalendarPage: React.FC = () => {
       <div className={styles.calendarShell}>
         <main className={styles.calendarMain}>
           <div className={styles.calendarViewport}>
-            {rangeMode === "day" && (
+            <div style={{ display: rangeMode === "day" ? "block" : "none" }}>
               <DesktopCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -278,9 +281,9 @@ const CalendarPage: React.FC = () => {
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            )}
+            </div>
 
-            {rangeMode === "week" && (
+            <div style={{ display: rangeMode === "week" ? "block" : "none" }}>
               <WeekCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -294,9 +297,9 @@ const CalendarPage: React.FC = () => {
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            )}
+            </div>
 
-            {rangeMode === "month" && (
+            <div style={{ display: rangeMode === "month" ? "block" : "none" }}>
               <MonthCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -312,7 +315,7 @@ const CalendarPage: React.FC = () => {
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            )}
+            </div>
           </div>
         </main>
 
