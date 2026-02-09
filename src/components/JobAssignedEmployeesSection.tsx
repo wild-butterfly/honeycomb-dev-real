@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import styles from "./JobAssignedEmployeesSection.module.css";
 import type { Assignment, Employee } from "../types/calendar";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 
 /* ================= TYPES ================= */
 
@@ -120,7 +121,7 @@ const JobAssignedEmployeesSection: React.FC<
                     })
                   }
                 >
-                  <div className={styles.calendarIcon}>📅</div>
+                  <CalendarDaysIcon className={styles.calendarIcon} />
 
                   <div>
                     <div className={styles.assignmentText}>

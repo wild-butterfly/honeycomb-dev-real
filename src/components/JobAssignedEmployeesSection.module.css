@@ -1,105 +1,155 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
+/* ================= CARD ================= */
+
 .employeeCard {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f8fafc;
+  border: 1px solid #ffe58f;
+  border-radius: 12px;
+  background: #fffdf5;
   overflow: hidden;
+  box-shadow: 0 2px 6px rgba(122, 90, 0, 0.08);
 }
+
+.employeeCard:hover {
+  box-shadow: 0 4px 10px rgba(224, 168, 0, 0.15);
+}
+/* ================= HEADER ================= */
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background: #e6f1f7;
+  padding: 12px 14px;
+
+  background: #fffdf5; /* düz, temiz */
+  border-bottom: 2px solid #ffd43b;
+
+  box-shadow: inset 0 -1px 0 rgba(224, 168, 0, 0.25);
 }
 
 .employeeInfo {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
+/* ================= AVATAR ================= */
+
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: #2563eb;
-  color: white;
-  font-weight: 700;
+  background: #ffd43b;
+  color: #4b3b00;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 0 0 2px #f4b400;
 }
+
+/* ================= TEXT ================= */
 
 .name {
-  font-weight: 600;
+  font-weight: 700;
+  color: #4b3b00;
 }
 
+/* ================= BADGES ================= */
+
 .labourBadge {
-  margin-top: 2px;
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: 6px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
   display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .notCompleted {
-  background: #f59e0b;
-  color: white;
+  background: #f4b400;
+  color: #4b3b00;
 }
 
 .completed {
-  background: #16a34a;
-  color: white;
+  background: #7fbf3f;
+  color: #1f3b08;
 }
+
+/* ================= BUTTON ================= */
 
 .completeBtn {
   font-size: 0.8rem;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: white;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid #e0a800;
+  background: #fff3c4;
+  color: #4b3b00;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.summary {
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  color: #374151;
-  border-bottom: 1px solid #e5e7eb;
+.completeBtn:hover {
+  background: #ffd43b;
 }
+
+/* ================= SUMMARY ================= */
+
+.summary {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #7a5a00;
+  border-bottom: 1px solid #ffe58f;
+  background: #fffdf5;
+}
+
+/* ================= ASSIGNMENTS ================= */
 
 .assignmentRow {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  border-top: 1px solid #e5e7eb;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px dashed #ffe58f;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.assignmentRow:hover {
+  background: #fff3c4;
 }
 
 .calendarIcon {
-  font-size: 1.1rem;
+  width: 20px;
+  height: 20px;
+  color: #e0a800;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .assignmentText {
-  font-weight: 500;
+  font-weight: 600;
+  color: #4b3b00;
 }
 
 .subText {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: #7a5a00;
 }
+
+/* ================= MENU ================= */
 
 .menuBtn {
   margin-left: auto;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  color: #7a5a00;
 }
