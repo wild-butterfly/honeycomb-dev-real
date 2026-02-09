@@ -361,54 +361,54 @@ const DesktopCalendarLayout: React.FC<Props> = ({
   /* =========================================================
    INITIAL HORIZONTAL SCROLL (CENTER 6AM–6PM)
   ========================================================= */
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const body = bodyScrollRef.current;
     if (!body) return;
 
-    // her mount'ta reset
-    didInitialScrollRef.current = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 10;
 
-    const raf1 = requestAnimationFrame(() => {
-      const raf2 = requestAnimationFrame(() => {
-        if (didInitialScrollRef.current) return;
+    const tryScroll = () => {
+      const firstRow = body.querySelector(
+        `.${styles.timeSlotsRow}`,
+      ) as HTMLElement | null;
 
-        const firstRow = body.querySelector(
-          `.${styles.timeSlotsRow}`,
-        ) as HTMLElement | null;
+      const firstCell = body.querySelector(
+        `.${styles.timeSlotCell}`,
+      ) as HTMLElement | null;
 
-        const firstCell = body.querySelector(
-          `.${styles.timeSlotCell}`,
-        ) as HTMLElement | null;
+      if (
+        !firstRow ||
+        !firstCell ||
+        firstRow.scrollWidth === 0 ||
+        body.clientWidth === 0
+      ) {
+        if (attempts++ < MAX_ATTEMPTS) {
+          requestAnimationFrame(tryScroll);
+        }
+        return;
+      }
 
-        if (!firstRow || !firstCell) return;
+      const viewportWidth = body.clientWidth;
+      const totalTimelineWidth = firstRow.scrollWidth;
+      const zeroHourOffset = firstCell.offsetLeft;
 
-        const viewportWidth = body.clientWidth;
-        const totalTimelineWidth = firstRow.scrollWidth;
+      const TARGET_HOUR = 13;
 
-        const zeroHourOffset = firstCell.offsetLeft;
+      const targetX =
+        zeroHourOffset + TARGET_HOUR * HOUR_WIDTH_PX + HOUR_WIDTH_PX / 2;
 
-        // 🎯 her zaman bu saate odaklan
-        const targetHour = 13;
+      body.scrollLeft = Math.max(
+        0,
+        Math.min(
+          targetX - viewportWidth / 2,
+          totalTimelineWidth - viewportWidth,
+        ),
+      );
+    };
 
-        const targetX =
-          zeroHourOffset + targetHour * HOUR_WIDTH_PX + HOUR_WIDTH_PX / 2;
-
-        const scrollLeft = targetX - viewportWidth / 2;
-
-        body.scrollLeft = Math.max(
-          0,
-          Math.min(scrollLeft, totalTimelineWidth - viewportWidth),
-        );
-
-        didInitialScrollRef.current = true;
-      });
-
-      return () => cancelAnimationFrame(raf2);
-    });
-
-    return () => cancelAnimationFrame(raf1);
-  }, []);
+    tryScroll();
+  }, [date, visibleEmployees.length]);
 
   /* =========================================================
      START MOVE

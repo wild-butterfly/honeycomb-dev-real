@@ -22,7 +22,6 @@ import type {
 
 import { fetchEmployees } from "../services/employees";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
-import { parseLocalTimestamp } from "../utils/localDate";
 
 /* =========================================================
    TYPES
@@ -30,6 +29,19 @@ import { parseLocalTimestamp } from "../utils/localDate";
 
 type CreateJobResponse = { id: number };
 type JobFilter = "all" | "unassigned" | JobStatus;
+
+const safeDate = (v: any): Date | null => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+
+  if (typeof v === "string") {
+    // PostgreSQL timestamp → LOCAL Date (UTC kaydırma yok)
+    const d = new Date(v.replace(" ", "T"));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+};
 
 /* =========================================================
    DATE → SQL (LOCAL TIME)
@@ -42,20 +54,6 @@ function toLocalSqlTime(d: Date) {
   )} ${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
 }
 
-const safeDate = (v: any): Date | null => {
-  if (!v) return null;
-
-  if (v instanceof Date) return v;
-
-  if (typeof v === "string") {
-    // 🔒 PostgreSQL timestamp without time zone
-    // 🔒 FORCE local time (NO UTC SHIFT)
-    const d = new Date(v.replace(" ", "T"));
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  return null;
-};
 /* =========================================================
    COMPONENT
 ========================================================= */
@@ -64,11 +62,11 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
   /* ================= STATE ================= */
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [jobs, setJobs] = useState<CalendarJob[]>([]);
-
   const [companyId, setCompanyId] = useState<number | null>(null);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -86,11 +84,7 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     apiGet<{ company_id: number }>("/me").then((me) => {
-      if (me?.company_id) {
-        setCompanyId(me.company_id);
-      } else {
-        console.error("No company_id returned from /me");
-      }
+      if (me?.company_id) setCompanyId(me.company_id);
     });
   }, []);
 
@@ -140,6 +134,7 @@ const CalendarPage: React.FC = () => {
 
       const start = safeDate(a.start_time);
       const end = safeDate(a.end_time);
+
       if (!start || !end || end <= start) continue;
 
       const assignment: Assignment = {
@@ -153,6 +148,7 @@ const CalendarPage: React.FC = () => {
       if (!assignmentsByJob.has(jobId)) {
         assignmentsByJob.set(jobId, []);
       }
+
       assignmentsByJob.get(jobId)!.push(assignment);
     }
 
@@ -199,17 +195,14 @@ const CalendarPage: React.FC = () => {
   /* ================= ADD JOB + ASSIGNMENT ================= */
 
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    if (!companyId) {
-      console.error("Cannot create job: companyId not loaded yet");
-      return;
-    }
+    if (!companyId) return;
 
     setOpenContext(null);
 
     const job = await apiPost<CreateJobResponse>("/jobs", {
       title: "New Job",
       status: "active",
-      company_id: companyId, // ✅ NOW REAL
+      company_id: companyId,
     });
 
     if (!job?.id) return;
@@ -222,7 +215,6 @@ const CalendarPage: React.FC = () => {
     });
 
     await loadAll();
-
     setOpenContext({ jobId: job.id, assignmentId: null });
   };
 
@@ -266,7 +258,7 @@ const CalendarPage: React.FC = () => {
       <div className={styles.calendarShell}>
         <main className={styles.calendarMain}>
           <div className={styles.calendarViewport}>
-            <div style={{ display: rangeMode === "day" ? "block" : "none" }}>
+            {rangeMode === "day" && (
               <DesktopCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -281,9 +273,9 @@ const CalendarPage: React.FC = () => {
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            </div>
+            )}
 
-            <div style={{ display: rangeMode === "week" ? "block" : "none" }}>
+            {rangeMode === "week" && (
               <WeekCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -297,9 +289,9 @@ const CalendarPage: React.FC = () => {
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            </div>
+            )}
 
-            <div style={{ display: rangeMode === "month" ? "block" : "none" }}>
+            {rangeMode === "month" && (
               <MonthCalendarLayout
                 date={selectedDate}
                 employees={employees}
@@ -307,15 +299,12 @@ const CalendarPage: React.FC = () => {
                 selectedStaff={selectedStaff}
                 onStaffChange={setSelectedStaff}
                 onItemClick={(item: CalendarItem) =>
-                  setOpenContext({
-                    jobId: item.jobId,
-                    assignmentId: null,
-                  })
+                  setOpenContext({ jobId: item.jobId, assignmentId: null })
                 }
                 onAssignmentMove={moveAssignment}
                 onAddJobAt={handleAddJobAt}
               />
-            </div>
+            )}
           </div>
         </main>
 
