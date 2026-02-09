@@ -131,6 +131,85 @@ export const updateAssignment = async (req: Request, res: Response) => {
 };
 
 /* ===============================
+   COMPLETE ASSIGNMENTS (BULK)
+   PUT /assignments/complete
+   body: { assignmentIds: number[] }
+================================ */
+export const completeAssignments = async (req: Request, res: Response) => {
+  try {
+    const { assignmentIds } = req.body;
+
+    if (
+      !Array.isArray(assignmentIds) ||
+      assignmentIds.length === 0 ||
+      !assignmentIds.every((id) => Number.isInteger(Number(id)))
+    ) {
+      return res.status(400).json({ error: "Invalid assignmentIds" });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE assignments
+      SET completed = TRUE
+      WHERE id = ANY($1::int[])
+      RETURNING id, completed
+      `,
+      [assignmentIds]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "No assignments updated" });
+    }
+
+    res.json({
+      updated: result.rows.length,
+      assignments: result.rows,
+    });
+  } catch (err) {
+    console.error("assignments.complete", err);
+    res.status(500).json({ error: "Assignment completion failed" });
+  }
+};
+
+/* ===============================
+   REOPEN ASSIGNMENTS (BULK)
+   PUT /assignments/reopen
+   body: { assignmentIds: number[] }
+================================ */
+export const reopenAssignments = async (req: Request, res: Response) => {
+  try {
+    const { assignmentIds } = req.body;
+
+    if (
+      !Array.isArray(assignmentIds) ||
+      assignmentIds.length === 0 ||
+      !assignmentIds.every((id) => Number.isInteger(Number(id)))
+    ) {
+      return res.status(400).json({ error: "Invalid assignmentIds" });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE assignments
+      SET completed = FALSE
+      WHERE id = ANY($1::int[])
+      RETURNING id, completed
+      `,
+      [assignmentIds]
+    );
+
+    res.json({
+      updated: result.rows.length,
+      assignments: result.rows,
+    });
+  } catch (err) {
+    console.error("assignments.reopen", err);
+    res.status(500).json({ error: "Assignment reopen failed" });
+  }
+};
+
+
+/* ===============================
    DELETE ASSIGNMENT
 ================================ */
 export const deleteAssignment = async (req: Request, res: Response) => {

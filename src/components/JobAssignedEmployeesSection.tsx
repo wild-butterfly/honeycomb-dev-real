@@ -18,11 +18,25 @@ export interface JobAssignedEmployeesSectionProps {
   onSelectAssignment?: (range: AssignmentRange) => void;
 }
 
+export interface JobAssignedEmployeesSectionProps {
+  assignments: Assignment[];
+  employees: Employee[];
+  onSelectAssignment?: (range: AssignmentRange) => void;
+
+  onCompleteAssignments?: (assignmentIds: number[]) => Promise<void>;
+  onReopenAssignments?: (ids: number[]) => Promise<void>;
+}
 /* ================= COMPONENT ================= */
 
 const JobAssignedEmployeesSection: React.FC<
   JobAssignedEmployeesSectionProps
-> = ({ assignments, employees, onSelectAssignment }) => {
+> = ({
+  assignments,
+  employees,
+  onSelectAssignment,
+  onCompleteAssignments,
+  onReopenAssignments,
+}) => {
   const assignmentsByEmployee = useMemo(() => {
     const map = new Map<number, Assignment[]>();
 
@@ -84,8 +98,15 @@ const JobAssignedEmployeesSection: React.FC<
                 </div>
               </div>
 
-              <button className={styles.completeBtn}>
-                Mark labour as completed
+              <button
+                className={styles.completeBtn}
+                onClick={() =>
+                  labourCompleted
+                    ? onReopenAssignments?.(list.map((a) => a.id))
+                    : onCompleteAssignments?.(list.map((a) => a.id))
+                }
+              >
+                {labourCompleted ? "Reopen labour" : "Mark labour as completed"}
               </button>
             </div>
 

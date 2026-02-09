@@ -130,6 +130,42 @@ const JobPage: React.FC = () => {
     setIsEditingNotes(false);
   };
 
+  //MARK LABOUR AS COMPLETED FUNCTION
+
+  const handleCompleteAssignments = async (assignmentIds: number[]) => {
+    try {
+      console.log("Completing assignments:", assignmentIds);
+
+      await apiPut("/assignments/complete", {
+        assignmentIds,
+      });
+
+      setAssignments((prev) =>
+        prev.map((a) =>
+          assignmentIds.includes(a.id) ? { ...a, completed: true } : a,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to complete assignments", err);
+      alert("Failed to mark labour as completed");
+    }
+  };
+
+  //MARK AS INCOMPLETED FUCTION
+  const handleReopenAssignments = async (assignmentIds: number[]) => {
+    try {
+      await apiPut("/assignments/reopen", { assignmentIds });
+
+      setAssignments((prev) =>
+        prev.map((a) =>
+          assignmentIds.includes(a.id) ? { ...a, completed: false } : a,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to reopen assignments", err);
+      alert("Failed to reopen labour");
+    }
+  };
   /* ================= UI STATES ================= */
 
   if (loading) {
@@ -234,6 +270,8 @@ const JobPage: React.FC = () => {
                     setActiveAssignment(range);
                     setActiveTab("labour");
                   }}
+                  onCompleteAssignments={handleCompleteAssignments}
+                  onReopenAssignments={handleReopenAssignments}
                 />
               </>
             )}

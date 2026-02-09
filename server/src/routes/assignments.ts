@@ -6,10 +6,16 @@ import {
   getAllAssignments,
   createAssignment,
   updateAssignment,
+  completeAssignments,
+  reopenAssignments,
   deleteAssignment,
+  
 } from "../controllers/assignments.controller";
 
 const router = Router();
+
+router.put("/complete", completeAssignments);
+router.put("/reopen", reopenAssignments);
 
 router.get("/", getAllAssignments);
 router.post("/", createAssignment);
