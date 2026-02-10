@@ -14,29 +14,28 @@ export type AssignmentRange = {
 
 export interface JobAssignedEmployeesSectionProps {
   assignments: Assignment[];
+  assignees?: Employee[];
   employees: Employee[];
-  onSelectAssignment?: (range: AssignmentRange) => void;
-}
 
-export interface JobAssignedEmployeesSectionProps {
-  assignments: Assignment[];
-  employees: Employee[];
   onSelectAssignment?: (range: AssignmentRange) => void;
-
   onCompleteAssignments?: (assignmentIds: number[]) => Promise<void>;
   onReopenAssignments?: (ids: number[]) => Promise<void>;
 }
+
 /* ================= COMPONENT ================= */
 
 const JobAssignedEmployeesSection: React.FC<
   JobAssignedEmployeesSectionProps
 > = ({
   assignments,
+  assignees,
   employees,
   onSelectAssignment,
   onCompleteAssignments,
   onReopenAssignments,
 }) => {
+  /* ================= GROUP ASSIGNMENTS ================= */
+
   const assignmentsByEmployee = useMemo(() => {
     const map = new Map<number, Assignment[]>();
 
@@ -50,8 +49,21 @@ const JobAssignedEmployeesSection: React.FC<
     return map;
   }, [assignments]);
 
+  /* ================= UNSCHEDULED ASSIGNEES ================= */
+
+  const scheduledEmployeeIds = useMemo(() => {
+    return new Set(assignments.map((a) => a.employee_id));
+  }, [assignments]);
+
+  const unscheduledAssignees = useMemo(() => {
+    return (assignees ?? []).filter((e) => !scheduledEmployeeIds.has(e.id));
+  }, [assignees, scheduledEmployeeIds]);
+
+  /* ================= RENDER ================= */
+
   return (
     <div className={styles.container}>
+      {/* ================= SCHEDULED EMPLOYEES ================= */}
       {Array.from(assignmentsByEmployee.entries()).map(([employeeId, list]) => {
         const emp = employees.find((e) => e.id === employeeId);
         if (!emp) return null;
@@ -165,6 +177,35 @@ const JobAssignedEmployeesSection: React.FC<
           </div>
         );
       })}
+
+      {/* ================= ASSIGNED BUT NOT SCHEDULED ================= */}
+      {unscheduledAssignees.length > 0 && (
+        <div className={styles.employeeCard}>
+          <div className={styles.header}>
+            <div className={styles.employeeInfo}>
+              <div className={styles.avatar}>👤</div>
+              <div>
+                <div className={styles.name}>Assigned (not scheduled)</div>
+                <div className={`${styles.labourBadge} ${styles.notCompleted}`}>
+                  NOT SCHEDULED
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {unscheduledAssignees.map((e) => (
+            <div key={e.id} className={styles.assignmentRow}>
+              <CalendarDaysIcon className={styles.calendarIcon} />
+              <div>
+                <div className={styles.assignmentText}>{e.name}</div>
+                <div className={styles.subText}>
+                  Assigned to job, no schedule yet
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

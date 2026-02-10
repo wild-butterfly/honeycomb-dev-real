@@ -40,20 +40,36 @@ export const getOne = async (req: Request, res: Response) => {
       `
       SELECT
         j.*,
+
+        /* ================= ASSIGNMENTS (SCHEDULED) ================= */
         COALESCE(
           json_agg(
-            json_build_object(
+            DISTINCT jsonb_build_object(
               'id', a.id,
               'employee_id', a.employee_id,
               'start_time', to_char(a.start_time, 'YYYY-MM-DD"T"HH24:MI:SS'),
-'end_time',   to_char(a.end_time,   'YYYY-MM-DD"T"HH24:MI:SS'),
+              'end_time',   to_char(a.end_time,   'YYYY-MM-DD"T"HH24:MI:SS'),
               'completed', a.completed
             )
           ) FILTER (WHERE a.id IS NOT NULL),
           '[]'
-        ) AS assignments
+        ) AS assignments,
+
+        /* ================= ASSIGNEES (NO SCHEDULE) ================= */
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'employee_id', e.id,
+              'name', e.name
+            )
+          ) FILTER (WHERE e.id IS NOT NULL),
+          '[]'
+        ) AS assignees
+
       FROM jobs j
       LEFT JOIN assignments a ON a.job_id = j.id
+      LEFT JOIN job_assignees ja ON ja.job_id = j.id
+      LEFT JOIN employees e ON e.id = ja.employee_id
       WHERE j.id = $1
       GROUP BY j.id
       `,
@@ -255,5 +271,37 @@ export const addLabour = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("ADD job labour error", err);
     res.status(500).json({ error: "Labour add failed" });
+  }
+};
+
+/* ===============================
+   ASSIGN EMPLOYEE TO JOB (NO SCHEDULE)
+   PUT /jobs/:id/assign
+================================ */
+export const assignEmployee = async (req: Request, res: Response) => {
+  try {
+    const jobId = Number(req.params.id);
+    const { employee_id } = req.body;
+
+    if (
+      !Number.isInteger(jobId) ||
+      !Number.isInteger(Number(employee_id))
+    ) {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO job_assignees (job_id, employee_id)
+      VALUES ($1, $2)
+      ON CONFLICT DO NOTHING
+      `,
+      [jobId, employee_id]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("JOB ASSIGN error", err);
+    res.status(500).json({ error: "Job assign failed" });
   }
 };

@@ -2,13 +2,14 @@
 // Created by Honeycomb © 2025
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import styles from "./JobPage.module.css";
 import LeftSidebar from "../components/LeftSidebar";
 
 import LabourTimeEntrySection from "../components/LabourTimeSection";
 import JobAssignedEmployeesSection from "../components/JobAssignedEmployeesSection";
+import AssigneeFilterBar from "../components/AssigneeFilterBar";
 
 import type { Assignment, Employee } from "../types/calendar";
 import { apiGet, apiPut } from "../services/api";
@@ -19,6 +20,10 @@ interface JobDoc {
   id: string;
   title?: string;
   notes?: string;
+  assignees?: {
+    employee_id: number;
+    name: string;
+  }[];
 }
 
 type TabType = "scheduling" | "labour";
@@ -32,14 +37,19 @@ type AssignmentRange = {
 
 const JobPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-
+  const navigate = useNavigate();
+  const [selectedAssignee, setSelectedAssignee] = useState<number | "all">(
+    "all",
+  );
   const [job, setJob] = useState<JobDoc | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState<TabType>("scheduling");
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [assignees, setAssignees] = useState<Employee[]>([]);
 
   /* 🔑 ACTIVE ASSIGNMENT (SOURCE OF TRUTH) */
   const [activeAssignment, setActiveAssignment] =
@@ -66,6 +76,13 @@ const JobPage: React.FC = () => {
         }
 
         setJob(resolvedJob);
+
+        setAssignees(
+          (resolvedJob.assignees ?? []).map((a: any) => ({
+            id: Number(a.employee_id),
+            name: a.name,
+          })),
+        );
       } catch (err) {
         console.error("Failed to load job:", err);
         setJob(null);
@@ -166,6 +183,24 @@ const JobPage: React.FC = () => {
       alert("Failed to reopen labour");
     }
   };
+
+  //ASSIGN JOB
+  const handleAssignEmployee = async () => {
+    if (!id || selectedAssignee === "all") return;
+
+    await apiPut(`/jobs/${id}/assign`, {
+      employee_id: selectedAssignee,
+    });
+
+    alert("Employee assigned to job (not scheduled)");
+  };
+
+  //CLONE
+  const handleScheduleEmployee = () => {
+    if (!id || selectedAssignee === "all") return;
+
+    navigate(`/calendar?mode=clone&job=${id}&employee=${selectedAssignee}`);
+  };
   /* ================= UI STATES ================= */
 
   if (loading) {
@@ -263,8 +298,37 @@ const JobPage: React.FC = () => {
             {/* SCHEDULING */}
             {activeTab === "scheduling" && (
               <>
+                {/* ASSIGNEE FILTER */}
+                <AssigneeFilterBar
+                  employees={employees.map((e) => ({
+                    id: e.id,
+                    name: e.name,
+                  }))}
+                  selectedAssignee={selectedAssignee}
+                  onChange={setSelectedAssignee}
+                />
+
+                {/* ACTION BUTTONS */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                  <button
+                    disabled={selectedAssignee === "all"}
+                    onClick={handleAssignEmployee}
+                  >
+                    Assign
+                  </button>
+
+                  <button
+                    disabled={selectedAssignee === "all"}
+                    onClick={handleScheduleEmployee}
+                  >
+                    Schedule
+                  </button>
+                </div>
+
+                {/* EXISTING SECTION – UNCHANGED */}
                 <JobAssignedEmployeesSection
                   assignments={assignments}
+                  assignees={assignees}
                   employees={employees}
                   onSelectAssignment={(range) => {
                     setActiveAssignment(range);

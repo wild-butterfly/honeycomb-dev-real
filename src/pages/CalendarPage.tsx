@@ -22,6 +22,7 @@ import type {
 
 import { fetchEmployees } from "../services/employees";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
+import { useLocation } from "react-router-dom";
 
 /* =========================================================
    TYPES
@@ -79,6 +80,20 @@ const CalendarPage: React.FC = () => {
     jobId: number;
     assignmentId: number | null;
   } | null>(null);
+  const location = useLocation();
+
+  const cloneContext = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("mode") !== "clone") return null;
+
+    const jobId = Number(params.get("job"));
+    const employeeId = Number(params.get("employee"));
+
+    if (!jobId || !employeeId) return null;
+
+    return { jobId, employeeId };
+  }, [location.search]);
 
   /* ================= LOAD COMPANY ================= */
 
@@ -218,6 +233,22 @@ const CalendarPage: React.FC = () => {
     setOpenContext({ jobId: job.id, assignmentId: null });
   };
 
+  const handleCloneAssignmentAt = async (
+    employeeId: number,
+    start: Date,
+    end: Date,
+  ) => {
+    if (!cloneContext) return;
+
+    await apiPost("/assignments", {
+      job_id: cloneContext.jobId,
+      employee_id: employeeId,
+      start_time: toLocalSqlTime(start),
+      end_time: toLocalSqlTime(end),
+    });
+
+    await loadAll();
+  };
   /* ================= FILTER ================= */
 
   const filteredJobs = useMemo(() => {
@@ -271,7 +302,9 @@ const CalendarPage: React.FC = () => {
                   })
                 }
                 onAssignmentMove={moveAssignment}
-                onAddJobAt={handleAddJobAt}
+                onAddJobAt={
+                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                }
               />
             )}
 
