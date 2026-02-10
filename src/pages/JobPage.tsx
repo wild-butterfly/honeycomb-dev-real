@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import styles from "./JobPage.module.css";
+import Toast from "../components/Toast";
 import LeftSidebar from "../components/LeftSidebar";
 
 import LabourTimeEntrySection from "../components/LabourTimeSection";
@@ -55,6 +56,7 @@ const JobPage: React.FC = () => {
   const [activeAssignment, setActiveAssignment] =
     useState<AssignmentRange | null>(null);
 
+  const [toast, setToast] = useState<string | null>(null);
   /* ================= NOTES ================= */
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -219,11 +221,27 @@ const JobPage: React.FC = () => {
   const handleAssignEmployee = async () => {
     if (!id || selectedAssignee === "all") return;
 
-    await apiPut(`/jobs/${id}/assign`, {
-      employee_id: selectedAssignee,
-    });
+    try {
+      await apiPut(`/jobs/${id}/assign`, {
+        employee_id: selectedAssignee,
+      });
 
-    alert("Employee assigned to job (not scheduled)");
+      const employee = employees.find((e) => e.id === selectedAssignee);
+      if (!employee) return;
+
+      setAssignees((prev) => {
+        if (prev.some((a) => a.id === employee.id)) return prev;
+        return [...prev, employee];
+      });
+
+      // ✅ PREMIUM FEEDBACK
+      setToast(`${employee.name} assigned to job`);
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      console.error("Failed to assign employee", err);
+      setToast("Failed to assign employee");
+      setTimeout(() => setToast(null), 2500);
+    }
   };
 
   //CLONE
@@ -255,6 +273,7 @@ const JobPage: React.FC = () => {
 
   return (
     <div className={styles.pageWrapper}>
+      {toast && <Toast message={toast} />}
       <LeftSidebar />
 
       <div className={styles.mainCard}>
