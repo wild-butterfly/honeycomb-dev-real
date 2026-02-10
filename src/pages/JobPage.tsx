@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./JobPage.module.css";
 import Toast from "../components/Toast";
 import LeftSidebar from "../components/LeftSidebar";
+import ConfirmModal from "../components/ConfirmModal";
 
 import LabourTimeEntrySection from "../components/LabourTimeSection";
 import JobAssignedEmployeesSection from "../components/JobAssignedEmployeesSection";
@@ -57,6 +58,12 @@ const JobPage: React.FC = () => {
     useState<AssignmentRange | null>(null);
 
   const [toast, setToast] = useState<string | null>(null);
+
+  const [confirmUnassign, setConfirmUnassign] = useState<{
+    employeeId: number;
+    name: string;
+  } | null>(null);
+
   /* ================= NOTES ================= */
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -213,7 +220,7 @@ const JobPage: React.FC = () => {
       setAssignees((prev) => prev.filter((e) => e.id !== employeeId));
     } catch (err) {
       console.error("Failed to unassign employee", err);
-      alert("Failed to remove employee from job");
+      setToast("Failed to remove employee from job");
     }
   };
 
@@ -274,6 +281,27 @@ const JobPage: React.FC = () => {
   return (
     <div className={styles.pageWrapper}>
       {toast && <Toast message={toast} />}
+
+      {confirmUnassign && (
+        <ConfirmModal
+          title="Remove employee"
+          description={
+            <>
+              Remove <b>{confirmUnassign.name}</b> from this job completely?
+            </>
+          }
+          confirmText="Remove"
+          cancelText="Cancel"
+          onCancel={() => setConfirmUnassign(null)}
+          onConfirm={async () => {
+            await handleUnassignEmployee(confirmUnassign.employeeId);
+            setConfirmUnassign(null);
+            setToast(`${confirmUnassign.name} removed from job`);
+            setTimeout(() => setToast(null), 2500);
+          }}
+        />
+      )}
+
       <LeftSidebar />
 
       <div className={styles.mainCard}>
@@ -396,7 +424,9 @@ const JobPage: React.FC = () => {
                   onCompleteAssignments={handleCompleteAssignments}
                   onReopenAssignments={handleReopenAssignments}
                   onDeleteAssignment={handleDeleteAssignment}
-                  onUnassignEmployee={handleUnassignEmployee}
+                  onRequestUnassignEmployee={(employeeId, name) =>
+                    setConfirmUnassign({ employeeId, name })
+                  }
                 />
               </>
             )}

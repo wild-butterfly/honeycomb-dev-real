@@ -24,7 +24,7 @@ export interface JobAssignedEmployeesSectionProps {
 
   /** NEW */
   onDeleteAssignment?: (assignmentId: number) => Promise<void>;
-  onUnassignEmployee?: (employeeId: number) => Promise<void>;
+  onRequestUnassignEmployee?: (employeeId: number, name: string) => void;
 }
 
 /* ================= COMPONENT ================= */
@@ -39,7 +39,7 @@ const JobAssignedEmployeesSection: React.FC<
   onCompleteAssignments,
   onReopenAssignments,
   onDeleteAssignment,
-  onUnassignEmployee,
+  onRequestUnassignEmployee,
 }) => {
   /* ================= GROUP ASSIGNMENTS ================= */
 
@@ -230,14 +230,7 @@ const JobAssignedEmployeesSection: React.FC<
                 className={styles.removeBtn}
                 title="Remove from job"
                 onClick={() => {
-                  if (
-                    !window.confirm(
-                      `Remove ${e.name} from this job completely?`,
-                    )
-                  )
-                    return;
-
-                  onUnassignEmployee?.(e.id);
+                  onRequestUnassignEmployee?.(e.id, e.name);
                 }}
               >
                 <XMarkIcon width={16} />
