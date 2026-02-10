@@ -196,6 +196,37 @@ export const remove = async (req: Request, res: Response) => {
 };
 
 /* ===============================
+   UNASSIGN EMPLOYEE FROM JOB
+   PUT /jobs/:id/unassign
+================================ */
+export const unassignEmployee = async (req: Request, res: Response) => {
+  try {
+    const jobId = Number(req.params.id);
+    const { employee_id } = req.body;
+
+    if (
+      !Number.isInteger(jobId) ||
+      !Number.isInteger(Number(employee_id))
+    ) {
+      return res.status(400).json({ error: "Invalid payload" });
+    }
+
+    await pool.query(
+      `
+      DELETE FROM job_assignees
+      WHERE job_id = $1 AND employee_id = $2
+      `,
+      [jobId, employee_id]
+    );
+
+    res.status(204).send();
+  } catch (err) {
+    console.error("JOB UNASSIGN error", err);
+    res.status(500).json({ error: "Job unassign failed" });
+  }
+};
+
+/* ===============================
    GET JOB LABOUR
 ================================ */
 export const getLabour = async (req: Request, res: Response) => {

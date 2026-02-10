@@ -22,7 +22,7 @@ import type {
 
 import { fetchEmployees } from "../services/employees";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /* =========================================================
    TYPES
@@ -81,18 +81,16 @@ const CalendarPage: React.FC = () => {
     assignmentId: number | null;
   } | null>(null);
   const location = useLocation();
-
+  const navigate = useNavigate();
   const cloneContext = useMemo(() => {
     const params = new URLSearchParams(location.search);
 
     if (params.get("mode") !== "clone") return null;
 
     const jobId = Number(params.get("job"));
-    const employeeId = Number(params.get("employee"));
+    if (!Number.isFinite(jobId)) return null;
 
-    if (!jobId || !employeeId) return null;
-
-    return { jobId, employeeId };
+    return { jobId };
   }, [location.search]);
 
   /* ================= LOAD COMPANY ================= */
@@ -248,6 +246,8 @@ const CalendarPage: React.FC = () => {
     });
 
     await loadAll();
+
+    navigate("/dashboard/calendar", { replace: true });
   };
   /* ================= FILTER ================= */
 

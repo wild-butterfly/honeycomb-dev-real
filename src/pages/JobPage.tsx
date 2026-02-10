@@ -12,7 +12,7 @@ import JobAssignedEmployeesSection from "../components/JobAssignedEmployeesSecti
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
 
 import type { Assignment, Employee } from "../types/calendar";
-import { apiGet, apiPut } from "../services/api";
+import { apiGet, apiPut, apiDelete } from "../services/api";
 
 /* ================= TYPES ================= */
 
@@ -184,6 +184,37 @@ const JobPage: React.FC = () => {
     }
   };
 
+  //DELETE EMPLOYEE FUNCTION
+
+  const handleDeleteAssignment = async (assignmentId: number) => {
+    try {
+      await apiDelete(`/assignments/${assignmentId}`);
+
+      // 🔥 UI state update
+      setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+    } catch (err) {
+      console.error("Failed to delete assignment", err);
+      alert("Failed to remove scheduled time");
+    }
+  };
+
+  //UNASSIGN FUNCTION
+  const handleUnassignEmployee = async (employeeId: number) => {
+    if (!id) return;
+
+    try {
+      await apiPut(`/jobs/${id}/unassign`, {
+        employee_id: employeeId,
+      });
+
+      // 🔥 UI state update
+      setAssignees((prev) => prev.filter((e) => e.id !== employeeId));
+    } catch (err) {
+      console.error("Failed to unassign employee", err);
+      alert("Failed to remove employee from job");
+    }
+  };
+
   //ASSIGN JOB
   const handleAssignEmployee = async () => {
     if (!id || selectedAssignee === "all") return;
@@ -197,9 +228,18 @@ const JobPage: React.FC = () => {
 
   //CLONE
   const handleScheduleEmployee = () => {
-    if (!id || selectedAssignee === "all") return;
+    if (!id) return;
 
-    navigate(`/calendar?mode=clone&job=${id}&employee=${selectedAssignee}`);
+    const params = new URLSearchParams({
+      mode: "clone",
+      job: id,
+    });
+
+    if (selectedAssignee !== "all") {
+      params.set("employee", String(selectedAssignee));
+    }
+
+    navigate(`/dashboard/calendar?${params.toString()}`);
   };
   /* ================= UI STATES ================= */
 
@@ -336,6 +376,8 @@ const JobPage: React.FC = () => {
                   }}
                   onCompleteAssignments={handleCompleteAssignments}
                   onReopenAssignments={handleReopenAssignments}
+                  onDeleteAssignment={handleDeleteAssignment}
+                  onUnassignEmployee={handleUnassignEmployee}
                 />
               </>
             )}
