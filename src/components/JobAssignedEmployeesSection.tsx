@@ -3,7 +3,8 @@
 import React, { useMemo } from "react";
 import styles from "./JobAssignedEmployeesSection.module.css";
 import type { Assignment, Employee } from "../types/calendar";
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import StatusBadge from "../components/StatusBadge";
+import { CalendarDaysIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 /* ================= TYPES ================= */
 
@@ -20,6 +21,10 @@ export interface JobAssignedEmployeesSectionProps {
   onSelectAssignment?: (range: AssignmentRange) => void;
   onCompleteAssignments?: (assignmentIds: number[]) => Promise<void>;
   onReopenAssignments?: (ids: number[]) => Promise<void>;
+
+  /** NEW */
+  onDeleteAssignment?: (assignmentId: number) => Promise<void>;
+  onUnassignEmployee?: (employeeId: number) => Promise<void>;
 }
 
 /* ================= COMPONENT ================= */
@@ -33,6 +38,8 @@ const JobAssignedEmployeesSection: React.FC<
   onSelectAssignment,
   onCompleteAssignments,
   onReopenAssignments,
+  onDeleteAssignment,
+  onUnassignEmployee,
 }) => {
   /* ================= GROUP ASSIGNMENTS ================= */
 
@@ -51,9 +58,10 @@ const JobAssignedEmployeesSection: React.FC<
 
   /* ================= UNSCHEDULED ASSIGNEES ================= */
 
-  const scheduledEmployeeIds = useMemo(() => {
-    return new Set(assignments.map((a) => a.employee_id));
-  }, [assignments]);
+  const scheduledEmployeeIds = useMemo(
+    () => new Set(assignments.map((a) => a.employee_id)),
+    [assignments],
+  );
 
   const unscheduledAssignees = useMemo(() => {
     return (assignees ?? []).filter((e) => !scheduledEmployeeIds.has(e.id));
@@ -77,7 +85,6 @@ const JobAssignedEmployeesSection: React.FC<
             }, 0) * 10,
           ) / 10;
 
-        const totalEnteredHours = 0; // later hook
         const labourCompleted = list.every((a) => a.completed);
 
         const initials = emp.name
@@ -124,8 +131,7 @@ const JobAssignedEmployeesSection: React.FC<
 
             {/* SUMMARY */}
             <div className={styles.summary}>
-              Total Scheduled: {totalScheduledHours} hours | Total Time Entered:{" "}
-              {totalEnteredHours} hours
+              Total Scheduled: {totalScheduledHours} hours
             </div>
 
             {/* ASSIGNMENTS */}
@@ -165,11 +171,24 @@ const JobAssignedEmployeesSection: React.FC<
                     </div>
                   </div>
 
+                  {/* ❌ REMOVE ASSIGNMENT */}
                   <button
-                    className={styles.menuBtn}
-                    onClick={(e) => e.stopPropagation()}
+                    className={styles.removeBtn}
+                    title="Remove scheduled time"
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      if (
+                        !window.confirm(
+                          "Remove this scheduled time? The employee will stay assigned to the job.",
+                        )
+                      )
+                        return;
+
+                      onDeleteAssignment?.(a.id);
+                    }}
                   >
-                    ⋮
+                    <XMarkIcon width={16} />
                   </button>
                 </div>
               );
@@ -186,8 +205,10 @@ const JobAssignedEmployeesSection: React.FC<
               <div className={styles.avatar}>👤</div>
               <div>
                 <div className={styles.name}>Assigned (not scheduled)</div>
-                <div className={`${styles.labourBadge} ${styles.notCompleted}`}>
-                  NOT SCHEDULED
+                <div
+                  className={`${styles.labourBadge} ${styles.labourAssigned}`}
+                >
+                  ASSIGNED
                 </div>
               </div>
             </div>
@@ -196,12 +217,31 @@ const JobAssignedEmployeesSection: React.FC<
           {unscheduledAssignees.map((e) => (
             <div key={e.id} className={styles.assignmentRow}>
               <CalendarDaysIcon className={styles.calendarIcon} />
+
               <div>
                 <div className={styles.assignmentText}>{e.name}</div>
                 <div className={styles.subText}>
                   Assigned to job, no schedule yet
                 </div>
               </div>
+
+              {/* ❌ REMOVE FROM JOB */}
+              <button
+                className={styles.removeBtn}
+                title="Remove from job"
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Remove ${e.name} from this job completely?`,
+                    )
+                  )
+                    return;
+
+                  onUnassignEmployee?.(e.id);
+                }}
+              >
+                <XMarkIcon width={16} />
+              </button>
             </div>
           ))}
         </div>

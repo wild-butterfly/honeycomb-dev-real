@@ -34,7 +34,7 @@
   backdrop-filter: saturate(105%);
 }
 
-/* Optional subtle variants for better readability */
+/* ================= STATUS VARIANTS ================= */
 
 .completed {
   background: #d8f5d2;

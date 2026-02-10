@@ -62,25 +62,35 @@
 /* ================= BADGES ================= */
 
 .labourBadge {
-  margin-top: 4px;
-  font-size: 0.72rem;
-  padding: 3px 8px;
-  border-radius: 999px;
   display: inline-block;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
+  padding: 4px 10px;
 
-.notCompleted {
-  background: #f4b400;
-  color: #4b3b00;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+
+  border-radius: 999px;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  border: 1px solid transparent;
 }
 
 .completed {
-  background: #7fbf3f;
-  color: #1f3b08;
+  background: #7ac943;
+  color: #1f3d0c;
 }
 
+.notCompleted {
+  background: #ffc107;
+  color: #5c4500;
+}
+
+.labourAssigned {
+  background: #e9ecef;
+  color: #495057;
+  border: 1px dashed #adb5bd;
+}
 /* ================= BUTTON ================= */
 
 .completeBtn {
@@ -115,6 +125,20 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.removeBtn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #b45309;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.removeBtn:hover {
+  color: #dc2626;
+}
+
 /* ================= SUMMARY ================= */
 
 .summary {
