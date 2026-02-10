@@ -64,6 +64,10 @@ const JobPage: React.FC = () => {
     name: string;
   } | null>(null);
 
+  const [confirmDeleteAssignment, setConfirmDeleteAssignment] = useState<
+    number | null
+  >(null);
+
   /* ================= NOTES ================= */
 
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -302,6 +306,21 @@ const JobPage: React.FC = () => {
         />
       )}
 
+      {confirmDeleteAssignment && (
+        <ConfirmModal
+          title="Remove scheduled time"
+          description="Remove this scheduled time? The employee will stay assigned to the job."
+          confirmText="Remove"
+          cancelText="Cancel"
+          onCancel={() => setConfirmDeleteAssignment(null)}
+          onConfirm={async () => {
+            await handleDeleteAssignment(confirmDeleteAssignment);
+            setConfirmDeleteAssignment(null);
+            setToast("Scheduled time removed");
+            setTimeout(() => setToast(null), 2500);
+          }}
+        />
+      )}
       <LeftSidebar />
 
       <div className={styles.mainCard}>
@@ -423,7 +442,9 @@ const JobPage: React.FC = () => {
                   }}
                   onCompleteAssignments={handleCompleteAssignments}
                   onReopenAssignments={handleReopenAssignments}
-                  onDeleteAssignment={handleDeleteAssignment}
+                  onRequestDeleteAssignment={(id) =>
+                    setConfirmDeleteAssignment(id)
+                  }
                   onRequestUnassignEmployee={(employeeId, name) =>
                     setConfirmUnassign({ employeeId, name })
                   }

@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 import styles from "./JobAssignedEmployeesSection.module.css";
 import type { Assignment, Employee } from "../types/calendar";
-import StatusBadge from "../components/StatusBadge";
 import { CalendarDaysIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 /* ================= TYPES ================= */
@@ -22,8 +21,8 @@ export interface JobAssignedEmployeesSectionProps {
   onCompleteAssignments?: (assignmentIds: number[]) => Promise<void>;
   onReopenAssignments?: (ids: number[]) => Promise<void>;
 
-  /** NEW */
-  onDeleteAssignment?: (assignmentId: number) => Promise<void>;
+  // 🔥 Premium modal triggers (NO window.confirm anymore)
+  onRequestDeleteAssignment?: (assignmentId: number) => void;
   onRequestUnassignEmployee?: (employeeId: number, name: string) => void;
 }
 
@@ -38,7 +37,7 @@ const JobAssignedEmployeesSection: React.FC<
   onSelectAssignment,
   onCompleteAssignments,
   onReopenAssignments,
-  onDeleteAssignment,
+  onRequestDeleteAssignment,
   onRequestUnassignEmployee,
 }) => {
   /* ================= GROUP ASSIGNMENTS ================= */
@@ -47,9 +46,7 @@ const JobAssignedEmployeesSection: React.FC<
     const map = new Map<number, Assignment[]>();
 
     assignments.forEach((a) => {
-      if (!map.has(a.employee_id)) {
-        map.set(a.employee_id, []);
-      }
+      if (!map.has(a.employee_id)) map.set(a.employee_id, []);
       map.get(a.employee_id)!.push(a);
     });
 
@@ -100,6 +97,7 @@ const JobAssignedEmployeesSection: React.FC<
             <div className={styles.header}>
               <div className={styles.employeeInfo}>
                 <div className={styles.avatar}>{initials}</div>
+
                 <div>
                   <div className={styles.name}>
                     {emp.name} ({list.length})
@@ -171,21 +169,13 @@ const JobAssignedEmployeesSection: React.FC<
                     </div>
                   </div>
 
-                  {/* ❌ REMOVE ASSIGNMENT */}
+                  {/* 🔥 Premium confirm trigger */}
                   <button
                     className={styles.removeBtn}
                     title="Remove scheduled time"
                     onClick={(e) => {
                       e.stopPropagation();
-
-                      if (
-                        !window.confirm(
-                          "Remove this scheduled time? The employee will stay assigned to the job.",
-                        )
-                      )
-                        return;
-
-                      onDeleteAssignment?.(a.id);
+                      onRequestDeleteAssignment?.(a.id);
                     }}
                   >
                     <XMarkIcon width={16} />
@@ -203,6 +193,7 @@ const JobAssignedEmployeesSection: React.FC<
           <div className={styles.header}>
             <div className={styles.employeeInfo}>
               <div className={styles.avatar}>👤</div>
+
               <div>
                 <div className={styles.name}>Assigned (not scheduled)</div>
                 <div
@@ -225,11 +216,12 @@ const JobAssignedEmployeesSection: React.FC<
                 </div>
               </div>
 
-              {/* ❌ REMOVE FROM JOB */}
+              {/* 🔥 Premium confirm trigger */}
               <button
                 className={styles.removeBtn}
                 title="Remove from job"
-                onClick={() => {
+                onClick={(ev) => {
+                  ev.stopPropagation();
                   onRequestUnassignEmployee?.(e.id, e.name);
                 }}
               >
