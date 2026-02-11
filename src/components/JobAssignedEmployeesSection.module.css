@@ -1,195 +1,202 @@
+/* =========================================================
+   CONTAINER
+========================================================= */
+
 .container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-/* ================= CARD ================= */
+/* =========================================================
+   EMPLOYEE CARD (SOFT ENTERPRISE PANEL)
+========================================================= */
 
 .employeeCard {
-  border: 1px solid #ffe58f;
-  border-radius: 12px;
-  background: #fffdf5;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(122, 90, 0, 0.08);
+  background: #ffffff;
+  border: 1px solid #ece7da;
+  border-radius: 18px;
+  padding: 18px 22px;
+  transition: all 0.2s ease;
 }
 
 .employeeCard:hover {
-  box-shadow: 0 4px 10px rgba(224, 168, 0, 0.15);
+  border-color: #f4d97a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
 }
-/* ================= HEADER ================= */
+
+/* =========================================================
+   HEADER
+========================================================= */
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
-
-  background: #fffdf5; /* düz, temiz */
-  border-bottom: 2px solid #ffd43b;
-
-  box-shadow: inset 0 -1px 0 rgba(224, 168, 0, 0.25);
+  padding: 0;
+  border: none;
 }
 
 .employeeInfo {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
 }
 
-/* ================= AVATAR ================= */
+/* =========================================================
+   AVATAR (HEX – BRAND IDENTITY)
+========================================================= */
 
 .avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #ffd43b;
-  color: #4b3b00;
-  font-weight: 800;
+  width: 44px;
+  height: 44px;
+
+  background: linear-gradient(135deg, #f4b400, #ffcc33);
+  color: #2b2b2b;
+  font-weight: 700;
+  font-size: 14px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 0 0 2px #f4b400;
+
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
-/* ================= TEXT ================= */
+/* =========================================================
+   TEXT
+========================================================= */
 
 .name {
-  font-weight: 700;
-  color: #4b3b00;
+  font-weight: 600;
+  font-size: 15px;
+  color: #1f1f1f;
 }
 
-/* ================= BADGES ================= */
+/* =========================================================
+   BADGES (SOFT PREMIUM)
+========================================================= */
 
 .labourBadge {
   display: inline-block;
-  padding: 4px 10px;
+  margin-top: 4px;
 
+  padding: 5px 10px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  border-radius: 8px;
   letter-spacing: 0.4px;
-
-  border-radius: 999px;
-  text-transform: uppercase;
-  white-space: nowrap;
 
   border: 1px solid transparent;
 }
 
 .completed {
-  background: #7ac943;
-  color: #1f3d0c;
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 .notCompleted {
-  background: #ffc107;
-  color: #5c4500;
+  background: rgba(244, 180, 0, 0.12);
+  color: #8a6d00;
+  border-color: rgba(244, 180, 0, 0.35);
 }
 
 .labourAssigned {
-  background: #e9ecef;
-  color: #495057;
-  border: 1px dashed #adb5bd;
+  background: #f5f6f8;
+  color: #4b5563;
+  border: 1px dashed #d1d5db;
 }
-/* ================= BUTTON ================= */
+
+/* =========================================================
+   COMPLETE BUTTON (ENTERPRISE STYLE)
+========================================================= */
 
 .completeBtn {
-  font-size: 0.78rem;
-  padding: 7px 14px;
-  border-radius: 8px;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 10px;
 
   background: #ffffff;
-  color: #7a5a00;
+  color: #8a6d00;
 
-  border: 2px solid #ffd43b;
+  border: 1px solid #f4d97a;
 
   font-weight: 600;
-  letter-spacing: 0.2px;
-
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    border-color 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .completeBtn:hover {
-  background: #fff3c4;
+  background: #fff8e1;
   border-color: #f4b400;
-  box-shadow: 0 2px 6px rgba(224, 168, 0, 0.25);
+  box-shadow: 0 4px 10px rgba(244, 180, 0, 0.15);
 }
 
-.completeBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.removeBtn {
-  margin-left: auto;
-  background: transparent;
-  border: none;
-  color: #b45309;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.removeBtn:hover {
-  color: #dc2626;
-}
-
-/* ================= SUMMARY ================= */
+/* =========================================================
+   SUMMARY
+========================================================= */
 
 .summary {
-  padding: 10px 14px;
-  font-size: 0.85rem;
-  color: #7a5a00;
-  border-bottom: 1px solid #ffe58f;
-  background: #fffdf5;
+  padding: 12px 0;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-/* ================= ASSIGNMENTS ================= */
+/* =========================================================
+   ASSIGNMENT ROWS
+========================================================= */
 
 .assignmentRow {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-top: 1px dashed #ffe58f;
+  gap: 14px;
+
+  padding: 14px 0;
+  border-top: 1px solid #f3f2ee;
+
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .assignmentRow:hover {
-  background: #fff3c4;
+  background: #faf9f6;
 }
 
 .calendarIcon {
-  width: 20px;
-  height: 20px;
-  color: #e0a800;
+  width: 18px;
+  height: 18px;
+  color: #f4b400;
+  margin-top: 3px;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .assignmentText {
   font-weight: 600;
-  color: #4b3b00;
+  font-size: 14px;
+  color: #1f2937;
 }
 
 .subText {
-  font-size: 0.8rem;
-  color: #7a5a00;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
 }
 
-/* ================= MENU ================= */
+/* =========================================================
+   REMOVE BUTTON
+========================================================= */
 
-.menuBtn {
+.removeBtn {
   margin-left: auto;
-  background: none;
+  background: transparent;
   border: none;
+  color: #9ca3af;
   cursor: pointer;
-  font-size: 1.3rem;
-  color: #7a5a00;
+  transition: color 0.15s ease;
+}
+
+.removeBtn:hover {
+  color: #dc2626;
 }
