@@ -288,19 +288,19 @@ const JobPage: React.FC = () => {
 
       {confirmUnassign && (
         <ConfirmModal
-          title="Remove employee"
+          title="Unassign employee"
           description={
             <>
-              Remove <b>{confirmUnassign.name}</b> from this job completely?
+              Are you sure you want to unassign <b>{confirmUnassign.name}</b>?
             </>
           }
-          confirmText="Remove"
+          confirmText="Unassign"
           cancelText="Cancel"
           onCancel={() => setConfirmUnassign(null)}
           onConfirm={async () => {
             await handleUnassignEmployee(confirmUnassign.employeeId);
             setConfirmUnassign(null);
-            setToast(`${confirmUnassign.name} removed from job`);
+            setToast(`${confirmUnassign.name} unassigned`);
             setTimeout(() => setToast(null), 2500);
           }}
         />
@@ -309,7 +309,7 @@ const JobPage: React.FC = () => {
       {confirmDeleteAssignment && (
         <ConfirmModal
           title="Remove scheduled time"
-          description="Remove this scheduled time? The employee will stay assigned to the job."
+          description="Are you sure you want to remove this scheduled time? This action cannot be undone."
           confirmText="Remove"
           cancelText="Cancel"
           onCancel={() => setConfirmDeleteAssignment(null)}
