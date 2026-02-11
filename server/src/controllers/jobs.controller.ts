@@ -232,21 +232,41 @@ export const unassignEmployee = async (req: Request, res: Response) => {
 export const getLabour = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { assignment_id } = req.query;
 
-    const result = await pool.query(
-      `
+    let query = `
       SELECT
         l.id,
+        l.assignment_id,
+        l.employee_id,
         e.name AS employee_name,
-        l.chargeable_hours,
-        l.total
+
+        l.start_time,
+        l.end_time,
+        l.created_at,
+
+        l.worked_hours::float        AS worked_hours,
+        l.uncharged_hours::float     AS uncharged_hours,
+        l.chargeable_hours::float    AS chargeable_hours,
+        l.rate::float                AS rate,
+        l.total::float               AS total,
+
+        l.notes
       FROM labour_entries l
       JOIN employees e ON e.id = l.employee_id
       WHERE l.job_id = $1
-      ORDER BY l.created_at DESC
-      `,
-      [id],
-    );
+    `;
+
+    const values: any[] = [id];
+
+    if (assignment_id) {
+      query += ` AND l.assignment_id = $2`;
+      values.push(assignment_id);
+    }
+
+    query += ` ORDER BY l.created_at DESC`;
+
+    const result = await pool.query(query, values);
 
     res.json(result.rows);
   } catch (err) {
@@ -254,18 +274,18 @@ export const getLabour = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Labour load failed" });
   }
 };
-
 /* ===============================
-   ADD JOB LABOUR
+   ADD JOB LABOUR (PRODUCTION SAFE)
 ================================ */
 export const addLabour = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const jobId = Number(req.params.id);
 
     const {
+      assignment_id,
       employee_id,
-      assignment_start,
-      assignment_end,
+      start_time,
+      end_time,
       worked_hours,
       uncharged_hours,
       chargeable_hours,
@@ -274,37 +294,84 @@ export const addLabour = async (req: Request, res: Response) => {
       description,
     } = req.body;
 
+    if (!employee_id) {
+      return res.status(400).json({ error: "Employee required" });
+    }
+
+    /* ---- Optional: verify job exists ---- */
+    const jobCheck = await pool.query(
+      `SELECT id FROM jobs WHERE id = $1`,
+      [jobId]
+    );
+
+    if (!jobCheck.rowCount) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    /* ---- Optional: verify assignment belongs to job ---- */
+    if (assignment_id) {
+      const assignmentCheck = await pool.query(
+        `SELECT id FROM assignments WHERE id = $1 AND job_id = $2`,
+        [assignment_id, jobId]
+      );
+
+      if (!assignmentCheck.rowCount) {
+        return res.status(400).json({ error: "Invalid assignment for this job" });
+      }
+    }
+
     const result = await pool.query(
       `
       INSERT INTO labour_entries
-        (job_id, employee_id,
-         assignment_start, assignment_end,
-         worked_hours, uncharged_hours,
-         chargeable_hours, rate, total, description)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-      RETURNING *
-      `,
-      [
-        id,
+      (
+        job_id,
+        assignment_id,
         employee_id,
-        assignment_start,
-        assignment_end,
+        start_time,
+        end_time,
         worked_hours,
         uncharged_hours,
         chargeable_hours,
         rate,
         total,
-        description,
-      ],
+        notes
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      RETURNING
+        id,
+        assignment_id,
+        employee_id,
+        start_time,
+        end_time,
+        worked_hours::float     AS worked_hours,
+        uncharged_hours::float  AS uncharged_hours,
+        chargeable_hours::float AS chargeable_hours,
+        rate::float             AS rate,
+        total::float            AS total,
+        notes
+      `,
+      [
+        jobId,
+        assignment_id ?? null,
+        employee_id,
+        start_time ?? null,
+        end_time ?? null,
+        worked_hours ?? 0,
+        uncharged_hours ?? 0,
+        chargeable_hours ?? 0,
+        rate ?? 0,
+        total ?? 0,
+        description ?? null,
+      ]
     );
 
     res.status(201).json(result.rows[0]);
+
   } catch (err) {
     console.error("ADD job labour error", err);
     res.status(500).json({ error: "Labour add failed" });
   }
 };
-
 /* ===============================
    ASSIGN EMPLOYEE TO JOB (NO SCHEDULE)
    PUT /jobs/:id/assign

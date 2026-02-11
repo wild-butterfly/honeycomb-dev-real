@@ -1,9 +1,9 @@
-// LabourTimeEntrySection.tsx
 // Created by Honeycomb © 2025
 
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./LabourTimeSection.module.css";
-import { apiGet, apiPost, apiDelete } from "../services/api";
+import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
+import { labourReasons } from "../config/labourReasons";
 
 /* ================= TYPES ================= */
 
@@ -15,14 +15,29 @@ type Employee = {
 
 type LabourEntry = {
   id: number;
+  assignment_id?: number;
+  employee_id?: number;
   employee_name: string;
   chargeable_hours: number;
+  worked_hours: number;
+  uncharged_hours: number;
   total: number;
+  rate: number;
+  created_at: string;
+  source?: "auto" | "manual";
+};
+
+type UnchargedReason = {
+  id: number;
+  name: string;
+  paid: boolean;
 };
 
 type UnchargedRow = {
-  reason: string;
+  reasonId: number;
+  name: string;
   minutes: number;
+  paid: boolean;
 };
 
 type Props = {
@@ -30,7 +45,9 @@ type Props = {
   assignment: {
     start: Date;
     end: Date;
-    id?: number; // optional ama önerilir
+    id?: number;
+    completed?: boolean;
+    employee_id?: number;
   };
 };
 
@@ -49,37 +66,45 @@ function calcHours(start: Date, end: Date) {
   return Math.round((diff / 36e5) * 4) / 4;
 }
 
+function toSqlString(d: Date) {
+  return (
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:00`
+  );
+}
+
 /* ================= COMPONENT ================= */
 
 export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [entries, setEntries] = useState<LabourEntry[]>([]);
+  const [reasons] = useState<UnchargedReason[]>(labourReasons);
 
-  /* FORM STATE */
   const [employeeId, setEmployeeId] = useState<number>(0);
   const [rate, setRate] = useState<number>(0);
 
   const [date, setDate] = useState(toDateInput(assignment.start));
   const [startTime, setStartTime] = useState(toTimeInput(assignment.start));
   const [endTime, setEndTime] = useState(toTimeInput(assignment.end));
-
   const [description, setDescription] = useState("");
 
   const [unchargedRows, setUnchargedRows] = useState<UnchargedRow[]>([]);
-  const [tempReason, setTempReason] = useState("");
-  const [tempMinutes, setTempMinutes] = useState(0);
+  const [selectedReasonId, setSelectedReasonId] = useState<number>(0);
+  const [tempMinutes, setTempMinutes] = useState<number>(0);
+
+  const [editingEntry, setEditingEntry] = useState<LabourEntry | null>(null);
 
   /* ================= LOAD ================= */
 
+  const loadLabour = async () => {
+    const data = await apiGet<LabourEntry[]>(`/jobs/${jobId}/labour`);
+    setEntries(data ?? []);
+  };
+
   useEffect(() => {
     apiGet<Employee[]>("/employees").then((r) => setEmployees(r ?? []));
-
-    apiGet<LabourEntry[]>(
-      assignment.id
-        ? `/jobs/${jobId}/labour?assignment_id=${assignment.id}`
-        : `/jobs/${jobId}/labour`,
-    ).then((r) => setEntries(r ?? []));
-  }, [jobId, assignment]);
+    loadLabour();
+  }, [jobId]);
 
   /* ================= TIME ================= */
 
@@ -98,55 +123,163 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     [startDate, endDate],
   );
 
-  const unchargedHours = useMemo(
+  const totalUnchargedHours = useMemo(
     () => unchargedRows.reduce((t, r) => t + r.minutes, 0) / 60,
     [unchargedRows],
   );
 
-  const chargeableHours = Math.max(0, workedHours - unchargedHours);
-  const total = Math.max(0, chargeableHours * rate);
+  const chargeableHours = Math.max(0, workedHours - totalUnchargedHours);
+
+  const total = chargeableHours * rate;
+
+  /* ================= AUTO GENERATE ================= */
+
+  useEffect(() => {
+    const autoGenerate = async () => {
+      if (!assignment.completed || !assignment.id || !assignment.employee_id)
+        return;
+
+      const exists = entries.some((e) => e.assignment_id === assignment.id);
+      if (exists) return;
+
+      const emp = employees.find((e) => e.id === assignment.employee_id);
+      const empRate = emp?.rate ?? 0;
+
+      const worked = calcHours(assignment.start, assignment.end);
+
+      await apiPost(`/jobs/${jobId}/labour`, {
+        assignment_id: assignment.id,
+        employee_id: assignment.employee_id,
+        start_time: toSqlString(assignment.start),
+        end_time: toSqlString(assignment.end),
+        worked_hours: worked,
+        uncharged_hours: 0,
+        chargeable_hours: worked,
+        rate: empRate,
+        total: worked * empRate,
+        description: "Auto-generated from completed assignment",
+        source: "auto",
+      });
+
+      await loadLabour();
+    };
+
+    autoGenerate();
+  }, [assignment.completed, employees]);
+
+  /* ================= UNCHARGED ================= */
+
+  const handleAddUncharged = () => {
+    if (!selectedReasonId || !tempMinutes) return;
+
+    const reason = reasons.find((r) => r.id === selectedReasonId);
+    if (!reason) return;
+
+    setUnchargedRows((prev) => [
+      ...prev,
+      {
+        reasonId: reason.id,
+        name: reason.name,
+        minutes: tempMinutes,
+        paid: reason.paid,
+      },
+    ]);
+
+    setTempMinutes(0);
+  };
+
+  const handleRemoveUncharged = (index: number) => {
+    setUnchargedRows((prev) => prev.filter((_, i) => i !== index));
+  };
 
   /* ================= SAVE ================= */
 
   const handleSave = async () => {
     if (!employeeId) return alert("Select employee");
 
-    await apiPost(`/jobs/${jobId}/labour`, {
-      assignment_id: assignment.id,
-      employee_id: employeeId,
-      start_time: startDate,
-      end_time: endDate,
-      worked_hours: workedHours,
-      uncharged_hours: unchargedHours,
-      chargeable_hours: chargeableHours,
-      rate,
-      total,
-      description,
-      uncharged: unchargedRows,
-    });
+    if (editingEntry) {
+      await apiPut(`/labour/${editingEntry.id}`, {
+        start_time: toSqlString(startDate),
+        end_time: toSqlString(endDate),
+        worked_hours: workedHours,
+        uncharged_hours: totalUnchargedHours,
+        chargeable_hours: chargeableHours,
+        rate,
+        total,
+        description,
+        uncharged: unchargedRows,
+      });
+
+      setEditingEntry(null);
+    } else {
+      await apiPost(`/jobs/${jobId}/labour`, {
+        assignment_id: assignment.id,
+        employee_id: employeeId,
+        start_time: toSqlString(startDate),
+        end_time: toSqlString(endDate),
+        worked_hours: workedHours,
+        uncharged_hours: totalUnchargedHours,
+        chargeable_hours: chargeableHours,
+        rate,
+        total,
+        description,
+        uncharged: unchargedRows,
+        source: "manual",
+      });
+    }
+
+    await loadLabour();
 
     setDescription("");
     setUnchargedRows([]);
-
-    const refreshed = await apiGet<LabourEntry[]>(
-      assignment.id
-        ? `/jobs/${jobId}/labour?assignment_id=${assignment.id}`
-        : `/jobs/${jobId}/labour`,
-    );
-
-    setEntries(refreshed ?? []);
+    setSelectedReasonId(0);
   };
+
+  const handleEdit = (entry: LabourEntry) => {
+    setEditingEntry(entry);
+    setEmployeeId(entry.employee_id ?? 0);
+    setRate(entry.rate);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete entry?")) return;
+    await apiDelete(`/labour/${id}`);
+    await loadLabour();
+  };
+
+  /* ================= GROUP ================= */
+
+  const groupedEntries = useMemo(() => {
+    return Object.values(
+      entries.reduce((acc: any, entry) => {
+        if (!acc[entry.employee_name]) {
+          acc[entry.employee_name] = {
+            name: entry.employee_name,
+            rows: [],
+            totalChargeable: 0,
+            totalValue: 0,
+          };
+        }
+
+        acc[entry.employee_name].rows.push(entry);
+        acc[entry.employee_name].totalChargeable += Number(
+          entry.chargeable_hours || 0,
+        );
+        acc[entry.employee_name].totalValue += Number(entry.total || 0);
+
+        return acc;
+      }, {}),
+    );
+  }, [entries]);
 
   /* ================= UI ================= */
 
   return (
     <div className={styles.wrapper}>
-      <h3>Labour</h3>
-
-      {/* ADD TIME ENTRY */}
       <div className={styles.card}>
-        <h4>Add time entry</h4>
+        <h4>{editingEntry ? "Edit time entry" : "Add time entry"}</h4>
 
+        {/* Employee + Rate */}
         <div className={styles.row}>
           <select
             value={employeeId}
@@ -173,18 +306,22 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           />
         </div>
 
+        {/* Date / Time */}
         <div className={styles.row}>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
+
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
+
           <span>→</span>
+
           <input
             type="time"
             value={endTime}
@@ -192,68 +329,90 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           />
         </div>
 
+        {/* Description */}
         <textarea
           placeholder="Work description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
 
+        {/* ================= UNCHARGED ================= */}
+        <div className={styles.unchargedWrapper}>
+          <select
+            value={selectedReasonId}
+            onChange={(e) => setSelectedReasonId(Number(e.target.value))}
+          >
+            <option value={0}>Uncharged reason</option>
+            {reasons.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} ({r.paid ? "PAID" : "UNPAID"})
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            value={tempMinutes}
+            onChange={(e) => setTempMinutes(Number(e.target.value))}
+            placeholder="minutes"
+          />
+
+          <button onClick={handleAddUncharged}>+ Add</button>
+        </div>
+
+        {/* Uncharged List */}
+        <div className={styles.unchargedTable}>
+          {unchargedRows.length === 0 && (
+            <div className={styles.noUncharged}>No uncharged time entered</div>
+          )}
+
+          {unchargedRows.map((row, index) => (
+            <div key={index} className={styles.unchargedRow}>
+              <span>{row.name}</span>
+              <span>{row.minutes} min</span>
+              <button onClick={() => handleRemoveUncharged(index)}>✕</button>
+            </div>
+          ))}
+        </div>
+
+        {/* Summary */}
         <div className={styles.summary}>
           <div>Worked: {workedHours.toFixed(2)}h</div>
-          <div>Uncharged: {unchargedHours.toFixed(2)}h</div>
+          <div>Uncharged: {totalUnchargedHours.toFixed(2)}h</div>
           <div>Chargeable: {chargeableHours.toFixed(2)}h</div>
           <div className={styles.total}>${total.toFixed(2)}</div>
         </div>
 
-        <div className={styles.unchargedRow}>
-          <input
-            placeholder="Uncharged reason"
-            value={tempReason}
-            onChange={(e) => setTempReason(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="minutes"
-            value={tempMinutes}
-            onChange={(e) => setTempMinutes(Number(e.target.value))}
-          />
-          <button
-            onClick={() => {
-              if (!tempReason || !tempMinutes) return;
-              setUnchargedRows((p) => [
-                ...p,
-                { reason: tempReason, minutes: tempMinutes },
-              ]);
-              setTempReason("");
-              setTempMinutes(0);
-            }}
-          >
-            + Add
-          </button>
-        </div>
-
+        {/* Save */}
         <button className={styles.primaryBtn} onClick={handleSave}>
-          + Add time entry
+          {editingEntry ? "Save changes" : "+ Add time entry"}
         </button>
       </div>
 
-      {/* LIST */}
-      <div className={styles.card}>
-        {entries.length === 0 ? (
-          <div className={styles.empty}>No time entries</div>
-        ) : (
-          entries.map((e) => (
-            <div key={e.id} className={styles.listRow}>
-              <span>{e.employee_name}</span>
-              <span>{e.chargeable_hours.toFixed(2)}h</span>
-              <span>${e.total.toFixed(2)}</span>
-              <button onClick={() => apiDelete(`/labour/${e.id}`)}>
-                Delete
-              </button>
+      {groupedEntries.map((emp: any, idx: number) => (
+        <div key={idx} className={styles.employeeBlock}>
+          <h4>
+            {emp.name} | ${emp.totalValue.toFixed(2)}
+          </h4>
+
+          {emp.rows.map((row: LabourEntry) => (
+            <div key={row.id} className={styles.entryRow}>
+              <span>{Number(row.chargeable_hours || 0).toFixed(2)}h</span>
+              <span>${Number(row.total || 0).toFixed(2)}</span>
+
+              <div>
+                <button onClick={() => handleEdit(row)}>✏️</button>
+                <button onClick={() => handleDelete(row.id)}>✕</button>
+              </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+
+          <div className={styles.employeeTotals}>
+            Total: {emp.totalChargeable.toFixed(2)}h | $
+            {emp.totalValue.toFixed(2)}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
