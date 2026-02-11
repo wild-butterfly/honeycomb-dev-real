@@ -405,30 +405,33 @@ const JobPage: React.FC = () => {
             {activeTab === "scheduling" && (
               <>
                 {/* ASSIGNEE FILTER */}
-                <AssigneeFilterBar
-                  employees={employees.map((e) => ({
-                    id: e.id,
-                    name: e.name,
-                  }))}
-                  selectedAssignee={selectedAssignee}
-                  onChange={setSelectedAssignee}
-                />
+                <div className={styles.filterActionRow}>
+                  <AssigneeFilterBar
+                    employees={employees.map((e) => ({
+                      id: e.id,
+                      name: e.name,
+                    }))}
+                    selectedAssignee={selectedAssignee}
+                    onChange={setSelectedAssignee}
+                  />
 
-                {/* ACTION BUTTONS */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                  <button
-                    disabled={selectedAssignee === "all"}
-                    onClick={handleAssignEmployee}
-                  >
-                    Assign
-                  </button>
+                  <div className={styles.actionButtons}>
+                    <button
+                      className={styles.assignBtn}
+                      disabled={selectedAssignee === "all"}
+                      onClick={handleAssignEmployee}
+                    >
+                      Assign
+                    </button>
 
-                  <button
-                    disabled={selectedAssignee === "all"}
-                    onClick={handleScheduleEmployee}
-                  >
-                    Schedule
-                  </button>
+                    <button
+                      className={styles.scheduleBtn}
+                      disabled={selectedAssignee === "all"}
+                      onClick={handleScheduleEmployee}
+                    >
+                      Schedule
+                    </button>
+                  </div>
                 </div>
 
                 {/* EXISTING SECTION – UNCHANGED */}

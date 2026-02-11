@@ -25,13 +25,14 @@
 
 .pageHeader h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
-  color: #3a2e0f;
+  color: #1f1f1f; /* koyu kahverengi yerine nötr */
+  letter-spacing: -0.3px;
 }
 
 /* =====================================================
-   GENERIC SECTION (ARTIK KART DEĞİL)
+   GENERIC SECTION 
 ===================================================== */
 
 .section {
@@ -43,10 +44,10 @@
 ===================================================== */
 
 .sectionTitle {
-  font-size: 16px;
+  font-size: 15px;
   margin-bottom: 14px;
-  color: #5d4a16;
-  font-weight: 700;
+  color: #6b6b6b;
+  font-weight: 600;
 }
 
 /* =====================================================
@@ -54,11 +55,17 @@
 ===================================================== */
 
 .detailBox {
-  background: #fffefa;
-  border: 1px solid #e8dfc8;
-  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #ece7da;
+  padding: 24px;
   border-radius: 14px;
   white-space: pre-wrap;
+  transition: all 0.18s ease;
+}
+
+.detailBox:hover {
+  background: #fffdf9; /* çok hafif honey */
+  border-color: #edeea8; /* açık sarı */
 }
 
 /* =====================================================
@@ -67,40 +74,42 @@
 
 .clickToEdit {
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 16px;
   border-radius: 10px;
-  background: #fffdf6;
-  transition: background 0.2s ease;
+  background: transparent;
+  transition: all 0.18s ease;
 }
 
 .clickToEdit:hover {
-  background: #fff7dd;
+  background: rgba(244, 180, 0, 0.05); /* çok hafif */
 }
 
 /* =====================================================
    EDIT MODE (NO MORE INNER CARD)
 ===================================================== */
 
-.editBox {
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
 .textarea {
   width: 100%;
   min-height: 140px;
   resize: vertical;
 
-  padding: 14px 16px;
-
+  padding: 16px;
   border-radius: 10px;
-  border: 1px solid #e8dfc8;
-  background: #fffefa;
+
+  border: 1px solid #e4dfd2;
+  background: #ffffff;
 
   font-family: inherit;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
+
+  transition: all 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #f4b400;
+  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.12);
 }
 
 /* =====================================================
@@ -111,7 +120,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 /* =====================================================
@@ -146,57 +155,106 @@
   background: #fff2c2;
 }
 
-/* =====================================================
-   TABS BAR (CLEAN + STABLE)
-===================================================== */
+/* ================= FILTER + ACTION ROW ================= */
 
-.sectionTabs {
+.filterActionRow {
   display: flex;
-  gap: 8px;
-  padding: 0 6px;
-  margin-bottom: 14px;
-  border-bottom: 2px solid #f0e6c2;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-/* base tab */
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  transform: translateY(-35px);
+}
 
-.sectionTab,
-.sectionTabActive {
-  padding: 10px 22px;
-  font-size: 14px;
+/* ================= BUTTONS ================= */
+
+.assignBtn,
+.scheduleBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-
-  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
-  border: 2px solid #ffcc00;
-
-  clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 100% 100%, 0% 100%, 0% 50%);
-
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
-/* inactive */
-
-.sectionTab {
-  opacity: 0.85;
+/* Assign - soft outline */
+.assignBtn {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #9c7c00;
 }
 
-.sectionTab:hover {
-  opacity: 1;
+.assignBtn:hover:not(:disabled) {
+  background: #fff8dc;
 }
 
-/* active */
+/* Schedule - primary honey gold */
+.scheduleBtn {
+  background: #f3c623;
+  border: 2px solid #e2b200;
+  color: #3a2f00;
+}
 
-.sectionTabActive {
-  background: linear-gradient(110deg, #ffe066 60%, #ffc400 120%);
-  border-color: #ffb800;
+.scheduleBtn:hover:not(:disabled) {
+  background: #ffcf3f;
   transform: translateY(-1px);
 }
 
-/* =====================================================
-   TAB CONTENT WRAPPER
-===================================================== */
+/* Disabled */
+.assignBtn:disabled,
+.scheduleBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
 
-.sectionContent {
-  padding: 8px 6px 6px 6px;
+/* =====================================================
+   TABS BAR (CLEAN + STABLE)
+===================================================== */
+.sectionTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e7e2d3;
+}
+
+/* BASE */
+
+.sectionTab,
+.sectionTabActive {
+  padding: 12px 26px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* INACTIVE */
+
+.sectionTab {
+  background: transparent;
+  color: #6b6b6b;
+}
+
+.sectionTab:hover {
+  background: #f3f2ee;
+  color: #1f1f1f;
+}
+
+/* ACTIVE */
+
+.sectionTabActive {
+  background: #ffffff;
+  color: #1f1f1f;
+  box-shadow:
+    0 -2px 0 #f4b400 inset,
+    0 2px 6px rgba(0, 0, 0, 0.05);
 }
