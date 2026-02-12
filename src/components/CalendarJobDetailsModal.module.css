@@ -441,7 +441,7 @@
 /* ---------- PRIMARY / SAVE / VIEW JOB ---------- */
 .saveBtn,
 .primaryBtn {
-  background: #ffe8a1; /* MAT açık sarı */
+  background: #ffe8a1;
   border: 2px solid #f1d36b;
   color: #5f4b00;
 }

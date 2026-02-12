@@ -333,7 +333,11 @@ const JobPage: React.FC = () => {
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Job Phase Description</h2>
 
-          <div className={styles.detailBox}>
+          <div
+            className={`${styles.detailBox} ${
+              isEditingNotes ? styles.editing : ""
+            }`}
+          >
             {!isEditingNotes ? (
               <div
                 className={styles.clickToEdit}
@@ -343,33 +347,35 @@ const JobPage: React.FC = () => {
                 }}
               >
                 {job.notes || (
-                  <span style={{ color: "#aaa" }}>Add job phase notes…</span>
+                  <span style={{ opacity: 0.5 }}>Add job phase notes…</span>
                 )}
               </div>
             ) : (
-              <div className={styles.editBox}>
+              <>
                 <textarea
                   className={styles.textarea}
                   value={notesDraft}
                   onChange={(e) => setNotesDraft(e.target.value)}
                   autoFocus
                 />
+
                 <div className={styles.editActionsInline}>
                   <button
-                    className={styles.saveBtn}
+                    className={styles.primaryBtn}
                     disabled={savingNotes}
                     onClick={handleSaveNotes}
                   >
                     Save
                   </button>
+
                   <button
-                    className={styles.cancelBtn}
+                    className={styles.secondaryBtn}
                     onClick={() => setIsEditingNotes(false)}
                   >
                     Cancel
                   </button>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>

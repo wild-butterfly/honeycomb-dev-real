@@ -5,22 +5,38 @@
 .pageWrapper {
   display: flex;
   min-height: 100vh;
-  background: #f8f9fb;
-  padding: 32px 24px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+
+  padding: 30px 20px;
 }
 
 .mainCard {
   flex: 1;
-  background: #ffffff;
+
+  /* Glass effect */
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
   border-radius: 22px;
-  border: 1px solid #e5e7eb;
+
+  border: 1px solid rgba(255, 204, 41, 0.35);
 
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.06),
-    0 4px 12px rgba(0, 0, 0, 0.04);
+    0 10px 40px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 204, 41, 0.08);
 
-  padding: 44px;
-  margin-left: 24px;
+  padding: 42px 48px;
+  margin-left: 0px;
 }
 
 /* =====================================================
@@ -29,7 +45,7 @@
 
 .pageHeader h1 {
   margin: 0;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   color: #1f2937;
   letter-spacing: -0.5px;
@@ -39,7 +55,7 @@
 ===================================================== */
 
 .section {
-  margin-top: 36px;
+  margin-top: 26px;
 }
 
 /* =====================================================
@@ -47,13 +63,12 @@
 ===================================================== */
 
 .sectionTitle {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #8a7c4a;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-
-  color: #6a5a1e; /* honey deep */
-  margin-bottom: 18px;
 }
 
 /* =====================================================
@@ -61,131 +76,246 @@
 ===================================================== */
 
 .detailBox {
-  position: relative;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
 
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-left: 4px solid #f4b400; /* honey accent */
+  border: 1px solid rgba(255, 204, 41, 0.25);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
   padding: 28px;
-  border-radius: 16px;
+  border-radius: 18px;
 
   transition: all 0.25s ease;
 }
 
-.detailBox:hover {
-  border-left-color: #9c7c00;
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.06),
-    0 0 0 2px rgba(244, 180, 0, 0.08);
+/* ================= FILTER + ACTION ROW ================= */
+
+.filterActionRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  transform: translateY(-35px);
+}
+
+/* ================= BUTTONS ================= */
+
+.assignBtn,
+.scheduleBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+/* Assign - soft outline */
+.assignBtn {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #9c7c00;
+}
+
+.assignBtn:hover:not(:disabled) {
+  background: #fff8dc;
+}
+
+/* Schedule - primary honey gold */
+.scheduleBtn {
+  background: #f3c623;
+  border: 2px solid #e2b200;
+  color: #3a2f00;
+}
+
+.scheduleBtn:hover {
+  background: #fff;
+  border: 2px solid #e2b200;
+  color: #3a2f00;
+}
+
+/* Disabled */
+.assignBtn:disabled,
+.scheduleBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================
+   HONEYCOMB TABS WRAPPER
+========================================== */
+
+.hcTabs {
+  display: flex;
+  gap: 32px;
+
+  margin-top: 32px; /* üstte boşluk */
+  margin-bottom: 28px;
+
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e7e2d3;
+}
+
+/* ==========================================
+   BASE TAB
+========================================== */
+
+.hcTab {
+  position: relative;
+
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  font-size: 15px;
+  font-weight: 600;
+  color: #6a6656;
+
+  padding: 6px 2px;
+
+  transition: all 0.25s ease;
+}
+
+/* Hover */
+
+.hcTab:hover {
+  color: #1f1f1f;
+}
+
+/* ==========================================
+   ACTIVE TAB
+========================================== */
+
+.hcTabActive {
+  color: #1f1f1f;
+}
+
+/* Honey underline animation */
+
+.hcTab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -13px;
+
+  width: 0%;
+  height: 3px;
+
+  background: linear-gradient(90deg, #ffcc29, #f4b400);
+  border-radius: 4px;
+
+  transition: width 0.3s ease;
+}
+
+.hcTabActive::after {
+  width: 100%;
 }
 
 /* =====================================================
-   CLICK TO EDIT (READ MODE)
+   NOTES CONTAINER (SINGLE GLASS SURFACE)
+===================================================== */
+
+.detailBox {
+  position: relative;
+
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-radius: 20px;
+
+  padding: 28px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  transition: all 0.3s ease;
+}
+
+/* Edit mode highlight */
+.editing {
+  box-shadow:
+    0 0 0 3px rgba(244, 180, 0, 0.12),
+    0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+/* =====================================================
+   READ MODE
 ===================================================== */
 
 .clickToEdit {
   cursor: pointer;
-  padding: 16px;
+
+  padding: 18px 6px;
+
+  font-size: 15px;
+  line-height: 1.7;
+  color: #2d2d2d;
+
   border-radius: 12px;
-  transition: background 0.2s ease;
+
+  transition:
+    background 0.25s ease,
+    transform 0.2s ease;
 }
 
 .clickToEdit:hover {
   background: rgba(244, 180, 0, 0.06);
+  transform: translateY(-1px);
 }
+
 /* =====================================================
-   EDIT MODE (NO MORE INNER CARD)
+   EDIT MODE
 ===================================================== */
 
 .textarea {
   width: 100%;
-  min-height: 150px;
+  min-height: 160px;
   resize: vertical;
 
-  padding: 18px;
-  border-radius: 14px;
-
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  background: transparent;
+  border: none;
+  outline: none;
 
   font-family: inherit;
-  font-size: 14px;
-  line-height: 1.6;
-
-  transition: all 0.2s ease;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #2d2d2d;
 }
 
+/* Remove old ugly focus ring completely */
 .textarea:focus {
   outline: none;
-  border-color: #f4b400;
-  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.12);
 }
 
 /* =====================================================
-   EDIT ACTIONS
+   ACTION BUTTON ROW
 ===================================================== */
 
 .editActionsInline {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 /* =====================================================
-   BUTTONS
+   BUTTONS – CLEAN MODERN STYLE
 ===================================================== */
 
-.saveBtn {
-  background: #e6c15a;
-  color: #ffffff;
-  border: 2px solid #d4b84a;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.saveBtn:hover {
-  background: #d6b24f;
-}
-
-.cancelBtn {
-  background: transparent;
-  border: 2px solid #d4b84a;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #6b560f;
-}
-
-.cancelBtn:hover {
-  background: #fff2c2;
-}
-
-/* ================= FILTER + ACTION ROW ================= */
-
-.filterActionRow {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  transform: translateY(-35px);
-}
-
-/* ================= BUTTONS ================= */
-
-.assignBtn,
-.scheduleBtn {
+.primaryBtn,
+.secondaryBtn {
   padding: 8px 16px;
   border-radius: 8px;
   font-weight: 600;
@@ -194,323 +324,25 @@
   transition: all 0.18s ease;
 }
 
-/* Assign - soft outline */
-.assignBtn {
-  background: #fff;
+.primaryBtn {
+  background-color: #f4b400;
+  color: black;
   border: 2px solid #f3c623;
+}
+
+.primaryBtn:hover {
+  background-color: #fff;
   color: #9c7c00;
 }
 
-.assignBtn:hover:not(:disabled) {
-  background: #fff8dc;
-}
-
-/* Schedule - primary honey gold */
-.scheduleBtn {
-  background: #f3c623;
-  border: 2px solid #e2b200;
-  color: #3a2f00;
-}
-
-.scheduleBtn:hover:not(:disabled) {
-  background: #ffcf3f;
-  transform: translateY(-1px);
-}
-
-/* Disabled */
-.assignBtn:disabled,
-.scheduleBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==========================================
-   HONEYCOMB TABS WRAPPER
-========================================== */
-
-.hcTabs {
-  display: flex;
-  gap: 32px;
-
-  margin-top: 32px; /* üstte boşluk */
-  margin-bottom: 28px;
-
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e7e2d3;
-}
-
-/* ==========================================
-   BASE TAB
-========================================== */
-
-.hcTab {
-  position: relative;
-
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  font-size: 15px;
-  font-weight: 600;
-  color: #6a6656;
-
-  padding: 6px 2px;
-
-  transition: all 0.25s ease;
-}
-
-/* Hover */
-
-.hcTab:hover {
-  color: #1f1f1f;
-}
-
-/* ==========================================
-   ACTIVE TAB
-========================================== */
-
-.hcTabActive {
-  color: #1f1f1f;
-}
-
-/* Honey underline animation */
-
-.hcTab::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -13px;
-
-  width: 0%;
-  height: 3px;
-
-  background: linear-gradient(90deg, #ffcc29, #f4b400);
-  border-radius: 4px;
-
-  transition: width 0.3s ease;
-}
-
-.hcTabActive::after {
-  width: 100%;
-}
-
-/* =====================================================
-   CLICK TO EDIT (READ MODE)
-===================================================== */
-
-.clickToEdit {
-  cursor: pointer;
-  padding: 18px;
-  border-radius: 14px;
-  transition: all 0.2s ease;
-}
-
-.clickToEdit:hover {
-  background: linear-gradient(
-    90deg,
-    rgba(244, 180, 0, 0.05),
-    rgba(244, 180, 0, 0.02)
-  );
-}
-
-/* =====================================================
-   EDIT MODE (NO MORE INNER CARD)
-===================================================== */
-
-.textarea {
-  width: 100%;
-  min-height: 140px;
-  resize: vertical;
-
-  padding: 16px;
-  border-radius: 10px;
-
-  border: 1px solid #e4dfd2;
-  background: #ffffff;
-
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.6;
-
-  transition: all 0.2s ease;
-}
-
-.textarea:focus {
-  outline: none;
-  border-color: #f4b400;
-  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.12);
-}
-
-/* =====================================================
-   EDIT ACTIONS
-===================================================== */
-
-.editActionsInline {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-.saveBtn {
-  background: #e6c15a;
-  color: #ffffff;
-  border: 2px solid #d4b84a;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.saveBtn:hover {
-  background: #d6b24f;
-}
-
-.cancelBtn {
-  background: transparent;
-  border: 2px solid #d4b84a;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #6b560f;
-}
-
-.cancelBtn:hover {
-  background: #fff2c2;
-}
-
-/* ================= FILTER + ACTION ROW ================= */
-
-.filterActionRow {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  transform: translateY(-35px);
-}
-
-/* ================= BUTTONS ================= */
-
-.assignBtn,
-.scheduleBtn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-/* Assign - soft outline */
-.assignBtn {
+.secondaryBtn {
   background: #fff;
   border: 2px solid #f3c623;
-  color: #9c7c00;
-}
-
-.assignBtn:hover:not(:disabled) {
-  background: #fff8dc;
-}
-
-/* Schedule - primary honey gold */
-.scheduleBtn {
-  background: #f3c623;
-  border: 2px solid #e2b200;
   color: #3a2f00;
 }
 
-.scheduleBtn:hover:not(:disabled) {
-  background: #ffcf3f;
-  transform: translateY(-1px);
-}
-
-/* Disabled */
-.assignBtn:disabled,
-.scheduleBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==========================================
-   HONEYCOMB TABS WRAPPER
-========================================== */
-
-.hcTabs {
-  display: flex;
-  gap: 32px;
-
-  margin-top: 32px; /* üstte boşluk */
-  margin-bottom: 28px;
-
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e7e2d3;
-}
-
-/* ==========================================
-   BASE TAB
-========================================== */
-
-.hcTab {
-  position: relative;
-
-  background: none;
-  border: none;
-  cursor: pointer;
-
-  font-size: 15px;
-  font-weight: 600;
-  color: #6a6656;
-
-  padding: 6px 2px;
-
-  transition: all 0.25s ease;
-}
-
-/* Hover */
-
-.hcTab:hover {
-  color: #1f1f1f;
-}
-
-/* ==========================================
-   ACTIVE TAB
-========================================== */
-
-.hcTabActive {
-  color: #1f1f1f;
-}
-
-/* Honey underline animation */
-
-.hcTab::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -13px;
-
-  width: 0%;
-  height: 3px;
-
-  background: linear-gradient(90deg, #ffcc29, #f4b400);
-  border-radius: 4px;
-
-  transition: width 0.3s ease;
-}
-
-.hcTabActive::after {
-  width: 100%;
+.secondaryBtn:hover {
+  background: #9c7c00;
+  color: #fff;
+  border: 2px solid #f8f4bf;
 }
