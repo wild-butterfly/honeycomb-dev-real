@@ -375,101 +375,91 @@ const JobPage: React.FC = () => {
         </div>
 
         {/* TABS */}
-        <div className={styles.section}>
-          <div className={styles.sectionTabs}>
-            <button
-              className={
-                activeTab === "scheduling"
-                  ? styles.sectionTabActive
-                  : styles.sectionTab
-              }
-              onClick={() => setActiveTab("scheduling")}
-            >
-              Scheduling
-            </button>
+        <div className={styles.hcTabs}>
+          <button
+            className={`${styles.hcTab} ${
+              activeTab === "scheduling" ? styles.hcTabActive : ""
+            }`}
+            onClick={() => setActiveTab("scheduling")}
+          >
+            Scheduling
+          </button>
 
-            <button
-              className={
-                activeTab === "labour"
-                  ? styles.sectionTabActive
-                  : styles.sectionTab
-              }
-              onClick={() => setActiveTab("labour")}
-            >
-              Labour
-            </button>
-          </div>
+          <button
+            className={`${styles.hcTab} ${
+              activeTab === "labour" ? styles.hcTabActive : ""
+            }`}
+            onClick={() => setActiveTab("labour")}
+          >
+            Labour
+          </button>
+        </div>
 
-          <div className={styles.sectionContent}>
-            {/* SCHEDULING */}
-            {activeTab === "scheduling" && (
-              <>
-                {/* ASSIGNEE FILTER */}
-                <div className={styles.filterActionRow}>
-                  <AssigneeFilterBar
-                    employees={employees.map((e) => ({
-                      id: e.id,
-                      name: e.name,
-                    }))}
-                    selectedAssignee={selectedAssignee}
-                    onChange={setSelectedAssignee}
-                  />
-
-                  <div className={styles.actionButtons}>
-                    <button
-                      className={styles.assignBtn}
-                      disabled={selectedAssignee === "all"}
-                      onClick={handleAssignEmployee}
-                    >
-                      Assign
-                    </button>
-
-                    <button
-                      className={styles.scheduleBtn}
-                      disabled={selectedAssignee === "all"}
-                      onClick={handleScheduleEmployee}
-                    >
-                      Schedule
-                    </button>
-                  </div>
-                </div>
-
-                {/* EXISTING SECTION – UNCHANGED */}
-                <JobAssignedEmployeesSection
-                  assignments={assignments}
-                  assignees={assignees}
-                  employees={employees}
-                  onSelectAssignment={(range) => {
-                    setActiveAssignment(range);
-                    setActiveTab("labour");
-                  }}
-                  onCompleteAssignments={handleCompleteAssignments}
-                  onReopenAssignments={handleReopenAssignments}
-                  onRequestDeleteAssignment={(id) =>
-                    setConfirmDeleteAssignment(id)
-                  }
-                  onRequestUnassignEmployee={(employeeId, name) =>
-                    setConfirmUnassign({ employeeId, name })
-                  }
+        {/* CONTENT OUTSIDE TABS */}
+        <div className={styles.sectionContent}>
+          {activeTab === "scheduling" && (
+            <>
+              <div className={styles.filterActionRow}>
+                <AssigneeFilterBar
+                  employees={employees.map((e) => ({
+                    id: e.id,
+                    name: e.name,
+                  }))}
+                  selectedAssignee={selectedAssignee}
+                  onChange={setSelectedAssignee}
                 />
-              </>
-            )}
 
-            {/* ================= LABOUR ================= */}
-            {activeTab === "labour" && activeAssignment && (
-              <LabourTimeEntrySection
-                jobId={Number(job.id)}
-                assignment={activeAssignment}
-              />
-            )}
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.assignBtn}
+                    disabled={selectedAssignee === "all"}
+                    onClick={handleAssignEmployee}
+                  >
+                    Assign
+                  </button>
 
-            {/* GUARD */}
-            {activeTab === "labour" && !activeAssignment && (
-              <div style={{ padding: 16, color: "#888" }}>
-                Select a scheduled time block first
+                  <button
+                    className={styles.scheduleBtn}
+                    disabled={selectedAssignee === "all"}
+                    onClick={handleScheduleEmployee}
+                  >
+                    Schedule
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+
+              <JobAssignedEmployeesSection
+                assignments={assignments}
+                assignees={assignees}
+                employees={employees}
+                onSelectAssignment={(range) => {
+                  setActiveAssignment(range);
+                  setActiveTab("labour");
+                }}
+                onCompleteAssignments={handleCompleteAssignments}
+                onReopenAssignments={handleReopenAssignments}
+                onRequestDeleteAssignment={(id) =>
+                  setConfirmDeleteAssignment(id)
+                }
+                onRequestUnassignEmployee={(employeeId, name) =>
+                  setConfirmUnassign({ employeeId, name })
+                }
+              />
+            </>
+          )}
+
+          {activeTab === "labour" && activeAssignment && (
+            <LabourTimeEntrySection
+              jobId={Number(job.id)}
+              assignment={activeAssignment}
+            />
+          )}
+
+          {activeTab === "labour" && !activeAssignment && (
+            <div style={{ padding: 16, color: "#888" }}>
+              Select a scheduled time block first
+            </div>
+          )}
         </div>
       </div>
     </div>
