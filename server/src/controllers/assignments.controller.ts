@@ -29,6 +29,80 @@ const recalcJobStatus = async (jobId: number) => {
   );
 };
 
+
+/* ===============================
+   INTERNAL: Auto-generate labour
+================================ */
+const generateLabourForAssignment = async (assignmentId: number) => {
+  const existsCheck = await pool.query(
+    `SELECT id FROM labour_entries WHERE assignment_id = $1`,
+    [assignmentId]
+  );
+
+  if (existsCheck.rowCount) return;
+
+  const result = await pool.query(
+    `
+    SELECT
+      a.id,
+      a.job_id,
+      a.employee_id,
+      a.start_time,
+      a.end_time,
+      e.rate
+    FROM assignments a
+    JOIN employees e ON e.id = a.employee_id
+    WHERE a.id = $1
+    `,
+    [assignmentId]
+  );
+
+  if (!result.rowCount) return;
+
+  const a = result.rows[0];
+
+  const start = new Date(a.start_time);
+  const end = new Date(a.end_time);
+
+  let diff = end.getTime() - start.getTime();
+  if (diff <= 0) diff += 24 * 60 * 60 * 1000;
+
+  const workedHours = Math.round((diff / 36e5) * 4) / 4;
+
+  const rate = Number(a.rate ?? 0);
+  const total = workedHours * rate;
+
+  await pool.query(
+    `
+    INSERT INTO labour_entries
+    (
+      job_id,
+      assignment_id,
+      employee_id,
+      start_time,
+      end_time,
+      worked_hours,
+      uncharged_hours,
+      chargeable_hours,
+      rate,
+      total,
+      notes
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,0,$6,$7,$8,'Auto-generated from completed assignment')
+    `,
+    [
+      a.job_id,
+      a.id,
+      a.employee_id,
+      a.start_time,
+      a.end_time,
+      workedHours,
+      rate,
+      total,
+    ]
+  );
+};
+
 /* ===============================
    GET ASSIGNMENTS
    - /assignments              → ALL
@@ -154,6 +228,10 @@ export const updateAssignment = async (req: Request, res: Response) => {
     // 🔥 JOB STATUS RECALC
     await recalcJobStatus(assignment.job_id);
 
+    if (assignment.completed === true) {
+  await generateLabourForAssignment(assignment.id);
+}
+
     res.json(assignment);
   } catch (err) {
     console.error("assignments.update", err);
@@ -195,6 +273,9 @@ export const completeAssignments = async (req: Request, res: Response) => {
     // 🔥 Affected jobs (unique)
     const jobIds = [...new Set(result.rows.map((r) => r.job_id))];
 
+    for (const id of assignmentIds) {
+  await generateLabourForAssignment(id);
+}
     for (const jobId of jobIds) {
       await recalcJobStatus(jobId);
     }

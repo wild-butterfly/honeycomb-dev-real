@@ -403,3 +403,76 @@ export const assignEmployee = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Job assign failed" });
   }
 };
+
+/* ===============================
+  LABOUR ENTRIES
+================================ */
+
+/* ===============================
+   UPDATE LABOUR ENTRY
+================================ */
+export const updateLabour = async (req: Request, res: Response) => {
+  try {
+    const { labourId } = req.params;
+
+    const result = await pool.query(
+      `
+      UPDATE labour_entries
+      SET
+        start_time = $1,
+        end_time = $2,
+        worked_hours = $3,
+        uncharged_hours = $4,
+        chargeable_hours = $5,
+        rate = $6,
+        total = $7,
+        notes = $8
+      WHERE id = $9
+      RETURNING *
+      `,
+      [
+        req.body.start_time,
+        req.body.end_time,
+        req.body.worked_hours,
+        req.body.uncharged_hours,
+        req.body.chargeable_hours,
+        req.body.rate,
+        req.body.total,
+        req.body.description ?? null,
+        labourId,
+      ]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Labour entry not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("UPDATE labour error", err);
+    res.status(500).json({ error: "Update labour failed" });
+  }
+};
+
+/* ===============================
+   DELETE LABOUR ENTRY
+================================ */
+export const deleteLabour = async (req: Request, res: Response) => {
+  try {
+    const { labourId } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM labour_entries WHERE id = $1 RETURNING id`,
+      [labourId]
+    );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Labour entry not found" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE labour error", err);
+    res.status(500).json({ error: "Delete labour failed" });
+  }
+};

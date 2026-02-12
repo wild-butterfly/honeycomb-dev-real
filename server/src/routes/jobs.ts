@@ -17,4 +17,6 @@ router.put("/:id/unassign", controller.unassignEmployee);
 router.get("/:id/labour", controller.getLabour);
 router.post("/:id/labour", controller.addLabour);
 
+router.put("/:jobId/labour/:labourId", controller.updateLabour);
+router.delete("/:jobId/labour/:labourId", controller.deleteLabour);
 export default router;

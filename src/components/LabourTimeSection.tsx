@@ -129,34 +129,39 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
   );
 
   const chargeableHours = Math.max(0, workedHours - totalUnchargedHours);
-
   const total = chargeableHours * rate;
 
   /* ================= AUTO GENERATE ================= */
 
   useEffect(() => {
     const autoGenerate = async () => {
-      if (!assignment.completed || !assignment.id || !assignment.employee_id)
-        return;
+      if (!assignment?.completed) return;
+      if (!assignment?.id) return;
+      if (!assignment?.employee_id) return;
+      if (!employees.length) return;
 
+      // Prevent duplicate generation
       const exists = entries.some((e) => e.assignment_id === assignment.id);
       if (exists) return;
 
       const emp = employees.find((e) => e.id === assignment.employee_id);
-      const empRate = emp?.rate ?? 0;
+      if (!emp) return;
 
-      const worked = calcHours(assignment.start, assignment.end);
+      const worked = calcHours(
+        new Date(assignment.start),
+        new Date(assignment.end),
+      );
 
       await apiPost(`/jobs/${jobId}/labour`, {
         assignment_id: assignment.id,
         employee_id: assignment.employee_id,
-        start_time: toSqlString(assignment.start),
-        end_time: toSqlString(assignment.end),
+        start_time: toSqlString(new Date(assignment.start)),
+        end_time: toSqlString(new Date(assignment.end)),
         worked_hours: worked,
         uncharged_hours: 0,
         chargeable_hours: worked,
-        rate: empRate,
-        total: worked * empRate,
+        rate: emp.rate,
+        total: worked * emp.rate,
         description: "Auto-generated from completed assignment",
         source: "auto",
       });
@@ -165,7 +170,16 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     };
 
     autoGenerate();
-  }, [assignment.completed, employees]);
+  }, [
+    assignment?.id,
+    assignment?.completed,
+    assignment?.employee_id,
+    assignment?.start,
+    assignment?.end,
+    employees,
+    entries,
+    jobId,
+  ]);
 
   /* ================= UNCHARGED ================= */
 
@@ -198,7 +212,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     if (!employeeId) return alert("Select employee");
 
     if (editingEntry) {
-      await apiPut(`/labour/${editingEntry.id}`, {
+      await apiPut(`/jobs/${jobId}/labour/${editingEntry.id}`, {
         start_time: toSqlString(startDate),
         end_time: toSqlString(endDate),
         worked_hours: workedHours,
@@ -213,7 +227,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
       setEditingEntry(null);
     } else {
       await apiPost(`/jobs/${jobId}/labour`, {
-        assignment_id: assignment.id,
+        assignment_id: null,
         employee_id: employeeId,
         start_time: toSqlString(startDate),
         end_time: toSqlString(endDate),
@@ -229,7 +243,6 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     }
 
     await loadLabour();
-
     setDescription("");
     setUnchargedRows([]);
     setSelectedReasonId(0);
@@ -243,7 +256,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
 
   const handleDelete = async (id: number) => {
     if (!window.confirm("Delete entry?")) return;
-    await apiDelete(`/labour/${id}`);
+    await apiDelete(`/jobs/${jobId}/labour/${id}`);
     await loadLabour();
   };
 
@@ -275,12 +288,12 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
   /* ================= UI ================= */
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.card}>
-        <h4>{editingEntry ? "Edit time entry" : "Add time entry"}</h4>
+    <div className={styles.layout}>
+      {/* LEFT FORM */}
+      <div className={styles.leftCard}>
+        <h3>{editingEntry ? "Edit time entry" : "Add time entry"}</h3>
 
-        {/* Employee + Rate */}
-        <div className={styles.row}>
+        <div className={styles.inlineRow}>
           <select
             value={employeeId}
             onChange={(e) => {
@@ -302,26 +315,22 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
             type="number"
             value={rate}
             onChange={(e) => setRate(Number(e.target.value))}
-            placeholder="$ Rate"
+            className={styles.rateInput}
           />
         </div>
 
-        {/* Date / Time */}
-        <div className={styles.row}>
+        <div className={styles.inlineRow}>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
-
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
-
           <span>→</span>
-
           <input
             type="time"
             value={endTime}
@@ -329,39 +338,37 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           />
         </div>
 
-        {/* Description */}
         <textarea
           placeholder="Work description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        {/* ================= UNCHARGED ================= */}
-        <div className={styles.unchargedWrapper}>
-          <select
-            value={selectedReasonId}
-            onChange={(e) => setSelectedReasonId(Number(e.target.value))}
-          >
-            <option value={0}>Uncharged reason</option>
-            {reasons.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name} ({r.paid ? "PAID" : "UNPAID"})
-              </option>
-            ))}
-          </select>
+        {/* UNCHARGED */}
+        <div className={styles.unchargedBox}>
+          <div className={styles.inlineRow}>
+            <select
+              value={selectedReasonId}
+              onChange={(e) => setSelectedReasonId(Number(e.target.value))}
+            >
+              <option value={0}>Uncharged reason</option>
+              {reasons.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} ({r.paid ? "PAID" : "UNPAID"})
+                </option>
+              ))}
+            </select>
 
-          <input
-            type="number"
-            value={tempMinutes}
-            onChange={(e) => setTempMinutes(Number(e.target.value))}
-            placeholder="minutes"
-          />
+            <input
+              type="number"
+              value={tempMinutes}
+              onChange={(e) => setTempMinutes(Number(e.target.value))}
+              placeholder="minutes"
+            />
 
-          <button onClick={handleAddUncharged}>+ Add</button>
-        </div>
+            <button onClick={handleAddUncharged}>+ Add</button>
+          </div>
 
-        {/* Uncharged List */}
-        <div className={styles.unchargedTable}>
           {unchargedRows.length === 0 && (
             <div className={styles.noUncharged}>No uncharged time entered</div>
           )}
@@ -375,44 +382,60 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           ))}
         </div>
 
-        {/* Summary */}
-        <div className={styles.summary}>
-          <div>Worked: {workedHours.toFixed(2)}h</div>
-          <div>Uncharged: {totalUnchargedHours.toFixed(2)}h</div>
-          <div>Chargeable: {chargeableHours.toFixed(2)}h</div>
-          <div className={styles.total}>${total.toFixed(2)}</div>
+        <div className={styles.summaryStrip}>
+          <div>Worked {workedHours.toFixed(2)}</div>
+          <div>Uncharged {totalUnchargedHours.toFixed(2)}</div>
+          <div>Chargeable {chargeableHours.toFixed(2)}</div>
+          <div className={styles.money}>${total.toFixed(2)}</div>
         </div>
 
-        {/* Save */}
         <button className={styles.primaryBtn} onClick={handleSave}>
           {editingEntry ? "Save changes" : "+ Add time entry"}
         </button>
       </div>
 
-      {groupedEntries.map((emp: any, idx: number) => (
-        <div key={idx} className={styles.employeeBlock}>
-          <h4>
-            {emp.name} | ${emp.totalValue.toFixed(2)}
-          </h4>
-
-          {emp.rows.map((row: LabourEntry) => (
-            <div key={row.id} className={styles.entryRow}>
-              <span>{Number(row.chargeable_hours || 0).toFixed(2)}h</span>
-              <span>${Number(row.total || 0).toFixed(2)}</span>
-
-              <div>
-                <button onClick={() => handleEdit(row)}>✏️</button>
-                <button onClick={() => handleDelete(row.id)}>✕</button>
-              </div>
+      {/* RIGHT SUMMARY */}
+      <div className={styles.rightCard}>
+        {groupedEntries.map((emp: any, idx: number) => (
+          <div key={idx} className={styles.employeeSection}>
+            <div className={styles.employeeHeader}>
+              <div className={styles.avatar}></div>
+              <h3>
+                {emp.name} | ${emp.totalValue.toFixed(2)}
+              </h3>
             </div>
-          ))}
 
-          <div className={styles.employeeTotals}>
-            Total: {emp.totalChargeable.toFixed(2)}h | $
-            {emp.totalValue.toFixed(2)}
+            <div className={styles.tableHeader}>
+              <span>Rate</span>
+              <span>Chargeable</span>
+              <span>Uncharged</span>
+              <span>Charged Out</span>
+              <span></span>
+            </div>
+
+            {emp.rows.map((row: LabourEntry) => (
+              <div key={row.id} className={styles.tableRow}>
+                <span>${row.rate.toFixed(2)}</span>
+                <span>{Number(row.chargeable_hours).toFixed(2)}</span>
+                <span>{Number(row.uncharged_hours).toFixed(2)}</span>
+                <span className={styles.money}>
+                  ${Number(row.total).toFixed(2)}
+                </span>
+
+                <div className={styles.actions}>
+                  <button onClick={() => handleEdit(row)}>✏</button>
+                  <button onClick={() => handleDelete(row.id)}>✕</button>
+                </div>
+              </div>
+            ))}
+
+            <div className={styles.employeeTotals}>
+              {emp.totalChargeable.toFixed(2)} hrs | $
+              {emp.totalValue.toFixed(2)}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

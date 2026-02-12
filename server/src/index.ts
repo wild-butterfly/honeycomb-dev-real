@@ -10,7 +10,7 @@ import companyRoutes from "./routes/companies";
 import jobRoutes from "./routes/jobs";
 import assignmentRoutes from "./routes/assignments";
 import tasksRoutes from "./routes/tasks";
-import labourRoutes from "./routes/labourRoutes";
+
 
 const app = express();
 
@@ -40,7 +40,6 @@ app.use("/api/companies", companyRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/tasks", tasksRoutes);
-app.use("/api", labourRoutes);
 
 /* ===============================
    404 FALLBACK
