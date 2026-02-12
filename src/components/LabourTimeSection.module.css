@@ -1,128 +1,421 @@
+:root {
+  --hc-gold-strong: #f4b400;
+  --hc-gold-dark: #9c7c00;
+  --hc-gold-deep: #6a5a1e;
+  --hc-bg-white: #ffffff;
+  --hc-border-light: #e5e7eb;
+}
+
 .layout {
   display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 28px;
+  grid-template-columns: 440px 1fr;
+  gap: 32px;
   align-items: start;
 }
 
+/* ================= LEFT ================= */
+
 .leftCard {
   background: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 14px;
-  padding: 22px;
+  border-radius: 18px;
+  padding: 28px;
+
+  border: 1px solid #eaeaea;
+  border-left: 6px solid #f4b400; /* ← ÇİZGİ BURADA */
+
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.04);
+}
+
+.leftCard h3 {
+  margin-bottom: 18px;
 }
 
 .inlineRow {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+select,
+input,
+textarea {
+  border: 1px solid #e9ebe5;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #f4b400;
+  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.25);
+}
+.rateInput {
+  width: 90px;
+}
+.money {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--hc-gold-dark);
+}
+textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+}
+/* ================= UNCHARGED ================= */
+
+.unchargedBox {
+  margin-top: 22px;
+  margin-bottom: 24px;
+  padding: 18px;
+
+  background: #ffffff;
+  border-radius: 16px;
+
+  border: 2px solid #f4b400;
+  box-shadow: 0 6px 20px rgba(244, 180, 0, 0.08);
+
+  transition: all 0.2s ease;
+}
+
+.unchargedBox:hover {
+  box-shadow: 0 8px 28px rgba(244, 180, 0, 0.14);
+}
+
+/* Row layout */
+.unchargedBox .inlineRow {
+  display: flex;
+  gap: 14px;
   align-items: center;
   margin-bottom: 14px;
 }
 
-.rateInput {
-  width: 90px;
-}
+/* Dropdown larger */
+.unchargedBox select {
+  flex: 3;
+  min-width: 200px;
 
-textarea {
-  width: 100%;
-  min-height: 80px;
-  margin-bottom: 16px;
-}
-
-.unchargedBox {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #faf7ee;
+  border: 2px solid #f4b400;
   border-radius: 10px;
+  padding: 8px 12px;
+
+  font-weight: 500;
+  color: #6a5a1e;
+  background: #ffffff;
 }
 
+/* Minutes smaller */
+.unchargedBox input[type="number"] {
+  flex: 1;
+  max-width: 90px;
+
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 8px 10px;
+
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Empty state */
 .noUncharged {
   font-size: 13px;
-  color: #888;
+  color: #9c7c00;
+  margin-top: 6px;
+  opacity: 0.8;
 }
 
+/* Existing uncharged row */
 .unchargedRow {
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
+  align-items: center;
+
+  margin-top: 10px;
+  padding: 8px 12px;
+
+  border-radius: 8px;
+  background: #fffdf6;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: #6a5a1e;
 }
+
+/* Remove button */
+.unchargedRow button {
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  font-size: 14px;
+  color: #c4a000;
+
+  transition: 0.15s ease;
+}
+
+.unchargedRow button:hover {
+  color: #d11;
+}
+
+/* ================= SUMMARY STRIP ================= */
 
 .summaryStrip {
-  display: flex;
-  justify-content: flex-end;
-  gap: 22px;
-  padding: 10px 14px;
-  background: #f9f3e3;
-  border-radius: 10px;
-  font-size: 13px;
-  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr) auto;
+  align-items: center;
+
+  padding: 16px 20px;
+  border-radius: 16px;
+
+  background: #ffffff;
+  border: 2px solid #f4b400;
+  margin-bottom: 20px;
+  gap: 12px;
 }
 
-.money {
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9c7c00;
+  margin-bottom: 4px;
+}
+
+.summaryTotal {
+  font-size: 18px;
   font-weight: 700;
-  color: #b88a00;
+  color: #6a5a1e;
+}
+
+/* =========================================
+   HONEYCOMB PREMIUM BUTTON SYSTEM
+========================================= */
+
+/* ================= BUTTONS ================= */
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
 }
 
 .primaryBtn {
-  background: #f4b400;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-weight: 600;
-  cursor: pointer;
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #9c7c00;
 }
+
+.primaryBtn:hover {
+  background-color: #f4b400;
+  color: #fff;
+}
+
+.secondaryBtn {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #3a2f00;
+}
+
+.secondaryBtn:hover {
+  background: #9c7c00;
+  color: #fff;
+  border: 2px solid #f8f4bf;
+}
+
+/* Disabled */
+.assignBtn:disabled,
+.secondaryBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ================= RIGHT ================= */
 
 .rightCard {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
+
+/* ================= EMPLOYEE CARD ================= */
 
 .employeeSection {
   background: #ffffff;
-  border: 1px solid #e8e8e8;
-  border-radius: 14px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 28px;
+
+  border: 1px solid #eaeaea;
+  border-left: 6px solid #f4b400;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease;
 }
+
+.employeeSection:hover {
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= HEADER ================= */
 
 .employeeHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
-.avatar {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, #d9d9d9, #bfbfbf);
-  border-radius: 50%;
+.employeeHeader h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f1f1f;
+  letter-spacing: 0.3px;
 }
+
+/* ================= HEX AVATAR ================= */
+
+.avatar {
+  width: 48px;
+  height: 48px;
+
+  background: linear-gradient(135deg, #f4b400, #e0a800);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0% 50%);
+
+  box-shadow: 0 6px 18px rgba(244, 180, 0, 0.35);
+
+  transition: transform 0.2s ease;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+/* ================= TABLE HEADER ================= */
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 120px 120px 120px 120px 60px;
+  grid-template-columns: 1fr 1fr 1fr 1fr 70px;
+
   font-size: 12px;
-  font-weight: 600;
-  color: #777;
-  margin-bottom: 6px;
+  font-weight: 700;
+  color: #6a5a1e;
+
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+
+  margin-bottom: 10px;
 }
+
+/* ================= TABLE ROW ================= */
 
 .tableRow {
   display: grid;
-  grid-template-columns: 120px 120px 120px 120px 60px;
+  grid-template-columns: 1fr 1fr 1fr 1fr 70px;
+
   align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid #f0f0f0;
+  padding: 14px 0;
+
+  border-top: 1px solid #f2f2f2;
+  font-size: 14px;
+
+  transition: all 0.15s ease;
 }
+
+.tableRow:hover {
+  background: #fff9e6;
+}
+
+/* ================= MONEY ================= */
+
+.money {
+  font-weight: 700;
+  font-size: 15px;
+  color: #b88a00;
+}
+
+/* ================= ACTION ICON BUTTONS ================= */
 
 .actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
+.iconBtn {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  border: 1.5px solid #f4b400;
+  border-radius: 10px;
+
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.iconBtn:hover {
+  background: #f4b400;
+}
+
+.iconBtn:hover .icon {
+  color: #ffffff;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: #6a5a1e;
+  transition: color 0.18s ease;
+}
+
+/* DELETE VARIANT */
+
+.dangerBtn {
+  border-color: #e0a000;
+}
+
+.dangerBtn:hover {
+  background: #9c7c00;
+}
+
+.dangerBtn:hover .icon {
+  color: #ffffff;
+}
+/* ================= TOTAL FOOTER ================= */
+
 .employeeTotals {
-  margin-top: 12px;
-  font-weight: 600;
+  margin-top: 20px;
+  padding-top: 16px;
+
+  border-top: 1px dashed #e6e6e6;
+
+  font-weight: 700;
+  font-size: 15px;
+  text-align: right;
+  color: #6a5a1e;
 }

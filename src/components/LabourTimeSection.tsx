@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styles from "./LabourTimeSection.module.css";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
 import { labourReasons } from "../config/labourReasons";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 /* ================= TYPES ================= */
 
@@ -15,14 +16,23 @@ type Employee = {
 
 type LabourEntry = {
   id: number;
-  assignment_id?: number;
-  employee_id?: number;
+  assignment_id?: number | null;
+  employee_id?: number | null;
   employee_name: string;
+
+  start_time: string;
+  end_time: string;
+
   chargeable_hours: number;
   worked_hours: number;
   uncharged_hours: number;
+
   total: number;
   rate: number;
+
+  description?: string;
+  uncharged?: UnchargedRow[];
+
   created_at: string;
   source?: "auto" | "manual";
 };
@@ -250,8 +260,20 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
 
   const handleEdit = (entry: LabourEntry) => {
     setEditingEntry(entry);
+
     setEmployeeId(entry.employee_id ?? 0);
     setRate(entry.rate);
+
+    const start = new Date(entry.start_time);
+    const end = new Date(entry.end_time);
+
+    setDate(toDateInput(start));
+    setStartTime(toTimeInput(start));
+    setEndTime(toTimeInput(end));
+
+    setDescription(entry.description ?? "");
+
+    setUnchargedRows(entry.uncharged ?? []);
   };
 
   const handleDelete = async (id: number) => {
@@ -291,7 +313,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     <div className={styles.layout}>
       {/* LEFT FORM */}
       <div className={styles.leftCard}>
-        <h3>{editingEntry ? "Edit time entry" : "Add time entry"}</h3>
+        <h3>{editingEntry ? "Update Time Entry" : "Create Time Entry"}</h3>
 
         <div className={styles.inlineRow}>
           <select
@@ -345,6 +367,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
         />
 
         {/* UNCHARGED */}
+        {/* UNCHARGED */}
         <div className={styles.unchargedBox}>
           <div className={styles.inlineRow}>
             <select
@@ -365,8 +388,12 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
               onChange={(e) => setTempMinutes(Number(e.target.value))}
               placeholder="minutes"
             />
+          </div>
 
-            <button onClick={handleAddUncharged}>+ Add</button>
+          <div className={styles.addRow}>
+            <button className={styles.primaryBtn} onClick={handleAddUncharged}>
+              Add
+            </button>
           </div>
 
           {unchargedRows.length === 0 && (
@@ -383,14 +410,26 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
         </div>
 
         <div className={styles.summaryStrip}>
-          <div>Worked {workedHours.toFixed(2)}</div>
-          <div>Uncharged {totalUnchargedHours.toFixed(2)}</div>
-          <div>Chargeable {chargeableHours.toFixed(2)}</div>
-          <div className={styles.money}>${total.toFixed(2)}</div>
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Worked</span>
+            <span>{workedHours.toFixed(2)} hrs</span>
+          </div>
+
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Uncharged</span>
+            <span>{totalUnchargedHours.toFixed(2)} hrs</span>
+          </div>
+
+          <div className={styles.summaryItem}>
+            <span className={styles.summaryLabel}>Chargeable</span>
+            <span>{chargeableHours.toFixed(2)} hrs</span>
+          </div>
+
+          <div className={styles.summaryTotal}>${total.toFixed(2)}</div>
         </div>
 
-        <button className={styles.primaryBtn} onClick={handleSave}>
-          {editingEntry ? "Save changes" : "+ Add time entry"}
+        <button className={styles.secondaryBtn} onClick={handleSave}>
+          Save Time Entry
         </button>
       </div>
 
@@ -423,8 +462,21 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
                 </span>
 
                 <div className={styles.actions}>
-                  <button onClick={() => handleEdit(row)}>✏</button>
-                  <button onClick={() => handleDelete(row.id)}>✕</button>
+                  <button
+                    className={styles.iconBtn}
+                    title="Edit"
+                    onClick={() => handleEdit(row)}
+                  >
+                    <PencilIcon className={styles.icon} />
+                  </button>
+
+                  <button
+                    className={`${styles.iconBtn} ${styles.dangerBtn}`}
+                    title="Delete"
+                    onClick={() => handleDelete(row.id)}
+                  >
+                    <TrashIcon className={styles.icon} />
+                  </button>
                 </div>
               </div>
             ))}
