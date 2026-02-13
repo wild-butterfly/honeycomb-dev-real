@@ -16,16 +16,17 @@ export type TaskEmployee = {
 
 async function api<T>(url: string): Promise<T> {
   const res = await fetch(`/api${url}`, {
+    headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
 
   if (!res.ok) {
-    throw new Error("Failed to fetch employees");
+    const text = await res.text();
+    throw new Error(text || "API request failed");
   }
 
   return res.json();
 }
-
 /* =========================================================
    HOOK (POSTGRES VERSION)
 ========================================================= */

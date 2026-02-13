@@ -1,15 +1,17 @@
 // server/controllers/employees.controller.ts
 // Created by Clevermode © 2026
+// 🔐 RLS SAFE VERSION
 
 import { Request, Response } from "express";
-import { pool } from "../db";
 
 /* ===============================
    GET ALL EMPLOYEES
 ================================ */
-export const getAll = async (_req: Request, res: Response) => {
+export const getAll = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
-    const result = await pool.query(`
+    const result = await db.query(`
       SELECT
         id,
         name,
@@ -30,10 +32,12 @@ export const getAll = async (_req: Request, res: Response) => {
    GET ONE EMPLOYEE
 ================================ */
 export const getOne = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const db = (req as any).db;
 
-    const result = await pool.query(
+  try {
+    const id = Number(req.params.id);
+
+    const result = await db.query(
       `
       SELECT id, name, hourly_rate, active
       FROM employees
@@ -57,6 +61,8 @@ export const getOne = async (req: Request, res: Response) => {
    CREATE EMPLOYEE
 ================================ */
 export const create = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const { name, hourly_rate = 0 } = req.body;
 
@@ -64,10 +70,10 @@ export const create = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Name is required" });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
-      INSERT INTO employees (name, hourly_rate, active)
-      VALUES ($1, $2, true)
+      INSERT INTO employees (name, hourly_rate, active, company_id)
+      VALUES ($1, $2, true, current_setting('app.current_company_id')::int)
       RETURNING id, name, hourly_rate, active
       `,
       [name, hourly_rate]
@@ -84,11 +90,13 @@ export const create = async (req: Request, res: Response) => {
    UPDATE EMPLOYEE
 ================================ */
 export const update = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
     const { name, hourly_rate, active } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE employees
       SET
@@ -116,11 +124,13 @@ export const update = async (req: Request, res: Response) => {
    DELETE EMPLOYEE (SAFE)
 ================================ */
 export const remove = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
 
     // 🔒 Block delete if assignments exist
-    const check = await pool.query(
+    const check = await db.query(
       `SELECT 1 FROM assignments WHERE employee_id = $1 LIMIT 1`,
       [id]
     );
@@ -131,7 +141,7 @@ export const remove = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `DELETE FROM employees WHERE id = $1`,
       [id]
     );

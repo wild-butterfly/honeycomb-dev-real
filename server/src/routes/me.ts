@@ -1,24 +1,29 @@
+// server/routes/me.ts
+// 🔐 RLS SAFE VERSION
+
 import { Router } from "express";
-import { pool } from "../db";
+import { withDbContext } from "../middleware/dbContext";
 
 const router = Router();
 
+/* ============================================
+   🔐 Attach DB Context (RLS)
+============================================ */
+router.use(withDbContext);
+
 /**
  * GET /api/me
- * Returns current session/company info
+ * Returns current company from session context
  */
-router.get("/", async (_req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT id AS company_id
-       FROM companies
-       ORDER BY id
-       LIMIT 1`
-    );
+router.get("/", async (req, res) => {
+  const db = (req as any).db;
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "No company found" });
-    }
+  try {
+    const result = await db.query(
+      `
+      SELECT current_setting('app.current_company_id')::int AS company_id
+      `
+    );
 
     res.json({
       company_id: result.rows[0].company_id,

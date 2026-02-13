@@ -1,14 +1,14 @@
 // server/controllers/assignments.controller.ts
 // Created by Clevermode © 2026
+// 🔐 RLS SAFE VERSION
 
 import { Request, Response } from "express";
-import { pool } from "../db";
 
 /* ===============================
    INTERNAL: Recalculate job status
 ================================ */
-const recalcJobStatus = async (jobId: number) => {
-  const result = await pool.query(
+const recalcJobStatus = async (db: any, jobId: number) => {
+  const result = await db.query(
     `
     SELECT COUNT(*) FILTER (WHERE completed = false) AS incomplete
     FROM assignments
@@ -19,7 +19,7 @@ const recalcJobStatus = async (jobId: number) => {
 
   const incompleteCount = Number(result.rows[0]?.incomplete ?? 0);
 
-  await pool.query(
+  await db.query(
     `
     UPDATE jobs
     SET status = $2
@@ -33,15 +33,16 @@ const recalcJobStatus = async (jobId: number) => {
 /* ===============================
    INTERNAL: Auto-generate labour
 ================================ */
-const generateLabourForAssignment = async (assignmentId: number) => {
-  const existsCheck = await pool.query(
+const generateLabourForAssignment = async (db: any, assignmentId: number) => {
+
+  const existsCheck = await db.query(
     `SELECT id FROM labour_entries WHERE assignment_id = $1`,
     [assignmentId]
   );
 
   if (existsCheck.rowCount) return;
 
-  const result = await pool.query(
+  const result = await db.query(
     `
     SELECT
       a.id,
@@ -49,7 +50,6 @@ const generateLabourForAssignment = async (assignmentId: number) => {
       a.employee_id,
       a.start_time,
       a.end_time,
-      a.company_id,
       e.rate
     FROM assignments a
     JOIN employees e ON e.id = a.employee_id
@@ -73,26 +73,31 @@ const generateLabourForAssignment = async (assignmentId: number) => {
   const rate = Number(a.rate ?? 0);
   const total = workedHours * rate;
 
-  await pool.query(
-  `
-  INSERT INTO labour_entries
-  (
-    job_id,
-    assignment_id,
-    employee_id,
-    start_time,
-    end_time,
-    worked_hours,
-    uncharged_hours,
-    chargeable_hours,
-    rate,
-    total,
-    notes,
-    company_id
-  )
-  VALUES ($1,$2,$3,$4,$5,$6,0,$6,$7,$8,'Auto-generated from completed assignment',$9)
-  `,
-   [
+  await db.query(
+    `
+    INSERT INTO labour_entries
+    (
+      job_id,
+      assignment_id,
+      employee_id,
+      start_time,
+      end_time,
+      worked_hours,
+      uncharged_hours,
+      chargeable_hours,
+      rate,
+      total,
+      notes,
+      company_id
+    )
+    VALUES
+    (
+      $1,$2,$3,$4,$5,$6,0,$6,$7,$8,
+      'Auto-generated from completed assignment',
+      current_setting('app.current_company_id')::int
+    )
+    `,
+    [
       a.job_id,
       a.id,
       a.employee_id,
@@ -101,7 +106,6 @@ const generateLabourForAssignment = async (assignmentId: number) => {
       workedHours,
       rate,
       total,
-      a.company_id 
     ]
   );
 };
@@ -109,14 +113,13 @@ const generateLabourForAssignment = async (assignmentId: number) => {
 
 /* ===============================
    GET ASSIGNMENTS
-   - /assignments              → ALL
-   - /assignments?job_id=123   → ONLY that job
 ================================ */
 export const getAllAssignments = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const jobIdRaw = req.query.job_id;
 
-    // 🔒 Explicit filtering
     if (jobIdRaw !== undefined) {
       const jobId = Number(jobIdRaw);
 
@@ -124,7 +127,7 @@ export const getAllAssignments = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Invalid job_id" });
       }
 
-      const result = await pool.query(
+      const result = await db.query(
         `
         SELECT
           id,
@@ -143,8 +146,7 @@ export const getAllAssignments = async (req: Request, res: Response) => {
       return res.json(result.rows);
     }
 
-    // 🔁 Fallback: return ALL assignments
-    const result = await pool.query(
+    const result = await db.query(
       `
       SELECT
         id,
@@ -165,10 +167,13 @@ export const getAllAssignments = async (req: Request, res: Response) => {
   }
 };
 
+
 /* ===============================
    CREATE ASSIGNMENT
 ================================ */
 export const createAssignment = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const { job_id, employee_id, start_time, end_time } = req.body;
 
@@ -181,26 +186,15 @@ export const createAssignment = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignment payload" });
     }
 
-    // 🔐 Get company_id from job
-    const jobResult = await pool.query(
-      `SELECT company_id FROM jobs WHERE id = $1`,
-      [job_id]
-    );
-
-    if (!jobResult.rows.length) {
-      return res.status(404).json({ error: "Job not found" });
-    }
-
-    const companyId = jobResult.rows[0].company_id;
-
-    const result = await pool.query(
+    const result = await db.query(
       `
-      INSERT INTO assignments 
+      INSERT INTO assignments
       (job_id, employee_id, start_time, end_time, company_id)
-      VALUES ($1, $2, $3, $4, $5)
+      VALUES
+      ($1, $2, $3, $4, current_setting('app.current_company_id')::int)
       RETURNING *
       `,
-      [job_id, employee_id, start_time, end_time, companyId]
+      [job_id, employee_id, start_time, end_time]
     );
 
     res.status(201).json(result.rows[0]);
@@ -210,10 +204,13 @@ export const createAssignment = async (req: Request, res: Response) => {
   }
 };
 
+
 /* ===============================
    UPDATE ASSIGNMENT
 ================================ */
 export const updateAssignment = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const assignmentId = Number(req.params.id);
     const { employee_id, start_time, end_time, completed } = req.body;
@@ -222,7 +219,7 @@ export const updateAssignment = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignment id" });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE assignments
       SET
@@ -242,12 +239,11 @@ export const updateAssignment = async (req: Request, res: Response) => {
 
     const assignment = result.rows[0];
 
-    // 🔥 JOB STATUS RECALC
-    await recalcJobStatus(assignment.job_id);
+    await recalcJobStatus(db, assignment.job_id);
 
     if (assignment.completed === true) {
-  await generateLabourForAssignment(assignment.id);
-}
+      await generateLabourForAssignment(db, assignment.id);
+    }
 
     res.json(assignment);
   } catch (err) {
@@ -256,12 +252,13 @@ export const updateAssignment = async (req: Request, res: Response) => {
   }
 };
 
+
 /* ===============================
    COMPLETE ASSIGNMENTS (BULK)
-   PUT /assignments/complete
-   body: { assignmentIds: number[] }
 ================================ */
 export const completeAssignments = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const { assignmentIds } = req.body;
 
@@ -273,12 +270,12 @@ export const completeAssignments = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignmentIds" });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE assignments
       SET completed = TRUE
       WHERE id = ANY($1::int[])
-      RETURNING job_id
+      RETURNING job_id, id
       `,
       [assignmentIds]
     );
@@ -287,14 +284,18 @@ export const completeAssignments = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "No assignments updated" });
     }
 
-    // 🔥 Affected jobs (unique)
-    const jobIds = [...new Set(result.rows.map((r) => r.job_id))];
+   const jobIds: number[] = [
+  ...new Set(
+    (result.rows as any[]).map(r => Number(r.job_id))
+  )
+];
 
-    for (const id of assignmentIds) {
-  await generateLabourForAssignment(id);
+    for (const row of result.rows as any[]) {
+  await generateLabourForAssignment(db, Number(row.id));
 }
+
     for (const jobId of jobIds) {
-      await recalcJobStatus(jobId);
+      await recalcJobStatus(db, jobId);
     }
 
     res.json({ updated: result.rows.length });
@@ -304,12 +305,13 @@ export const completeAssignments = async (req: Request, res: Response) => {
   }
 };
 
+
 /* ===============================
    REOPEN ASSIGNMENTS (BULK)
-   PUT /assignments/reopen
-   body: { assignmentIds: number[] }
 ================================ */
 export const reopenAssignments = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const { assignmentIds } = req.body;
 
@@ -321,7 +323,7 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignmentIds" });
     }
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE assignments
       SET completed = FALSE
@@ -331,10 +333,14 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       [assignmentIds]
     );
 
-    const jobIds = [...new Set(result.rows.map((r) => r.job_id))];
+    const jobIds = [
+  ...new Set(
+    (result.rows as any[]).map(r => Number(r.job_id))
+  )
+];
 
     for (const jobId of jobIds) {
-      await recalcJobStatus(jobId);
+      await recalcJobStatus(db, jobId);
     }
 
     res.json({ updated: result.rows.length });
@@ -345,15 +351,16 @@ export const reopenAssignments = async (req: Request, res: Response) => {
 };
 
 
-
 /* ===============================
    DELETE ASSIGNMENT
 ================================ */
 export const deleteAssignment = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const assignmentId = Number(req.params.id);
 
-    const result = await pool.query(
+    const result = await db.query(
       `DELETE FROM assignments WHERE id = $1 RETURNING job_id`,
       [assignmentId]
     );
@@ -362,7 +369,8 @@ export const deleteAssignment = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Assignment not found" });
     }
 
-    await recalcJobStatus(result.rows[0].job_id);
+    const jobId = Number(result.rows[0].job_id);
+    await recalcJobStatus(db, jobId);
 
     res.status(204).send();
   } catch (err) {

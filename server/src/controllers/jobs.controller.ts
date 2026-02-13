@@ -1,12 +1,13 @@
 //jobs.controller.ts
 import { Request, Response } from "express";
-import { pool } from "../db";
 
 /* ===============================
    GET ALL JOBS + ASSIGNMENTS
 ================================ */
-export const getAll = async (_req: Request, res: Response) => {
-  const result = await pool.query(`
+export const getAll = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
+  const result = await db.query(`
     SELECT
       j.*,
       COALESCE(
@@ -34,15 +35,15 @@ export const getAll = async (_req: Request, res: Response) => {
    GET ONE JOB
 ================================ */
 export const getOne = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       SELECT
         j.*,
-
-        /* ================= ASSIGNMENTS (SCHEDULED) ================= */
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -55,8 +56,6 @@ export const getOne = async (req: Request, res: Response) => {
           ) FILTER (WHERE a.id IS NOT NULL),
           '[]'
         ) AS assignments,
-
-        /* ================= ASSIGNEES (NO SCHEDULE) ================= */
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -66,7 +65,6 @@ export const getOne = async (req: Request, res: Response) => {
           ) FILTER (WHERE e.id IS NOT NULL),
           '[]'
         ) AS assignees
-
       FROM jobs j
       LEFT JOIN assignments a ON a.job_id = j.id
       LEFT JOIN job_assignees ja ON ja.job_id = j.id
@@ -92,20 +90,18 @@ export const getOne = async (req: Request, res: Response) => {
    CREATE JOB
 ================================ */
 export const create = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
-    const { title, company_id, status = "active" } = req.body;
+    const { title, status = "active" } = req.body;
 
-    if (!company_id) {
-      return res.status(400).json({ error: "company_id is required" });
-    }
-
-    const result = await pool.query(
+    const result = await db.query(
       `
-      INSERT INTO jobs (title, company_id, status)
-      VALUES ($1, $2, $3)
+      INSERT INTO jobs (title, status, company_id)
+      VALUES ($1, $2, current_setting('app.current_company_id')::int)
       RETURNING *
       `,
-      [title, company_id, status]
+      [title, status]
     );
 
     res.status(201).json(result.rows[0]);
@@ -120,6 +116,8 @@ export const create = async (req: Request, res: Response) => {
 ================================ */
 export const update = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped connection
+
     const { id } = req.params;
 
     const {
@@ -134,21 +132,21 @@ export const update = async (req: Request, res: Response) => {
       contact_phone,
     } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE jobs
-SET
-  title = COALESCE($1, title),
-  client = COALESCE($2, client),
-  address = COALESCE($3, address),
-  notes = COALESCE($4, notes),
-  status = COALESCE($5, status),
-  color = COALESCE($6, color),
-  contact_name = COALESCE($7, contact_name),
-  contact_email = COALESCE($8, contact_email),
-  contact_phone = COALESCE($9, contact_phone)
-WHERE id = $10
-RETURNING *;
+      SET
+        title = COALESCE($1, title),
+        client = COALESCE($2, client),
+        address = COALESCE($3, address),
+        notes = COALESCE($4, notes),
+        status = COALESCE($5, status),
+        color = COALESCE($6, color),
+        contact_name = COALESCE($7, contact_name),
+        contact_email = COALESCE($8, contact_email),
+        contact_phone = COALESCE($9, contact_phone)
+      WHERE id = $10
+      RETURNING *;
       `,
       [
         title,
@@ -175,15 +173,25 @@ RETURNING *;
   }
 };
 
+
 /* ===============================
    DELETE JOB
 ================================ */
 export const remove = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped connection
+
     const { id } = req.params;
 
-    await pool.query(`DELETE FROM assignments WHERE job_id = $1`, [id]);
-    const result = await pool.query(`DELETE FROM jobs WHERE id = $1`, [id]);
+    await db.query(
+      `DELETE FROM assignments WHERE job_id = $1`,
+      [id]
+    );
+
+    const result = await db.query(
+      `DELETE FROM jobs WHERE id = $1`,
+      [id]
+    );
 
     if (!result.rowCount) {
       return res.status(404).json({ error: "Job not found" });
@@ -202,6 +210,8 @@ export const remove = async (req: Request, res: Response) => {
 ================================ */
 export const unassignEmployee = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped db
+
     const jobId = Number(req.params.id);
     const { employee_id } = req.body;
 
@@ -212,7 +222,7 @@ export const unassignEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid payload" });
     }
 
-    await pool.query(
+    await db.query(
       `
       DELETE FROM job_assignees
       WHERE job_id = $1 AND employee_id = $2
@@ -227,11 +237,14 @@ export const unassignEmployee = async (req: Request, res: Response) => {
   }
 };
 
+
 /* ===============================
    GET JOB LABOUR
 ================================ */
 export const getLabour = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped db
+
     const { id } = req.params;
     const { assignment_id } = req.query;
 
@@ -267,7 +280,7 @@ export const getLabour = async (req: Request, res: Response) => {
 
     query += ` ORDER BY l.created_at DESC`;
 
-    const result = await pool.query(query, values);
+    const result = await db.query(query, values);
 
     res.json(result.rows);
   } catch (err) {
@@ -275,11 +288,14 @@ export const getLabour = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Labour load failed" });
   }
 };
+
 /* ===============================
-   ADD JOB LABOUR (PRODUCTION SAFE)
+   ADD JOB LABOUR (RLS SAFE)
 ================================ */
 export const addLabour = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped transaction
+
     const jobId = Number(req.params.id);
 
     const {
@@ -299,8 +315,15 @@ export const addLabour = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Employee required" });
     }
 
-    /* ---- Optional: verify job exists ---- */
-    const jobCheck = await pool.query(
+    /*
+      RLS sayesinde:
+      - Job başka company ise SELECT 0 rows döner
+      - Employee başka company ise INSERT fail olur
+      - Assignment başka company ise SELECT 0 rows döner
+    */
+
+    // 1️⃣ Job exists? (RLS filtered)
+    const jobCheck = await db.query(
       `SELECT id FROM jobs WHERE id = $1`,
       [jobId]
     );
@@ -309,9 +332,9 @@ export const addLabour = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    /* ---- Optional: verify assignment belongs to job ---- */
+    // 2️⃣ Optional assignment validation (RLS filtered)
     if (assignment_id) {
-      const assignmentCheck = await pool.query(
+      const assignmentCheck = await db.query(
         `SELECT id FROM assignments WHERE id = $1 AND job_id = $2`,
         [assignment_id, jobId]
       );
@@ -321,7 +344,8 @@ export const addLabour = async (req: Request, res: Response) => {
       }
     }
 
-    const result = await pool.query(
+    // 3️⃣ Insert (company_id otomatik RLS scope'tan gelir)
+    const result = await db.query(
       `
       INSERT INTO labour_entries
       (
@@ -335,9 +359,11 @@ export const addLabour = async (req: Request, res: Response) => {
         chargeable_hours,
         rate,
         total,
-        notes
+        notes,
+        company_id
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+              current_setting('app.current_company_id')::int)
       RETURNING
         id,
         assignment_id,
@@ -373,12 +399,15 @@ export const addLabour = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Labour add failed" });
   }
 };
+
 /* ===============================
-   ASSIGN EMPLOYEE TO JOB (NO SCHEDULE)
+   ASSIGN EMPLOYEE TO JOB (RLS SAFE)
    PUT /jobs/:id/assign
 ================================ */
 export const assignEmployee = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;   // 🔐 request-scoped db
+
     const jobId = Number(req.params.id);
     const { employee_id } = req.body;
 
@@ -389,60 +418,44 @@ export const assignEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid payload" });
     }
 
-    // 🔐 1️⃣ Job company_id al
-    const jobResult = await pool.query(
-      `SELECT company_id FROM jobs WHERE id = $1`,
+    // 1️⃣ Job exists? (RLS filtered)
+    const jobCheck = await db.query(
+      `SELECT id FROM jobs WHERE id = $1`,
       [jobId]
     );
 
-    if (!jobResult.rows.length) {
+    if (!jobCheck.rowCount) {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    const companyId = jobResult.rows[0].company_id;
-
-    // 🔐 2️⃣ Employee aynı company mi kontrol et
-    const employeeCheck = await pool.query(
-      `SELECT company_id FROM employees WHERE id = $1`,
-      [employee_id]
-    );
-
-    if (!employeeCheck.rows.length) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-
-    if (employeeCheck.rows[0].company_id !== companyId) {
-      return res.status(403).json({ error: "Cross-company access denied" });
-    }
-
-    // 🔐 3️⃣ Insert with company_id
-    await pool.query(
+    // 2️⃣ Insert — company_id DB context'ten gelir
+    await db.query(
       `
       INSERT INTO job_assignees (job_id, employee_id, company_id)
-      VALUES ($1, $2, $3)
+      VALUES ($1, $2, current_setting('app.current_company_id')::int)
       ON CONFLICT DO NOTHING
       `,
-      [jobId, employee_id, companyId]
+      [jobId, employee_id]
     );
 
     res.json({ ok: true });
+
   } catch (err) {
     console.error("JOB ASSIGN error", err);
     res.status(500).json({ error: "Job assign failed" });
   }
 };
-/* ===============================
-  LABOUR ENTRIES
-================================ */
 
 /* ===============================
    UPDATE LABOUR ENTRY
 ================================ */
 export const updateLabour = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;  // 🔐 request-scoped transaction
+
     const { labourId } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE labour_entries
       SET
@@ -470,34 +483,45 @@ export const updateLabour = async (req: Request, res: Response) => {
       ]
     );
 
+    /*
+      RLS sayesinde:
+      - Başka company'ye ait labour update edilemez
+      - SELECT/UPDATE otomatik company filter'lıdır
+    */
+
     if (!result.rowCount) {
       return res.status(404).json({ error: "Labour entry not found" });
     }
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error("UPDATE labour error", err);
     res.status(500).json({ error: "Update labour failed" });
   }
 };
-
 /* ===============================
    DELETE LABOUR ENTRY
 ================================ */
 export const deleteLabour = async (req: Request, res: Response) => {
   try {
+    const db = (req as any).db;  // 🔐 request-scoped transaction
+
     const { labourId } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `DELETE FROM labour_entries WHERE id = $1 RETURNING id`,
       [labourId]
     );
+
+
 
     if (!result.rowCount) {
       return res.status(404).json({ error: "Labour entry not found" });
     }
 
     res.json({ success: true });
+
   } catch (err) {
     console.error("DELETE labour error", err);
     res.status(500).json({ error: "Delete labour failed" });

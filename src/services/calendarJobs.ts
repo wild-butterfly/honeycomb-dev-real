@@ -11,6 +11,4 @@ export async function deleteJob(jobId: number | string) {
   const id = String(jobId);
 
   await apiDelete(`/jobs/${id}`);
-
-  console.log("🧨 Job HARD deleted:", id);
 }

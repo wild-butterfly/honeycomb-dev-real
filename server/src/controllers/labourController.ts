@@ -1,17 +1,23 @@
 // Created by Honeycomb © 2025
+// 🔐 RLS SAFE VERSION
 
 import { Request, Response } from "express";
-import { pool } from "../db";
 
 /* =========================================================
    GET LABOUR ENTRIES (by job)
 ========================================================= */
 
 export const getLabourEntries = async (req: Request, res: Response) => {
-  try {
-    const { jobId } = req.params;
+  const db = (req as any).db;
 
-    const result = await pool.query(
+  try {
+    const jobId = Number(req.params.jobId);
+
+    if (!Number.isInteger(jobId)) {
+      return res.status(400).json({ error: "Invalid jobId" });
+    }
+
+    const result = await db.query(
       `
       SELECT 
         le.id,
@@ -42,8 +48,10 @@ export const getLabourEntries = async (req: Request, res: Response) => {
 ========================================================= */
 
 export const addLabourEntry = async (req: Request, res: Response) => {
+  const db = (req as any).db;
+
   try {
-    const { jobId } = req.params;
+    const jobId = Number(req.params.jobId);
 
     const {
       assignment_id,
@@ -58,11 +66,29 @@ export const addLabourEntry = async (req: Request, res: Response) => {
       description,
     } = req.body;
 
-    if (!employee_id) {
-      return res.status(400).json({ error: "Employee required" });
+    if (!Number.isInteger(jobId) || !Number.isInteger(Number(employee_id))) {
+      return res.status(400).json({ error: "Invalid payload" });
     }
 
-    const result = await pool.query(
+    /*
+      RLS guarantees:
+      - Job başka company ise SELECT 0 rows
+      - Employee başka company ise INSERT fail
+      - labour_entries company_id otomatik current_setting'ten gelir
+    */
+
+    // 1️⃣ Job exists? (RLS filtered)
+    const jobCheck = await db.query(
+      `SELECT id FROM jobs WHERE id = $1`,
+      [jobId]
+    );
+
+    if (!jobCheck.rowCount) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // 2️⃣ Insert
+    const result = await db.query(
       `
       INSERT INTO labour_entries
       (
@@ -76,9 +102,14 @@ export const addLabourEntry = async (req: Request, res: Response) => {
         chargeable_hours,
         rate,
         total,
-        notes
+        notes,
+        company_id
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES
+      (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+        current_setting('app.current_company_id')::int
+      )
       RETURNING *
       `,
       [
@@ -86,7 +117,6 @@ export const addLabourEntry = async (req: Request, res: Response) => {
         assignment_id ?? null,
         employee_id,
         start_time ?? null,
-        end_time ?? null,
         worked_hours ?? 0,
         uncharged_hours ?? 0,
         chargeable_hours ?? 0,
@@ -96,7 +126,7 @@ export const addLabourEntry = async (req: Request, res: Response) => {
       ]
     );
 
-    res.json(result.rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (err: any) {
     console.error("LABOUR INSERT ERROR:", err);
     res.status(500).json({ error: "Labour add failed" });
@@ -108,13 +138,23 @@ export const addLabourEntry = async (req: Request, res: Response) => {
 ========================================================= */
 
 export const deleteLabourEntry = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const db = (req as any).db;
 
-    await pool.query(
-      `DELETE FROM labour_entries WHERE id = $1`,
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ error: "Invalid labour id" });
+    }
+
+    const result = await db.query(
+      `DELETE FROM labour_entries WHERE id = $1 RETURNING id`,
       [id]
     );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Labour entry not found" });
+    }
 
     res.json({ success: true });
   } catch (err: any) {

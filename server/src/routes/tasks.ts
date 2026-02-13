@@ -1,14 +1,24 @@
+// server/routes/tasks.ts
+// 🔐 RLS SAFE VERSION
+
 import { Router } from "express";
-import { pool } from "../db";
+import { withDbContext } from "../middleware/dbContext";
 
 const router = Router();
 
-/* =====================================================
+/* ============================================
+   🔐 Attach RLS DB Context
+============================================ */
+router.use(withDbContext);
+
+/* ============================================
    GET ALL TASKS
-===================================================== */
+============================================ */
 router.get("/", async (req, res) => {
+  const db = (req as any).db;
+
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `
       SELECT *
       FROM tasks
@@ -23,20 +33,30 @@ router.get("/", async (req, res) => {
   }
 });
 
-/* =====================================================
+/* ============================================
    CREATE TASK
-===================================================== */
+============================================ */
 router.post("/", async (req, res) => {
+  const db = (req as any).db;
+
   try {
     const { description, assigned, due } = req.body;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
-      INSERT INTO tasks (description, assigned, due, company_id, status)
-      VALUES ($1,$2,$3,$4,'pending')
+      INSERT INTO tasks
+      (description, assigned, due, company_id, status)
+      VALUES
+      (
+        $1,
+        $2,
+        $3,
+        current_setting('app.current_company_id')::int,
+        'pending'
+      )
       RETURNING *
       `,
-      [description, assigned ?? [], due, 1]
+      [description, assigned ?? [], due]
     );
 
     res.json(result.rows[0]);
@@ -46,32 +66,41 @@ router.post("/", async (req, res) => {
   }
 });
 
-/* =====================================================
-   ⚠️ IMPORTANT: SPECIFIC ROUTES FIRST
-===================================================== */
-
-/* DELETE ALL COMPLETED */
+/* ============================================
+   DELETE ALL COMPLETED
+============================================ */
 router.delete("/completed", async (req, res) => {
+  const db = (req as any).db;
+
   try {
-    await pool.query("DELETE FROM tasks WHERE status='completed'");
+    await db.query(
+      `
+      DELETE FROM tasks
+      WHERE status = 'completed'
+      `
+    );
+
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error("DELETE completed tasks error:", err);
     res.status(500).json({ error: "Clean failed" });
   }
 });
-/* =====================================================
-   COMPLETE TASK  (PUT matches frontend)
-===================================================== */
+
+/* ============================================
+   COMPLETE TASK
+============================================ */
 router.put("/:id/complete", async (req, res) => {
+  const db = (req as any).db;
+
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
+    const result = await db.query(
       `
       UPDATE tasks
-      SET status='completed'
-      WHERE id=$1
+      SET status = 'completed'
+      WHERE id = $1
       RETURNING *
       `,
       [id]
@@ -88,15 +117,24 @@ router.put("/:id/complete", async (req, res) => {
   }
 });
 
-/* =====================================================
+/* ============================================
    DELETE SINGLE TASK
-===================================================== */
+============================================ */
 router.delete("/:id", async (req, res) => {
+  const db = (req as any).db;
+
   try {
-    await pool.query("DELETE FROM tasks WHERE id=$1", [req.params.id]);
+    await db.query(
+      `
+      DELETE FROM tasks
+      WHERE id = $1
+      `,
+      [req.params.id]
+    );
+
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    console.error("DELETE task error:", err);
     res.status(500).json({ error: "Delete failed" });
   }
 });
