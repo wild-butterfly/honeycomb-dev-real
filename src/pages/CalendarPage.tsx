@@ -246,8 +246,6 @@ const CalendarPage: React.FC = () => {
     });
 
     await loadAll();
-
-    navigate("/dashboard/calendar", { replace: true });
   };
   /* ================= FILTER ================= */
 
@@ -320,7 +318,9 @@ const CalendarPage: React.FC = () => {
                   })
                 }
                 onAssignmentMove={moveAssignment}
-                onAddJobAt={handleAddJobAt}
+                onAddJobAt={
+                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                }
               />
             )}
 

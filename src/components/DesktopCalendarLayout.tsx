@@ -659,7 +659,10 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                       <div key={h} className={styles.timeSlotCell}>
                         <button
                           className={styles.slotAddButton}
-                          onClick={() => onAddJobAt(emp.id, s, e)}
+                          onClick={(ev) => {
+                            if (suppressClickRef.current) return;
+                            onAddJobAt(emp.id, s, e);
+                          }}
                         >
                           +
                         </button>
