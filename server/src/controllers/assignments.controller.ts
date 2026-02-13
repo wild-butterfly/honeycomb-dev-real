@@ -88,12 +88,14 @@ const generateLabourForAssignment = async (db: any, assignmentId: number) => {
       rate,
       total,
       notes,
+      source,
       company_id
     )
     VALUES
     (
       $1,$2,$3,$4,$5,$6,0,$6,$7,$8,
       'Auto-generated from completed assignment',
+        'auto',
       current_setting('app.current_company_id')::int
     )
     `,
@@ -323,6 +325,7 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignmentIds" });
     }
 
+    // ✅ 1. Reopen assignments
     const result = await db.query(
       `
       UPDATE assignments
@@ -333,11 +336,20 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       [assignmentIds]
     );
 
+    // ✅ 2. DELETE auto-generated labour entries
+    await db.query(
+      `
+      DELETE FROM labour_entries
+      WHERE assignment_id = ANY($1::int[])
+      AND source = 'auto'
+      `,
+      [assignmentIds]
+    );
+
+    // ✅ 3. Recalculate job status
     const jobIds = [
-  ...new Set(
-    (result.rows as any[]).map(r => Number(r.job_id))
-  )
-];
+      ...new Set((result.rows as any[]).map((r) => Number(r.job_id))),
+    ];
 
     for (const jobId of jobIds) {
       await recalcJobStatus(db, jobId);
