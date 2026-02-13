@@ -321,6 +321,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
             onChange={(e) => {
               const id = Number(e.target.value);
               setEmployeeId(id);
+
               const emp = employees.find((x) => x.id === id);
               setRate(emp?.rate ?? 0);
             }}
@@ -366,7 +367,6 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        {/* UNCHARGED */}
         {/* UNCHARGED */}
         <div className={styles.unchargedBox}>
           <div className={styles.inlineRow}>
