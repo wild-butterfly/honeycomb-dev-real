@@ -335,7 +335,9 @@ const CalendarPage: React.FC = () => {
                   setOpenContext({ jobId: item.jobId, assignmentId: null })
                 }
                 onAssignmentMove={moveAssignment}
-                onAddJobAt={handleAddJobAt}
+                onAddJobAt={
+                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                }
               />
             )}
           </div>

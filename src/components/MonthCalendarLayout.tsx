@@ -290,6 +290,8 @@ const MonthCalendarLayout: React.FC<Props> = ({
                   <button
                     className={styles.slotAddButton}
                     onClick={() => {
+                      if (suppressClickRef.current) return;
+
                       const start = new Date(day);
                       start.setHours(9, 0, 0, 0);
 
