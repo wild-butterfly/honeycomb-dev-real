@@ -49,6 +49,7 @@ const generateLabourForAssignment = async (assignmentId: number) => {
       a.employee_id,
       a.start_time,
       a.end_time,
+      a.company_id,
       e.rate
     FROM assignments a
     JOIN employees e ON e.id = a.employee_id
@@ -73,24 +74,25 @@ const generateLabourForAssignment = async (assignmentId: number) => {
   const total = workedHours * rate;
 
   await pool.query(
-    `
-    INSERT INTO labour_entries
-    (
-      job_id,
-      assignment_id,
-      employee_id,
-      start_time,
-      end_time,
-      worked_hours,
-      uncharged_hours,
-      chargeable_hours,
-      rate,
-      total,
-      notes
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,0,$6,$7,$8,'Auto-generated from completed assignment')
-    `,
-    [
+  `
+  INSERT INTO labour_entries
+  (
+    job_id,
+    assignment_id,
+    employee_id,
+    start_time,
+    end_time,
+    worked_hours,
+    uncharged_hours,
+    chargeable_hours,
+    rate,
+    total,
+    notes,
+    company_id
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,0,$6,$7,$8,'Auto-generated from completed assignment',$9)
+  `,
+   [
       a.job_id,
       a.id,
       a.employee_id,
@@ -99,9 +101,11 @@ const generateLabourForAssignment = async (assignmentId: number) => {
       workedHours,
       rate,
       total,
+      a.company_id 
     ]
   );
 };
+
 
 /* ===============================
    GET ASSIGNMENTS
@@ -177,13 +181,26 @@ export const createAssignment = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignment payload" });
     }
 
+    // 🔐 Get company_id from job
+    const jobResult = await pool.query(
+      `SELECT company_id FROM jobs WHERE id = $1`,
+      [job_id]
+    );
+
+    if (!jobResult.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const companyId = jobResult.rows[0].company_id;
+
     const result = await pool.query(
       `
-      INSERT INTO assignments (job_id, employee_id, start_time, end_time)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO assignments 
+      (job_id, employee_id, start_time, end_time, company_id)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
       `,
-      [job_id, employee_id, start_time, end_time]
+      [job_id, employee_id, start_time, end_time, companyId]
     );
 
     res.status(201).json(result.rows[0]);

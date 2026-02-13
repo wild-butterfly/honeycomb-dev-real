@@ -1,3 +1,4 @@
+//jobs.controller.ts
 import { Request, Response } from "express";
 import { pool } from "../db";
 
@@ -388,13 +389,40 @@ export const assignEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid payload" });
     }
 
+    // 🔐 1️⃣ Job company_id al
+    const jobResult = await pool.query(
+      `SELECT company_id FROM jobs WHERE id = $1`,
+      [jobId]
+    );
+
+    if (!jobResult.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const companyId = jobResult.rows[0].company_id;
+
+    // 🔐 2️⃣ Employee aynı company mi kontrol et
+    const employeeCheck = await pool.query(
+      `SELECT company_id FROM employees WHERE id = $1`,
+      [employee_id]
+    );
+
+    if (!employeeCheck.rows.length) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    if (employeeCheck.rows[0].company_id !== companyId) {
+      return res.status(403).json({ error: "Cross-company access denied" });
+    }
+
+    // 🔐 3️⃣ Insert with company_id
     await pool.query(
       `
-      INSERT INTO job_assignees (job_id, employee_id)
-      VALUES ($1, $2)
+      INSERT INTO job_assignees (job_id, employee_id, company_id)
+      VALUES ($1, $2, $3)
       ON CONFLICT DO NOTHING
       `,
-      [jobId, employee_id]
+      [jobId, employee_id, companyId]
     );
 
     res.json({ ok: true });
@@ -403,7 +431,6 @@ export const assignEmployee = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Job assign failed" });
   }
 };
-
 /* ===============================
   LABOUR ENTRIES
 ================================ */
