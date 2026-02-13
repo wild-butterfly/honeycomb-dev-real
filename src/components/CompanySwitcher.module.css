@@ -1,0 +1,23 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  height: 28px;
+  padding: 0 6px;
+
+  font-size: 0.78rem;
+
+  border-radius: 6px;
+  border: 2px solid #ffcc00;
+
+  background: #fffdf5;
+  color: #4a3f00;
+
+  font-weight: 600;
+  cursor: pointer;
+
+  width: auto;
+  min-width: 110px;
+}

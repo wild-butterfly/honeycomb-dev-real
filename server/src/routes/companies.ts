@@ -1,12 +1,17 @@
 import { Router } from "express";
 import * as controller from "../controllers/companies.controller";
 import { withDbContext } from "../middleware/dbContext";
+import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
 /*
-  🔐 Attach request-scoped DB context
-  Every /api/companies request runs inside RLS scope
+  🔐 Auth required
+*/
+router.use(requireAuth);
+
+/*
+  🔐 Attach request-scoped DB context (after auth)
 */
 router.use(withDbContext);
 
@@ -14,12 +19,10 @@ router.use(withDbContext);
    COMPANIES
 ================================ */
 
-// Optional: Only if you plan super-admin
-router.get("/", controller.getAll);
+// Admin only
+router.get("/", requireRole(["admin"]), controller.getAll);
 
-router.post("/", controller.create);
-
-// ⚠️ REMOVE this for SaaS safety unless super-admin
-// router.get("/:id/employees", controller.getEmployees);
+// Only admin can create company (or disable completely)
+router.post("/", requireRole(["admin"]), controller.create);
 
 export default router;

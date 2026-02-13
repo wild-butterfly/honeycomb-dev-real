@@ -1,11 +1,9 @@
 // server/src/index.ts
-// Created by Honeycomb © 2026
 
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db";
-import { withDbContext } from "./middleware/dbContext";
 
 /* ROUTES */
 import meRoutes from "./routes/me";
@@ -14,6 +12,7 @@ import companyRoutes from "./routes/companies";
 import jobRoutes from "./routes/jobs";
 import assignmentRoutes from "./routes/assignments";
 import tasksRoutes from "./routes/tasks";
+import authRoutes from "./routes/auth";
 
 dotenv.config();
 
@@ -23,7 +22,6 @@ const app = express();
    GLOBAL MIDDLEWARE
 ========================================================= */
 
-// 🔒 Controlled CORS (production ready)
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "*",
@@ -32,9 +30,6 @@ app.use(
 );
 
 app.use(express.json());
-
-// 🔥 DB Context (RLS per request)
-app.use(withDbContext);
 
 /* =========================================================
    HEALTH CHECK
@@ -45,7 +40,13 @@ app.get("/", (_req, res) => {
 });
 
 /* =========================================================
-   API ROUTES
+   PUBLIC ROUTES (NO AUTH)
+========================================================= */
+
+app.use("/api/auth", authRoutes);
+
+/* =========================================================
+   PROTECTED ROUTES
 ========================================================= */
 
 app.use("/api/me", meRoutes);

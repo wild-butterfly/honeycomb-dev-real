@@ -1,7 +1,3 @@
-// server/routes/assignments.ts
-// Created by Clevermode © 2026
-// 🔐 RLS SAFE ROUTE
-
 import { Router } from "express";
 import {
   getAllAssignments,
@@ -13,30 +9,40 @@ import {
 } from "../controllers/assignments.controller";
 
 import { withDbContext } from "../middleware/dbContext";
+import { requireAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
 
-/*
-  🔐 Attach request-scoped DB context
-  Every request to /api/assignments will:
-  - Open transaction
-  - SET LOCAL app.current_company_id
-  - Run inside RLS scope
-*/
+/* 🔐 AUTH FIRST */
+router.use(requireAuth);
+
+/* 🔐 RLS CONTEXT */
 router.use(withDbContext);
 
 /* ===============================
    BULK ACTIONS
 ================================ */
+
+/* complete → admin + employee */
 router.put("/complete", completeAssignments);
+
+/* reopen → admin + employee */
 router.put("/reopen", reopenAssignments);
 
 /* ===============================
    CRUD
 ================================ */
+
+/* get assignments */
 router.get("/", getAllAssignments);
-router.post("/", createAssignment);
-router.put("/:id", updateAssignment);
-router.delete("/:id", deleteAssignment);
+
+/* create assignment → admin only */
+router.post("/", requireRole(["admin"]), createAssignment);
+
+/* update assignment → admin only */
+router.put("/:id", requireRole(["admin"]), updateAssignment);
+
+/* delete → admin only */
+router.delete("/:id", requireRole(["admin"]), deleteAssignment);
 
 export default router;

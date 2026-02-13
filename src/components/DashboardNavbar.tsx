@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import styles from "./DashboardNavbar.module.css";
 
+import CompanySwitcher from "./CompanySwitcher";
 type Props = {
   onLogout?: () => void;
   onNewJob?: () => void;
@@ -22,10 +23,7 @@ const DashboardNavbar: React.FC<Props> = ({
   };
 
   const handleNewJobClick = () => {
-    // 1️⃣ Önce modal / action tetikle
     onNewJob?.();
-
-    // 2️⃣ Sonra hamburger menüyü kapat
     setMenuOpen(false);
   };
 
@@ -106,6 +104,9 @@ const DashboardNavbar: React.FC<Props> = ({
 
         {/* RIGHT SIDE */}
         <div className={styles.right}>
+          {/* 🔥 SUPERADMIN ONLY COMPANY SWITCHER */}
+          <CompanySwitcher />
+
           <div className={styles.searchBox}>
             <input
               type="text"
@@ -114,34 +115,11 @@ const DashboardNavbar: React.FC<Props> = ({
               onChange={onSearchChange}
               className={styles.searchInput}
             />
-            <span className={styles.searchIconInside}>
-              <svg viewBox="0 0 18 18" width="18" height="18">
-                <circle
-                  cx="8"
-                  cy="8"
-                  r="6"
-                  stroke="#b99a2a"
-                  strokeWidth="2"
-                  fill="none"
-                />
-                <line
-                  x1="13.2"
-                  y1="13.2"
-                  x2="17"
-                  y2="17"
-                  stroke="#b99a2a"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
           </div>
 
           <button
             className={styles.newJobBtn}
-            onClick={() => {
-              onNewJob?.();
-            }}
+            onClick={handleNewJobClick}
             type="button"
           >
             <span className={styles.plus}>＋</span>

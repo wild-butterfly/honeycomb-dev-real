@@ -1,142 +1,73 @@
-// server/routes/tasks.ts
-// 🔐 RLS SAFE VERSION
+// server/src/routes/tasks.ts
+// Created by Honeycomb © 2026
+// Tasks routes (RLS safe)
 
 import { Router } from "express";
+import * as controller from "../controllers/tasksController";
+import { requireAuth, requireRole } from "../middleware/auth";
 import { withDbContext } from "../middleware/dbContext";
 
 const router = Router();
 
-/* ============================================
-   🔐 Attach RLS DB Context
-============================================ */
+/* =================================================
+   AUTH
+   User must be logged in
+================================================= */
+router.use(requireAuth);
+
+/* =================================================
+   RLS CONTEXT
+   Sets current_company_id for PostgreSQL RLS
+================================================= */
 router.use(withDbContext);
 
-/* ============================================
-   GET ALL TASKS
-============================================ */
-router.get("/", async (req, res) => {
-  const db = (req as any).db;
+/* =================================================
+   ROUTES
+================================================= */
 
-  try {
-    const result = await db.query(
-      `
-      SELECT *
-      FROM tasks
-      ORDER BY created_at DESC
-      `
-    );
+/* -------------------------------------------------
+   Get all tasks (company scoped)
+   Everyone can view
+------------------------------------------------- */
+router.get("/", controller.getAll);
 
-    res.json(result.rows);
-  } catch (err) {
-    console.error("GET tasks error:", err);
-    res.status(500).json({ error: "Failed to fetch tasks" });
-  }
-});
+/* -------------------------------------------------
+   Create task
+   Admin + Manager only
+------------------------------------------------- */
+router.post(
+  "/",
+  requireRole(["admin", "manager"]),
+  controller.create
+);
 
-/* ============================================
-   CREATE TASK
-============================================ */
-router.post("/", async (req, res) => {
-  const db = (req as any).db;
+/* -------------------------------------------------
+   Mark task complete
+------------------------------------------------- */
+router.put(
+  "/:id/complete",
+  requireRole(["admin", "manager"]),
+  controller.complete
+);
 
-  try {
-    const { description, assigned, due } = req.body;
+/* -------------------------------------------------
+   Delete ALL completed tasks
+   ⚠ MUST come BEFORE /:id route
+------------------------------------------------- */
+router.delete(
+  "/completed",
+  requireRole(["admin", "manager"]),
+  controller.deleteCompleted
+);
 
-    const result = await db.query(
-      `
-      INSERT INTO tasks
-      (description, assigned, due, company_id, status)
-      VALUES
-      (
-        $1,
-        $2,
-        $3,
-        current_setting('app.current_company_id')::int,
-        'pending'
-      )
-      RETURNING *
-      `,
-      [description, assigned ?? [], due]
-    );
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("CREATE task error:", err);
-    res.status(500).json({ error: "Task create failed" });
-  }
-});
-
-/* ============================================
-   DELETE ALL COMPLETED
-============================================ */
-router.delete("/completed", async (req, res) => {
-  const db = (req as any).db;
-
-  try {
-    await db.query(
-      `
-      DELETE FROM tasks
-      WHERE status = 'completed'
-      `
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DELETE completed tasks error:", err);
-    res.status(500).json({ error: "Clean failed" });
-  }
-});
-
-/* ============================================
-   COMPLETE TASK
-============================================ */
-router.put("/:id/complete", async (req, res) => {
-  const db = (req as any).db;
-
-  try {
-    const { id } = req.params;
-
-    const result = await db.query(
-      `
-      UPDATE tasks
-      SET status = 'completed'
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id]
-    );
-
-    if (!result.rows.length) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("COMPLETE task error:", err);
-    res.status(500).json({ error: "Complete failed" });
-  }
-});
-
-/* ============================================
-   DELETE SINGLE TASK
-============================================ */
-router.delete("/:id", async (req, res) => {
-  const db = (req as any).db;
-
-  try {
-    await db.query(
-      `
-      DELETE FROM tasks
-      WHERE id = $1
-      `,
-      [req.params.id]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DELETE task error:", err);
-    res.status(500).json({ error: "Delete failed" });
-  }
-});
+/* -------------------------------------------------
+   Delete single task by id
+   ⚠ Dynamic route LAST
+------------------------------------------------- */
+router.delete(
+  "/:id",
+  requireRole(["admin"]),
+  controller.remove
+);
 
 export default router;
