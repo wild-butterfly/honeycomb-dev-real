@@ -5,6 +5,7 @@ import styles from "./LabourTimeSection.module.css";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
 import { labourReasons } from "../config/labourReasons";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import ConfirmModal from "../components/ConfirmModal";
 
 /* ================= TYPES ================= */
 
@@ -103,6 +104,7 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
   const [tempMinutes, setTempMinutes] = useState<number>(0);
 
   const [editingEntry, setEditingEntry] = useState<LabourEntry | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   /* ================= LOAD ================= */
 
@@ -276,10 +278,8 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
     setUnchargedRows(entry.uncharged ?? []);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete entry?")) return;
-    await apiDelete(`/jobs/${jobId}/labour/${id}`);
-    await loadLabour();
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
   };
 
   /* ================= GROUP ================= */
@@ -488,6 +488,21 @@ export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
           </div>
         ))}
       </div>
+
+      {deleteId !== null && (
+        <ConfirmModal
+          title="Delete labour entry"
+          description="Are you sure you want to delete this labour entry? This cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onCancel={() => setDeleteId(null)}
+          onConfirm={async () => {
+            await apiDelete(`/jobs/${jobId}/labour/${deleteId}`);
+            await loadLabour();
+            setDeleteId(null);
+          }}
+        />
+      )}
     </div>
   );
 }
