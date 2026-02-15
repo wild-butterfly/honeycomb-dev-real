@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styles from "./LeftSidebar.module.css";
 
 // HEROICONS
@@ -11,40 +11,65 @@ import {
   ChartBarIcon,
   DocumentDuplicateIcon,
   PencilSquareIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 
 const LeftSidebar: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+
+  if (!id) return null;
+
+  const go = (path: string) => {
+    navigate(`/jobs/${id}/${path}`);
+  };
+
+  const isActive = (path: string) =>
+    location.pathname === `/jobs/${id}/${path}`;
 
   return (
     <div className={styles.sidebar}>
-
       {/* JOB OVERVIEW */}
       <div className={styles.section}>
         <div className={styles.sectionTitle}>Job Overview</div>
 
-        <button className={styles.menuItem} onClick={() => navigate("summary")}>
+        <button
+          className={`${styles.menuItem} ${isActive("summary") ? styles.active : ""}`}
+          onClick={() => go("summary")}
+        >
           <DocumentTextIcon className={styles.icon} />
           Job Summary
         </button>
 
-        <button className={styles.menuItem} onClick={() => navigate("history")}>
+        <button
+          className={`${styles.menuItem} ${isActive("history") ? styles.active : ""}`}
+          onClick={() => go("history")}
+        >
           <ClockIcon className={styles.icon} />
           History
         </button>
 
-        <button className={styles.menuItem} onClick={() => navigate("files")}>
+        <button
+          className={`${styles.menuItem} ${isActive("files") ? styles.active : ""}`}
+          onClick={() => go("files")}
+        >
           <PhotoIcon className={styles.icon} />
           Files & Photos
         </button>
 
-        <button className={styles.menuItem} onClick={() => navigate("financial")}>
+        <button
+          className={`${styles.menuItem} ${isActive("financial") ? styles.active : ""}`}
+          onClick={() => go("financial")}
+        >
           <CurrencyDollarIcon className={styles.icon} />
           Financial Summary
         </button>
 
-        <button className={styles.menuItem} onClick={() => navigate("cost")}>
+        <button
+          className={`${styles.menuItem} ${isActive("cost") ? styles.active : ""}`}
+          onClick={() => go("cost")}
+        >
           <ChartBarIcon className={styles.icon} />
           Cost Report
         </button>
@@ -54,14 +79,17 @@ const LeftSidebar: React.FC = () => {
       <div className={styles.section}>
         <div className={styles.sectionTitle}>Quick Actions</div>
 
-        <button className={styles.menuItem} onClick={() => navigate("invoice")}>
+        <button
+          className={`${styles.menuItem} ${isActive("invoice") ? styles.active : ""}`}
+          onClick={() => go("invoice")}
+        >
           <DocumentDuplicateIcon className={styles.icon} />
           Invoicing
         </button>
 
         <button
-          className={styles.quickAction}
-          onClick={() => navigate("quick-note")}
+          className={`${styles.quickAction} ${isActive("quick-note") ? styles.active : ""}`}
+          onClick={() => go("quick-note")}
         >
           <PencilSquareIcon className={styles.icon} />
           Quick Note
@@ -72,12 +100,14 @@ const LeftSidebar: React.FC = () => {
       <div className={styles.section}>
         <div className={styles.sectionTitle}>Job Phases</div>
 
-        <button className={styles.menuItem} onClick={() => navigate("phases")}>
+        <button
+          className={`${styles.menuItem} ${isActive("phases") ? styles.active : ""}`}
+          onClick={() => go("phases")}
+        >
           <WrenchScrewdriverIcon className={styles.icon} />
           View Job Phases
         </button>
       </div>
-      
     </div>
   );
 };

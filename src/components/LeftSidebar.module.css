@@ -73,3 +73,8 @@
 .phaseButton {
   margin-top: 10px;
 }
+
+.active {
+  background: rgba(244, 180, 0, 0.15);
+  font-weight: 600;
+}

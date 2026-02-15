@@ -1,7 +1,7 @@
 // src/pages/JobSummaryPage.tsx
 // Created by Honeycomb © 2026
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import LeftSidebar from "../components/LeftSidebar";
 import styles from "./JobSummaryPage.module.css";
@@ -13,6 +13,10 @@ import TeamScheduleCard from "../components/TeamScheduleCard";
 import FinancialOverviewCard from "../components/FinancialOverviewCard";
 import ActivitySection from "../components/ActivitySection";
 
+import type { Assignment, Employee, LabourEntry } from "../types/calendar";
+
+/* ================= TYPES ================= */
+
 interface JobDoc {
   id: string;
   title?: string;
@@ -22,105 +26,53 @@ interface JobDoc {
   email?: string;
   notes?: string;
   status?: string;
-
-  completion?: number;
-  started_date?: string;
-
-  assigned_staff?: number;
-  scheduled_hours?: number;
-  completed_hours?: number;
-  next_visit?: string;
-  upcoming_booking?: string;
-
-  revenue?: number;
-  costs?: number;
-
   priority?: string;
-  updated_at?: string;
 }
 
-const formatDate = (value?: string) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleDateString();
-  } catch {
-    return "—";
-  }
-};
+/* ================= COMPONENT ================= */
 
 const JobSummaryPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+
   const [job, setJob] = useState<JobDoc | null>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Backend'e dokunmuyoruz → labour boş geliyor
+  const labourEntries: LabourEntry[] = [];
+
+  /* ================= LOAD ================= */
 
   useEffect(() => {
     if (!id) return;
 
     const load = async () => {
       try {
-        const data = await apiGet<any>(`/jobs/${id}`);
-        const raw = data?.job ?? data;
+        const [jobRes, aRes, eRes] = await Promise.all([
+          apiGet<any>(`/jobs/${id}`),
+          apiGet<any[]>(`/assignments?job_id=${id}`),
+          apiGet<Employee[]>(`/employees`),
+        ]);
 
-        console.log("RAW JOB:", raw);
+        const resolvedJob: JobDoc = jobRes?.job ?? jobRes;
+        setJob(resolvedJob);
 
-        // 🔥 FRONTEND NORMALIZATION LAYER
-        const normalized: JobDoc = {
-          id: raw.id,
-          title: raw.title,
-          client: raw.client ?? raw.contact_name ?? "",
-          address: raw.address,
-          phone: raw.phone ?? raw.contact_phone,
-          email: raw.email ?? raw.contact_email,
-          notes: raw.notes,
-          status: raw.status ?? "quoted",
+        /* === ASSIGNMENTS === */
+        const mappedAssignments: Assignment[] = (aRes ?? []).map((a) => ({
+          id: Number(a.id),
+          employee_id: Number(a.employee_id),
+          start: new Date(a.start_time?.replace?.(" ", "T") ?? a.start_time),
+          end: new Date(a.end_time),
+          completed: Boolean(a.completed),
+        }));
 
-          // PHASE
-          completion: raw.completion ?? 0,
-          started_date: raw.started_date ?? raw.start_time ?? raw.created_at,
+        setAssignments(mappedAssignments);
 
-          // TEAM
-          assigned_staff:
-            raw.assigned_staff ??
-            (Array.isArray(raw.assignments) ? raw.assignments.length : 0),
-
-          scheduled_hours:
-            raw.scheduled_hours ??
-            (Array.isArray(raw.schedules)
-              ? raw.schedules.reduce(
-                  (sum: number, s: any) =>
-                    sum +
-                    ((new Date(s.end_time).getTime() -
-                      new Date(s.start_time).getTime()) /
-                      3600000 || 0),
-                  0,
-                )
-              : 0),
-
-          completed_hours:
-            raw.completed_hours ??
-            (Array.isArray(raw.labour_entries)
-              ? raw.labour_entries.reduce(
-                  (sum: number, l: any) => sum + (l.hours || 0),
-                  0,
-                )
-              : 0),
-
-          next_visit:
-            raw.next_visit ??
-            (Array.isArray(raw.schedules) && raw.schedules.length > 0
-              ? raw.schedules[0].start_time
-              : undefined),
-
-          revenue: raw.revenue ?? 0,
-          costs: raw.costs ?? 0,
-
-          priority: raw.priority ?? "Normal",
-          updated_at: raw.updated_at,
-        };
-
-        setJob(normalized);
-      } catch (error) {
-        console.error("Failed to load job:", error);
+        /* === EMPLOYEES === */
+        setEmployees(eRes ?? []);
+      } catch (err) {
+        console.error("Failed loading summary page:", err);
       } finally {
         setLoading(false);
       }
@@ -129,31 +81,44 @@ const JobSummaryPage: React.FC = () => {
     load();
   }, [id]);
 
-  if (loading) {
+  /* ================= DERIVED ================= */
+
+  const assignees = useMemo(() => {
+    const map = new Map<number, string>();
+
+    assignments.forEach((a) => {
+      const emp = employees.find((e) => e.id === a.employee_id);
+      if (emp) map.set(emp.id, emp.name);
+    });
+
+    return Array.from(map.entries()).map(([id, name]) => ({
+      id,
+      name,
+    }));
+  }, [assignments, employees]);
+
+  const scheduledHours = useMemo(() => {
     return (
-      <div className={styles.pageWrapper}>
-        <LeftSidebar />
-        <div className={styles.main}>
-          <div className={styles.pageContainer}>
-            <div style={{ padding: "40px 0" }}>Loading job...</div>
-          </div>
-        </div>
-      </div>
+      Math.round(
+        assignments.reduce((sum, a) => {
+          const diff = (a.end.getTime() - a.start.getTime()) / (1000 * 60 * 60);
+          return sum + diff;
+        }, 0) * 10,
+      ) / 10
     );
+  }, [assignments]);
+
+  /* ================= LOADING ================= */
+
+  if (loading) {
+    return <div className={styles.pageWrapper}>Loading…</div>;
   }
 
   if (!job) {
-    return (
-      <div className={styles.pageWrapper}>
-        <LeftSidebar />
-        <div className={styles.main}>
-          <div className={styles.pageContainer}>
-            <div style={{ padding: "40px 0" }}>Job not found</div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className={styles.pageWrapper}>Job not found</div>;
   }
+
+  /* ================= RENDER ================= */
 
   return (
     <div className={styles.pageWrapper}>
@@ -161,15 +126,28 @@ const JobSummaryPage: React.FC = () => {
 
       <div className={styles.main}>
         <div className={styles.pageContainer}>
-          <PhaseCard job={job} />
+          {/* HERO */}
+          <PhaseCard
+            job={job}
+            assignments={assignments}
+            employees={employees}
+            labourEntries={labourEntries}
+          />
 
+          {/* CUSTOMER + TEAM */}
           <div className={styles.twoColumnRow}>
             <CustomerCard job={job} />
-            <TeamScheduleCard job={job} />
+
+            <TeamScheduleCard
+              job={{
+                ...job,
+                assigned_staff: assignees.length,
+                scheduled_hours: scheduledHours,
+              }}
+            />
           </div>
 
           <FinancialOverviewCard job={job} />
-
           <ActivitySection job={job} />
         </div>
       </div>

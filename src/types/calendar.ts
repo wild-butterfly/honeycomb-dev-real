@@ -29,3 +29,12 @@ export type CalendarJob = {
 
   assignments: Assignment[];
 };
+
+export type LabourEntry = {
+  id: number;
+  job_id: number;
+  employee_id: number;
+  hours: number;
+  rate: number;        
+  billable?: boolean;
+};
