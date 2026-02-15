@@ -16,6 +16,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import PricingPage from "./pages/PricingPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import HelpPage from "./pages/HelpPage";
+import JobSummaryPage from "./pages/JobSummaryPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 
@@ -70,6 +71,7 @@ const App: React.FC = () => {
 
           <Route path="/tasks" element={<TaskPage />} />
           <Route path="/jobs/:id" element={<JobPage />} />
+          <Route path="/jobs/:id/summary" element={<JobSummaryPage />} />
 
           {/* ================= DASHBOARD ================= */}
           <Route

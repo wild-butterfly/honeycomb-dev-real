@@ -1,0 +1,22 @@
+.card {
+  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 200%);
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid rgba(244, 180, 0, 0.25);
+}
+
+.company {
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.address {
+  margin-top: 4px;
+  color: #666;
+}
+
+.metaRow {
+  margin-top: 14px;
+  font-size: 14px;
+  color: #444;
+}

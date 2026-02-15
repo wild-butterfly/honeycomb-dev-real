@@ -1,0 +1,13 @@
+.card {
+  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 200%);
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid rgba(244, 180, 0, 0.25);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+}

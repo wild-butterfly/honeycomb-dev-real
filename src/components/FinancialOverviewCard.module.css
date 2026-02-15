@@ -1,0 +1,20 @@
+.card {
+  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 200%);
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid rgba(244, 180, 0, 0.25);
+  margin-top: 40px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.rowStrong {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  font-weight: 600;
+}

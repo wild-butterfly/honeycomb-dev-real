@@ -21,7 +21,7 @@
   padding: 28px;
 
   border: 1px solid #eaeaea;
-  border-left: 6px solid #f4b400; /* ← ÇİZGİ BURADA */
+  border-left: 6px solid #f4b400;
 
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.04);
 }

@@ -1,0 +1,60 @@
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+
+  padding: 30px 20px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.pageContainer {
+  width: 100%;
+  max-width: 1500px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.7)
+  );
+
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+
+  border-radius: 28px;
+  border: 1px solid rgba(255, 210, 0, 0.25);
+
+  box-shadow:
+    0 35px 80px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 210, 0, 0.12) inset;
+
+  padding: 48px 56px;
+}
+
+/* Layout Rows */
+
+.twoColumnRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 900px) {
+  .twoColumnRow {
+    grid-template-columns: 1fr;
+  }
+}
