@@ -1,5 +1,5 @@
 // src/components/PhaseCard.tsx
-// Honeycomb © 2026
+// Honeycomb © 2026 — PROFESSIONAL VERSION
 
 import React, { useMemo } from "react";
 import styles from "./PhaseCard.module.css";
@@ -19,15 +19,12 @@ interface Props {
   labourEntries: LabourEntry[];
 }
 
-/* ================= HELPERS ================= */
-
 function round1(n: number) {
   return Math.round(n * 10) / 10;
 }
 
 function hoursBetween(start: Date, end: Date) {
-  const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-  return diff > 0 ? diff : 0;
+  return Math.max((end.getTime() - start.getTime()) / (1000 * 60 * 60), 0);
 }
 
 function initials(name: string) {
@@ -49,29 +46,26 @@ const PhaseCard: React.FC<Props> = ({
   const phases = ["quoted", "scheduled", "active", "completed", "invoiced"];
   const status = String(job?.status ?? "active").toLowerCase();
 
-  /* ================= ASSIGNMENT DERIVED ================= */
-
   const derived = useMemo(() => {
     let scheduled = 0;
     let completed = 0;
 
     for (const a of assignments) {
-      const start =
-        a.start instanceof Date ? a.start : new Date(a.start as any);
-      const end = a.end instanceof Date ? a.end : new Date(a.end as any);
+      const start = new Date(a.start);
+      const end = new Date(a.end);
 
       const h = hoursBetween(start, end);
       scheduled += h;
 
-      if (a.completed === true) completed += h;
+      if (a.completed) completed += h;
     }
 
     const uniqueIds = Array.from(
       new Set(assignments.map((a) => Number(a.employee_id))),
-    ).filter((id) => Number.isFinite(id));
+    );
 
     const assignedEmployees = uniqueIds
-      .map((id) => employees.find((e) => Number(e.id) === id))
+      .map((id) => employees.find((e) => e.id === id))
       .filter(Boolean) as Employee[];
 
     const scheduledHours = round1(scheduled);
@@ -82,74 +76,44 @@ const PhaseCard: React.FC<Props> = ({
         ? Math.min((completedHours / scheduledHours) * 100, 100)
         : 0;
 
-    return { scheduledHours, completedHours, progress, assignedEmployees };
+    return {
+      scheduledHours,
+      completedHours,
+      progress,
+      assignedEmployees,
+    };
   }, [assignments, employees]);
 
-  /* ================= REVENUE ================= */
-
   const totalRevenue = useMemo(() => {
-    return round1(
-      labourEntries
-        .filter((e) => e.billable !== false)
-        .reduce((sum, entry) => {
-          return sum + entry.hours * entry.rate;
-        }, 0),
-    );
+    return round1(labourEntries.reduce((sum, e) => sum + e.hours * e.rate, 0));
   }, [labourEntries]);
-
-  /* ================= RENDER ================= */
 
   return (
     <div className={styles.card}>
-      {/* Phase Tabs */}
-      <div className={styles.phaseTabs}>
-        {phases.map((p) => (
-          <span
-            key={p}
-            className={`${styles.phaseTab} ${
-              status === p ? styles.activePhase : ""
-            }`}
-          >
-            {p.charAt(0).toUpperCase() + p.slice(1)}
-          </span>
-        ))}
-      </div>
+      {/* HEADER */}
 
-      <div className={styles.body}>
-        {/* LEFT */}
-        <div className={styles.left}>
+      <div className={styles.header}>
+        <div>
+          <div className={styles.phaseTabs}>
+            {phases.map((p) => (
+              <span
+                key={p}
+                className={`${styles.phaseTab}
+                ${status === p ? styles.activePhase : ""}`}
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+
           <h1 className={styles.title}>{job?.title ?? "Untitled job"}</h1>
-          <div className={styles.client}>{job?.client ?? "—"}</div>
 
-          <div className={styles.metaRow}>
-            <ClockIcon className={styles.icon} />
-            <span>{derived.scheduledHours}h scheduled</span>
-          </div>
-
-          <div className={styles.metaRow}>
-            <UserGroupIcon className={styles.icon} />
-
-            {derived.assignedEmployees.length === 0 ? (
-              <span className={styles.muted}>No staff assigned</span>
-            ) : (
-              <div className={styles.avatarStack}>
-                {derived.assignedEmployees.slice(0, 3).map((emp) => (
-                  <div key={emp.id} className={styles.avatar} title={emp.name}>
-                    {initials(emp.name)}
-                  </div>
-                ))}
-                {derived.assignedEmployees.length > 3 && (
-                  <div className={styles.moreAvatar}>
-                    +{derived.assignedEmployees.length - 3}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <div className={styles.client}>{job?.client ?? "No client"}</div>
         </div>
 
-        {/* RIGHT */}
-        <div className={styles.right}>
+        {/* KPI block */}
+
+        <div className={styles.kpiBlock}>
           <div className={styles.progressBig}>
             {derived.progress.toFixed(0)}%
           </div>
@@ -160,36 +124,70 @@ const PhaseCard: React.FC<Props> = ({
               style={{ width: `${derived.progress}%` }}
             />
           </div>
+        </div>
+      </div>
 
-          <div className={styles.metrics}>
-            <div className={styles.metric}>
-              <ClockIcon className={styles.metricIcon} />
-              <div>
-                <div className={styles.metricValue}>
-                  {derived.completedHours}h / {derived.scheduledHours}h
-                </div>
-                <div className={styles.metricLabel}>Hours</div>
+      {/* BODY */}
+
+      <div className={styles.body}>
+        {/* STAFF */}
+
+        <div className={styles.section}>
+          <UserGroupIcon className={styles.sectionIcon} />
+
+          <div>
+            <div className={styles.sectionLabel}>Assigned Staff</div>
+
+            {derived.assignedEmployees.length === 0 ? (
+              <div className={styles.muted}>No staff assigned</div>
+            ) : (
+              <div className={styles.avatarStack}>
+                {derived.assignedEmployees.map((emp) => (
+                  <div key={emp.id} className={styles.avatar}>
+                    {initials(emp.name)}
+                  </div>
+                ))}
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* HOURS */}
+
+        <div className={styles.section}>
+          <ClockIcon className={styles.sectionIcon} />
+
+          <div>
+            <div className={styles.sectionLabel}>Hours</div>
+
+            <div className={styles.sectionValue}>
+              {derived.completedHours} / {derived.scheduledHours}
             </div>
+          </div>
+        </div>
 
-            <div className={styles.metric}>
-              <CurrencyDollarIcon className={styles.metricIcon} />
-              <div>
-                <div className={styles.metricValue}>
-                  ${totalRevenue.toFixed(0)}
-                </div>
-                <div className={styles.metricLabel}>Revenue</div>
-              </div>
-            </div>
+        {/* REVENUE */}
 
-            <div className={styles.metric}>
-              <FlagIcon className={styles.metricIcon} />
-              <div>
-                <div className={styles.metricValue}>
-                  {job?.priority ?? "Normal"}
-                </div>
-                <div className={styles.metricLabel}>Priority</div>
-              </div>
+        <div className={styles.section}>
+          <CurrencyDollarIcon className={styles.sectionIcon} />
+
+          <div>
+            <div className={styles.sectionLabel}>Revenue</div>
+
+            <div className={styles.sectionValue}>${totalRevenue}</div>
+          </div>
+        </div>
+
+        {/* PRIORITY */}
+
+        <div className={styles.section}>
+          <FlagIcon className={styles.sectionIcon} />
+
+          <div>
+            <div className={styles.sectionLabel}>Priority</div>
+
+            <div className={styles.sectionValue}>
+              {job?.priority ?? "Normal"}
             </div>
           </div>
         </div>
