@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import StatusBoardChart from "../components/StatusBoardChart";
 import PaymentsPieChart from "../components/PaymentsPieChart";
@@ -206,6 +207,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     null | "jobType" | "status"
   >(null);
 
+  const navigate = useNavigate();
+
   /* ───────── Loaders ───────── */
   // ✅ Close dropdown when clicking outside
   useEffect(() => {
@@ -261,7 +264,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           title: String(j.title ?? "Untitled"),
           jobType,
           status,
-          customer: String(j.customer ?? j.customerName ?? "Unknown"),
+          customer: String(
+            j.client ??
+              j.customer ??
+              j.customer_name ??
+              j.customerName ??
+              "Unknown",
+          ),
           date,
           assignedEmployeeIds,
           scheduledEmployeeIds,
@@ -923,7 +932,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             <button
                               className={styles.viewBtnModern}
                               type="button"
-                              aria-label={`View job ${job.title}`}
+                              onClick={() =>
+                                navigate(`/dashboard/jobs/${job.id}`)
+                              }
                             >
                               View
                             </button>

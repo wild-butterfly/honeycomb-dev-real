@@ -54,10 +54,9 @@ const App: React.FC = () => {
     <div id="root-layout" className={isDashboard ? "no-footer" : undefined}>
       {!isDashboard && <Navbar />}
 
-      {/* ✅ Kritik: main flex:1 olacak */}
       <main id="app-content">
         <Routes>
-          {/* ================= PUBLIC ================= */}
+          {/* PUBLIC */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -72,7 +71,7 @@ const App: React.FC = () => {
           <Route path="/jobs/:id" element={<JobPage />} />
           <Route path="/jobs/:id/summary" element={<JobSummaryPage />} />
 
-          {/* ================= DASHBOARD ================= */}
+          {/* DASHBOARD */}
           <Route
             path="/dashboard"
             element={
@@ -90,7 +89,6 @@ const App: React.FC = () => {
             }
           />
 
-          {/* ================= CALENDAR ================= */}
           <Route
             path="/dashboard/calendar"
             element={
@@ -101,6 +99,13 @@ const App: React.FC = () => {
                 <CalendarPage />
               </NewJobModalProvider>
             }
+          />
+
+          {/* ✅ JOB (DASHBOARD) — BUNLAR Routes İÇİNDE KALMALI */}
+          <Route path="/dashboard/jobs/:id" element={<JobPage />} />
+          <Route
+            path="/dashboard/jobs/:id/summary"
+            element={<JobSummaryPage />}
           />
         </Routes>
       </main>
