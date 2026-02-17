@@ -17,6 +17,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ✅ Added (your TSX uses dashboardShell in the new version) */
+.dashboardShell {
+  width: 100%;
+}
+
 .dashboardBg {
   background:
     repeating-linear-gradient(
@@ -39,6 +44,13 @@ nav,
   position: sticky;
   top: 0;
   z-index: 10000;
+}
+
+/* ✅ Added: gives nicer spacing between navbar and charts */
+.chartsSection {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 12px;
 }
 
 /* ----------- CHARTS ROW ----------- */
@@ -119,6 +131,7 @@ nav,
   gap: 34px;
   align-items: flex-start;
   flex-wrap: wrap;
+  padding: 0 12px;
 }
 
 /* ----------- JOB TABLE ----------- */
@@ -218,6 +231,12 @@ nav,
   top: 1px;
 }
 
+.qaHeroIcon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
 .statusActive,
 .statusComplete,
 .statusPending {
@@ -227,41 +246,36 @@ nav,
   padding: 2px 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #fff;
-  border: 4px solid #bca652;
-  background: #fffef6;
-  box-shadow: 0 1px 2px rgba(188, 166, 82, 0.15);
   border-radius: 6px;
-  letter-spacing: 0.3px;
   min-width: 70px;
   text-align: center;
-}
 
-/* 🟩 Complete */
-.statusComplete {
-  background-color: #3ccf4e;
-  border: 1px solid #2ea73e;
-}
-
-/* 🟦 Active */
-.statusActive {
-  background-color: #4c91ff;
-  border: 1px solid #3673d0;
-}
-
-/* 🟧 Pending */
-.statusPending {
-  background-color: #ffb84c;
-  border: 1px solid #d49131;
-}
-
-.statusActive,
-.statusComplete,
-.statusPending {
   font-family: "Inter", sans-serif;
   box-shadow: 0 0 0 1px rgba(255, 215, 128, 0.25);
 }
 
+/* Complete */
+.statusComplete {
+  background-color: #3ccf4e;
+  border: 1px solid #2ea73e;
+  color: #fff;
+}
+
+/* Active */
+.statusActive {
+  background-color: #4c91ff;
+  border: 1px solid #3673d0;
+  color: #fff;
+}
+
+/* Pending */
+.statusPending {
+  background-color: #ffb84c;
+  border: 1px solid #d49131;
+  color: #fff;
+}
+
+/* ✅ DO NOT CHANGE (kept exactly your button style) */
 .detailsBtn {
   background: none;
   color: #b99a2a;
@@ -293,6 +307,14 @@ nav,
   position: relative;
   top: 2px;
 }
+
+/* ✅ Added: smaller variant class (does NOT override .detailsBtn) */
+.detailsBtnSm {
+  padding: 6px 12px;
+  font-size: 0.92rem;
+  border-radius: 7px;
+}
+
 /* ----------- SIDE COLUMN: QUICK ACTIONS & TASKS ----------- */
 .sideColumn {
   flex: 1;
@@ -837,10 +859,7 @@ nav,
 /* subtle container */
 .completedActionsRow {
   padding: 6px 26px 10px 26px;
-}
-
-.completedActionsRow {
-  margin-top: 10px; /* Show completed ile yapışmasın */
+  margin-top: 10px;
 }
 
 .cleanCompletedBtn {
@@ -901,7 +920,6 @@ nav,
   animation: confirmPop 0.18s ease-out;
 }
 
-/* subtle scale-in */
 @keyframes confirmPop {
   from {
     opacity: 0;
@@ -911,21 +929,6 @@ nav,
     opacity: 1;
     transform: scale(1);
   }
-}
-
-/* ===== Icon ===== */
-.confirmIcon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
 }
 
 /* ===== Text ===== */
@@ -944,7 +947,6 @@ nav,
   margin-bottom: 22px;
 }
 
-/* ===== Actions ===== */
 .confirmIcon {
   background: #fff4d6;
   width: 48px;
@@ -957,7 +959,7 @@ nav,
 }
 
 .confirmIcon svg {
-  stroke: #e08e00; /* 🔥 ÖNEMLİ */
+  stroke: #e08e00;
 }
 
 .confirmActions {
@@ -1012,18 +1014,6 @@ nav,
     0 2px 6px rgba(209, 169, 0, 0.25),
     inset 0 2px 4px rgba(0, 0, 0, 0.15);
   transform: translateY(0);
-}
-
-/* Completed row info  */
-.completedByRow {
-  font-size: 0.98em;
-  color: #45b86a;
-  margin-top: 4px;
-  font-style: italic;
-}
-.completedByLabel {
-  color: #45b86a;
-  font-weight: 600;
 }
 
 /* ----------- RESPONSIVE BREAKPOINTS ----------- */
@@ -1082,7 +1072,6 @@ nav,
 
 /* ----------- MOBILE JOB TABLE RESPONSIVE ----------- */
 @media (max-width: 600px) {
-  /* table header gizleniyor */
   .jobsTable thead {
     display: none;
   }
@@ -1148,5 +1137,722 @@ nav,
   .statusComplete {
     font-size: 0.8rem;
     padding: 4px 10px;
+  }
+}
+
+/* empty dash */
+.assigneeEmpty {
+  color: #bdb176;
+  font-weight: 700;
+}
+
+/* stack wrapper */
+.assigneeStack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* each circle */
+.assigneeBubble {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fffde4;
+  border: 2px solid #ffe066;
+  box-shadow: 0 1px 6px #ffd60018;
+
+  margin-left: -8px;
+}
+
+.assigneeBubble:first-child {
+  margin-left: 0;
+}
+
+/* initials */
+.assigneeInitials {
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: #b99a2a;
+  text-transform: uppercase;
+}
+
+/* avatar image */
+.assigneeAvatarImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
+}
+
+/* +X bubble */
+.assigneeMore {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-left: -8px;
+
+  background: #fff;
+  border: 2px dashed #e2d58a;
+  color: #8a7a29;
+
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+
+  box-shadow: 0 1px 6px #ffd60010;
+}
+
+@media (max-width: 700px) {
+  .assigneeBubble,
+  .assigneeMore {
+    width: 26px;
+    height: 26px;
+    margin-left: -7px;
+  }
+
+  .assigneeInitials {
+    font-size: 0.7rem;
+  }
+}
+
+/* ================================
+   MODERN STARTUP TABLE CARD (JOBS)
+================================ */
+
+.tableCardModern {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 214, 0, 0.28);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.08),
+    0 2px 10px rgba(185, 154, 42, 0.12);
+  padding: 18px 18px 12px 18px;
+  margin-bottom: 22px;
+  min-width: 360px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.tableHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 8px 12px 8px;
+}
+
+.tableHeaderLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tableTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #7f6a14;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.tableSubtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tablePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #6f5c12;
+  background: rgba(255, 214, 0, 0.14);
+  border: 1px solid rgba(255, 214, 0, 0.35);
+}
+
+.tableHint {
+  font-size: 12px;
+  color: rgba(111, 96, 26, 0.75);
+}
+
+.tableHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+/* Header layout */
+.tableHeaderTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tableHeaderRightTools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Premium toolbar (Search + Clear) */
+.jobToolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 154, 42, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.jobToolbar:focus-within {
+  border-color: rgba(255, 214, 0, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(255, 214, 0, 0.16),
+    0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.jobSearch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+}
+
+.jobSearchIcon {
+  width: 18px;
+  height: 18px;
+  color: rgba(111, 96, 26, 0.75);
+  flex: 0 0 auto;
+}
+
+.jobSearchInput {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(35, 35, 35, 0.92);
+}
+
+.jobSearchInput::placeholder {
+  color: rgba(35, 35, 35, 0.45);
+  font-weight: 650;
+}
+
+.jobToolbarDivider {
+  width: 1px;
+  height: 22px;
+  background: rgba(185, 154, 42, 0.22);
+}
+
+.jobClearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(185, 154, 42, 0.22);
+  background: rgba(255, 255, 255, 0.6);
+  color: rgba(111, 96, 26, 0.9);
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    background 0.12s,
+    border 0.12s,
+    opacity 0.12s;
+}
+
+.jobClearBtn:hover {
+  background: rgba(255, 214, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.jobClearBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.jobClearIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .jobSearch {
+    min-width: 200px;
+  }
+}
+
+@media (max-width: 620px) {
+  .tableHeaderTopRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .jobToolbar {
+    width: 100%;
+  }
+
+  .jobSearch {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+/* ===== Table header dropdown filter ===== */
+
+.thMenuWrap {
+  position: relative;
+  vertical-align: top;
+}
+
+.thMenuBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.thChevronIcon {
+  opacity: 0.8;
+}
+
+.thMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 214, 0, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.thMenuItem {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(35, 35, 35, 0.9);
+  cursor: pointer;
+}
+
+.thMenuItem:hover {
+  background: rgba(255, 214, 0, 0.12);
+}
+
+.thActiveFilter {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(111, 96, 26, 0.7);
+  text-transform: none;
+}
+
+/* keep your button style; only size tweak */
+.detailsBtnSm {
+  padding: 7px 14px;
+  font-size: 0.92rem;
+}
+
+/* disabled clean */
+.detailsBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* mobile: stack controls */
+@media (max-width: 700px) {
+  .tableHeaderControls {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .headerSearchWrap {
+    max-width: unset;
+    width: 100%;
+  }
+
+  .headerFilterChip {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 12px;
+  }
+}
+.headerBtnGhost {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(185, 154, 42, 0.35);
+  color: #7a6200;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+
+.headerBtnGhost:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.headerBtnPrimary {
+  background: linear-gradient(180deg, #ffd600, #f2c94c);
+  border: 1px solid rgba(122, 98, 0, 0.35);
+  color: #2b2400;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow:
+    0 12px 26px rgba(255, 214, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+
+.headerBtnPrimary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+  box-shadow:
+    0 18px 34px rgba(255, 214, 0, 0.33),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.tableTopDivider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 214, 0, 0),
+    rgba(255, 214, 0, 0.35),
+    rgba(255, 214, 0, 0)
+  );
+}
+
+.tableScrollWrap {
+  margin-top: 10px;
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 214, 0, 0.22);
+  background: rgba(255, 254, 247, 0.55);
+}
+
+.jobsTableModern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.98rem;
+  min-width: 860px;
+}
+
+.jobsTableModern thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  background: rgba(255, 253, 228, 0.92);
+  color: #7f6a14;
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(255, 214, 0, 0.35);
+}
+
+.jobsTableModern tbody td {
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(244, 238, 198, 0.9);
+  color: #232323;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.jobRow {
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+
+.jobRow:hover td {
+  background: rgba(255, 253, 228, 0.8);
+}
+
+.jobRow:hover {
+  transform: translateY(-1px);
+}
+
+.jobMainCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.jobTitle {
+  font-weight: 800;
+  color: #1f1f1f;
+  letter-spacing: 0.01em;
+}
+
+.jobSubtle {
+  font-size: 12px;
+  color: rgba(111, 96, 26, 0.55);
+  font-weight: 600;
+}
+
+.customerCell,
+.dateCell {
+  font-weight: 700;
+  color: rgba(35, 35, 35, 0.9);
+}
+
+.jobTypeChipModern {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 800;
+
+  color: #6f5c12;
+  border: 1px solid rgba(226, 213, 138, 0.85);
+  background: rgba(255, 214, 0, 0.1);
+  border-radius: 999px;
+
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.jobTypeChipIconModern {
+  width: 14px;
+  height: 14px;
+  color: #b99a2a;
+  flex-shrink: 0;
+  position: relative;
+  top: -0.5px;
+}
+
+.actionsCol {
+  text-align: right;
+}
+
+.viewBtnModern {
+  background: rgba(255, 255, 255, 0.8);
+  color: #7a6200;
+  border: 1px solid rgba(185, 154, 42, 0.45);
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
+}
+
+.viewBtnModern:hover {
+  background: rgba(255, 253, 228, 0.95);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.tableStateCell {
+  padding: 18px !important;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.tableState {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonLineLg,
+.skeletonLineSm {
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 214, 0, 0.1),
+    rgba(255, 214, 0, 0.25),
+    rgba(255, 214, 0, 0.1)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.1s infinite linear;
+}
+
+.skeletonLineLg {
+  height: 14px;
+  width: 50%;
+}
+
+.skeletonLineSm {
+  height: 12px;
+  width: 30%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.tableEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 10px;
+}
+
+.tableEmptyIcon {
+  font-size: 28px;
+  opacity: 0.9;
+}
+
+.tableEmptyTitle {
+  font-weight: 900;
+  color: #7f6a14;
+}
+
+.tableEmptyText {
+  font-size: 13px;
+  color: rgba(111, 96, 26, 0.75);
+  text-align: center;
+  max-width: 420px;
+}
+
+@media (max-width: 600px) {
+  .jobsTableModern {
+    min-width: unset;
+  }
+
+  .jobsTableModern thead {
+    display: none;
+  }
+
+  .jobsTableModern tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .jobsTableModern tr {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 214, 0, 0.35);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .jobsTableModern td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none !important;
+    padding: 7px 4px !important;
+    font-size: 0.92rem;
+    gap: 10px;
+  }
+
+  .jobsTableModern td:nth-child(1)::before {
+    content: "Job Type:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(2)::before {
+    content: "Status:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(3)::before {
+    content: "Job:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(4)::before {
+    content: "Customer:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(5)::before {
+    content: "Date:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(6)::before {
+    content: "Assigned:";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+  .jobsTableModern td:nth-child(7)::before {
+    content: "";
+    font-weight: 900;
+    color: #b99a2a;
+  }
+
+  .actionsCol {
+    text-align: left;
+  }
+
+  .viewBtnModern {
+    width: 100%;
+    justify-content: center;
   }
 }

@@ -116,58 +116,53 @@
   padding-right: 24px;
 }
 
-.actionBtnSecondary {
-  background: #fffdf5;
-  color: #4a3f00;
+/* ================= BUTTON SYSTEM (NAVBAR) ================= */
 
-  border: 2px solid #4a3f00; /* siyah/bronze outline */
-  border-radius: 6px;
-
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-
+.btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.1s ease;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
 }
 
-.actionBtnSecondary:hover {
-  background: #f7f3e4; /* çok hafif koyulaşma */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+/* Primary = New Job */
+.btnPrimary {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #9c7c00;
+  box-shadow: 0 8px 18px rgba(243, 198, 35, 0.16);
 }
 
-.actionBtnSecondary:active {
-  transform: translateY(1px);
+.btnPrimary:hover {
+  background: #f4b400;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(244, 180, 0, 0.24);
+  transform: translateY(-1px);
 }
 
-.newJobBtn {
-  background: #fffdf5; /* Log Out ile aynı taban */
-  color: #4a3f00;
-
-  border: 2px solid #ffb300; /* Sarı vurgu */
-  border-radius: 6px;
-
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.1s ease;
+/* Secondary = Log Out */
+.btnSecondary {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #3a2f00;
 }
 
-.newJobBtn:hover {
-  background: #ffefb3; /* çok hafif sarı */
-  box-shadow: 0 2px 6px rgba(185, 154, 42, 0.25);
+.btnSecondary:hover {
+  background: #9c7c00;
+  color: #fff;
+  border: 2px solid #f8f4bf;
+  transform: translateY(-1px);
 }
 
-.newJobBtn:active {
-  transform: translateY(1px);
+/* active */
+.btn:active {
+  transform: translateY(0px);
 }
 
 /* ================= MOBILE + TABLET (≤1024px) ================= */
@@ -229,6 +224,10 @@
   }
 }
 
+.btn {
+  width: 100%;
+  justify-content: center;
+}
 /* ================= DESKTOP (≥1025px) ================= */
 @media (min-width: 1025px) {
   .hamburger {

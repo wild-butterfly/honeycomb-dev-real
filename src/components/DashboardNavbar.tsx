@@ -1,26 +1,17 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import styles from "./DashboardNavbar.module.css";
-
 import CompanySwitcher from "./CompanySwitcher";
+
 type Props = {
   onLogout?: () => void;
   onNewJob?: () => void;
-  searchValue?: string;
-  onSearchChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-const DashboardNavbar: React.FC<Props> = ({
-  onLogout,
-  onNewJob,
-  searchValue = "",
-  onSearchChange,
-}) => {
+const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const closeMenu = () => {
-    setMenuOpen(false);
-  };
+  const closeMenu = () => setMenuOpen(false);
 
   const handleNewJobClick = () => {
     onNewJob?.();
@@ -29,9 +20,10 @@ const DashboardNavbar: React.FC<Props> = ({
 
   return (
     <nav className={styles.navbar}>
-      {/* LEFT: logo */}
+      {/* LEFT: logo + brand */}
       <div className={styles.left}>
-        <img src="/bee.png" alt="Logo" className={styles.logo} />
+        <img src="/bee.png" alt="Honeycomb" className={styles.logo} />
+        <span className={styles.brandText}>Honeycomb</span>
       </div>
 
       {/* HAMBURGER */}
@@ -104,21 +96,10 @@ const DashboardNavbar: React.FC<Props> = ({
 
         {/* RIGHT SIDE */}
         <div className={styles.right}>
-          {/* 🔥 SUPERADMIN ONLY COMPANY SWITCHER */}
           <CompanySwitcher />
 
-          <div className={styles.searchBox}>
-            <input
-              type="text"
-              placeholder="Search customers..."
-              value={searchValue}
-              onChange={onSearchChange}
-              className={styles.searchInput}
-            />
-          </div>
-
           <button
-            className={styles.newJobBtn}
+            className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={handleNewJobClick}
             type="button"
           >
@@ -128,7 +109,7 @@ const DashboardNavbar: React.FC<Props> = ({
 
           <button
             type="button"
-            className={styles.actionBtnSecondary}
+            className={`${styles.btn} ${styles.btnSecondary}`}
             onClick={() => {
               onLogout?.();
               closeMenu();

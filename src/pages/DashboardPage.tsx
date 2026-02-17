@@ -1,6 +1,3 @@
-// src/pages/DashboardPage.tsx
-// ✅ POSTGRES VERSION (UI restored)
-
 import React, { useEffect, useMemo, useState } from "react";
 
 import StatusBoardChart from "../components/StatusBoardChart";
@@ -14,7 +11,13 @@ import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import ConfirmModal from "../components/ConfirmModal";
 
 import styles from "./DashboardPage.module.css";
-import { Briefcase, UserPlus, FileText, PencilLine } from "phosphor-react";
+import {
+  Briefcase,
+  UserPlus,
+  FileText,
+  PencilLine,
+  XCircle,
+} from "phosphor-react";
 import { TrashIcon } from "@heroicons/react/24/outline";
 
 import {
@@ -127,6 +130,34 @@ const formatTaskDue = (due: string) => {
     return due;
   }
 };
+
+/* initials helper (AF, JD, etc) */
+const initialsFromName = (name?: string) => {
+  const cleaned = String(name ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+  if (!cleaned) return "?";
+  const parts = cleaned.split(" ").filter(Boolean);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+  const out = (first + last).toUpperCase();
+  return out || "?";
+};
+
+const uniqIntList = (arr: any): number[] => {
+  if (!Array.isArray(arr)) return [];
+  const seen = new Set<number>();
+  const out: number[] = [];
+  for (const v of arr) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) continue;
+    if (seen.has(n)) continue;
+    seen.add(n);
+    out.push(n);
+  }
+  return out;
+};
+
 /* ───────── Component ───────── */
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -162,8 +193,35 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     "all",
   );
 
-  /* ───────── Loaders ───────── */
+  // ✅ NEW: Job list filters (dashboard section)
 
+  const [jobTypeFilter, setJobTypeFilter] = useState<
+    "" | "CHARGE UP" | "ESTIMATE"
+  >("");
+  const [jobStatusFilter, setJobStatusFilter] = useState<
+    "" | "Pending" | "Active" | "Complete"
+  >("");
+
+  const [openHeaderMenu, setOpenHeaderMenu] = useState<
+    null | "jobType" | "status"
+  >(null);
+
+  /* ───────── Loaders ───────── */
+  // ✅ Close dropdown when clicking outside
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // anything inside our header menu should not close
+      if (target.closest(`.${styles.thMenuWrap}`)) return;
+
+      setOpenHeaderMenu(null);
+    };
+
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, []);
   const loadEmployees = async () => {
     // expects GET /api/employees -> [{id, name, avatar?}]
     const list = await apiGet<EmployeeType[]>("/employees");
@@ -173,7 +231,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const loadJobs = async () => {
     setJobsLoading(true);
     try {
-      // expects GET /api/jobs -> [{ id, title, jobType, status, customer, date, assignedEmployeeIds }]
+      // expects GET /api/jobs -> [{ id, title, jobType, status, customer, date, assignedEmployeeIds, scheduledEmployeeIds }]
       const list = await apiGet<any[]>("/jobs");
 
       const mapped: JobType[] = (Array.isArray(list) ? list : []).map((j) => {
@@ -195,11 +253,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             ? j.date
             : toDDMMYYYY(safeDate(j.date ?? j.start ?? j.createdAt));
 
-        const assignedEmployeeIds = Array.isArray(j.assignedEmployeeIds)
-          ? j.assignedEmployeeIds
-              .map((n: any) => Number(n))
-              .filter((n: number) => Number.isFinite(n))
-          : [];
+        const assignedEmployeeIds = uniqIntList(j.assignedEmployeeIds);
+        const scheduledEmployeeIds = uniqIntList(j.scheduledEmployeeIds);
 
         return {
           id: String(j.id),
@@ -209,6 +264,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           customer: String(j.customer ?? j.customerName ?? "Unknown"),
           date,
           assignedEmployeeIds,
+          scheduledEmployeeIds,
         };
       });
 
@@ -258,21 +314,35 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   /* ───────── Jobs filtering + chart data ───────── */
 
+  // pick "who counts as assigned" for filtering + UI:
+  // prefer scheduledEmployeeIds (calendar), fallback to assignedEmployeeIds (watchers/manual)
+  const jobPrimaryAssignees = (job: JobType): number[] => {
+    const scheduled = uniqIntList(job.scheduledEmployeeIds);
+    if (scheduled.length > 0) return scheduled;
+    return uniqIntList(job.assignedEmployeeIds);
+  };
+
   const visibleJobs = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase().trim();
 
     return jobs.filter((job) => {
       const matchesSearch =
+        q.length === 0 ||
         job.title.toLowerCase().includes(q) ||
         job.customer.toLowerCase().includes(q);
 
+      const who = jobPrimaryAssignees(job);
       const matchesAssignee =
-        selectedAssignee === "all" ||
-        job.assignedEmployeeIds.includes(selectedAssignee);
+        selectedAssignee === "all" || who.includes(selectedAssignee);
 
-      return matchesSearch && matchesAssignee;
+      const matchesStatus =
+        jobStatusFilter === "" || job.status === jobStatusFilter;
+
+      const matchesType = jobTypeFilter === "" || job.jobType === jobTypeFilter;
+
+      return matchesSearch && matchesAssignee && matchesStatus && matchesType;
     });
-  }, [jobs, search, selectedAssignee]);
+  }, [jobs, search, selectedAssignee, jobStatusFilter, jobTypeFilter]);
 
   const statusBuckets = ["Pending", "Active", "Complete"] as const;
 
@@ -322,7 +392,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     due: string;
   }) => {
     try {
-      // AddTask returns {desc}, but API expects description
       await createTask({
         description: task.description,
         assigned: task.assigned,
@@ -368,6 +437,22 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     } catch (err) {
       console.error("Failed to delete task:", err);
     }
+  };
+
+  /* ───────── Job filter clear ───────── */
+
+  const hasAnyJobFilter =
+    search.trim().length > 0 ||
+    selectedAssignee !== "all" ||
+    jobStatusFilter !== "" ||
+    jobTypeFilter !== "";
+
+  const handleClearJobFilters = () => {
+    setSearch("");
+    setSelectedAssignee("all");
+    setJobStatusFilter("");
+    setJobTypeFilter("");
+    setOpenHeaderMenu(null);
   };
 
   /* ───────── Render helpers ───────── */
@@ -436,18 +521,68 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     );
   };
 
+  const renderAssigneeAvatars = (job: JobType) => {
+    const ids = jobPrimaryAssignees(job);
+
+    if (!ids || ids.length === 0) {
+      return <span className={styles.assigneeEmpty}>—</span>;
+    }
+
+    // Map to employees we know (filter out missing)
+    const people = ids
+      .map((id) => employees.find((e) => e.id === id))
+      .filter(Boolean) as EmployeeType[];
+
+    if (people.length === 0) {
+      return <span className={styles.assigneeEmpty}>—</span>;
+    }
+
+    // Show first N with +X
+    const MAX = 4;
+    const shown = people.slice(0, MAX);
+    const extra = people.length - shown.length;
+
+    return (
+      <div
+        className={styles.assigneeStack}
+        title={people.map((p) => p.name).join(", ")}
+      >
+        {shown.map((p) => (
+          <div
+            key={p.id}
+            className={styles.assigneeBubble}
+            title={p.name}
+            aria-label={p.name}
+          >
+            {p.avatar ? (
+              <img
+                src={p.avatar}
+                alt={p.name}
+                className={styles.assigneeAvatarImg}
+              />
+            ) : (
+              <span className={styles.assigneeInitials}>
+                {initialsFromName(p.name)}
+              </span>
+            )}
+          </div>
+        ))}
+
+        {extra > 0 && (
+          <div className={styles.assigneeMore} title={`${extra} more`}>
+            +{extra}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   /* ───────── JSX ───────── */
 
   return (
     <div className={styles.dashboardShell}>
       <div className={styles.dashboardBg}>
-        <DashboardNavbar
-          searchValue={search}
-          onSearchChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setSearch(e.target.value)
-          }
-          onNewJob={() => setShowNewJobModal(true)}
-        />
+        <DashboardNavbar onNewJob={() => setShowNewJobModal(true)} />
 
         <div className={styles.chartsSection}>
           <AssigneeFilterBar
@@ -470,109 +605,336 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         <div className={styles.bottomGrid}>
-          <div className={styles.tableCard}>
-            <div className={styles.cardTitleRow}>
-              <h3 className={styles.cardTitle}>Job List</h3>
+          <div className={styles.tableCardModern}>
+            <div className={styles.tableHeader}>
+              <div className={styles.tableHeaderLeft}>
+                <div className={styles.tableHeaderTopRow}>
+                  <h3 className={styles.tableTitle}>Job List</h3>
+
+                  <div className={styles.tableHeaderRightTools}>
+                    <div className={styles.jobToolbar}>
+                      <div className={styles.jobSearch}>
+                        <svg
+                          className={styles.jobSearchIcon}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+
+                        <input
+                          className={styles.jobSearchInput}
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          placeholder="Search jobs or customers..."
+                        />
+                      </div>
+
+                      <div className={styles.jobToolbarDivider} />
+
+                      <button
+                        type="button"
+                        className={styles.jobClearBtn}
+                        onClick={handleClearJobFilters}
+                        disabled={!hasAnyJobFilter}
+                        title="Clear job filters"
+                      >
+                        <TrashIcon className={styles.jobClearIcon} />
+                        <span>Clear</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.tableHeaderMetaRow}>
+                  <div className={styles.tableSubtitle}>
+                    <span className={styles.tablePill}>
+                      {jobsLoading ? "Loading…" : `${visibleJobs.length} jobs`}
+                    </span>
+
+                    <span className={styles.tableHint}>
+                      Track progress, assignments, and next actions at a glance
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ✅ Removed header buttons (no duplicate New Job button here) */}
+              <div className={styles.tableHeaderRight} />
             </div>
 
-            <table className={styles.jobsTable}>
-              <thead>
-                <tr>
-                  <th>Job Type</th>
-                  <th>Status</th>
-                  <th>Job</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Assigned To</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+            <div className={styles.tableTopDivider} />
 
-              <tbody>
-                {jobsLoading ? (
+            <div className={styles.tableScrollWrap}>
+              <table className={styles.jobsTableModern}>
+                <thead>
                   <tr>
-                    <td colSpan={7} style={{ padding: 18 }}>
-                      Loading jobs…
-                    </td>
-                  </tr>
-                ) : visibleJobs.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ padding: 18 }}>
-                      No jobs found.
-                    </td>
-                  </tr>
-                ) : (
-                  visibleJobs.map((job) => {
-                    const assignedNames =
-                      job.assignedEmployeeIds.length === 0
-                        ? "—"
-                        : job.assignedEmployeeIds
-                            .map(
-                              (id) => employees.find((e) => e.id === id)?.name,
-                            )
-                            .filter(Boolean)
-                            .sort((a, b) => a!.localeCompare(b!, "tr"))
-                            .join(", ");
+                    {/* ✅ Job Type dropdown */}
+                    <th className={styles.thMenuWrap}>
+                      <button
+                        type="button"
+                        className={styles.thMenuBtn}
+                        onClick={() =>
+                          setOpenHeaderMenu((p) =>
+                            p === "jobType" ? null : "jobType",
+                          )
+                        }
+                        aria-label="Filter by Job Type"
+                      >
+                        <span>Job Type</span>
+                        {openHeaderMenu === "jobType" ? (
+                          <ChevronUp className={styles.thChevronIcon} />
+                        ) : (
+                          <ChevronDown className={styles.thChevronIcon} />
+                        )}
+                      </button>
 
-                    const jobTypeChip =
-                      job.jobType === "CHARGE UP" ? (
-                        <span className={styles.jobTypeChip}>
-                          <FileText
-                            size={11}
-                            weight="regular"
-                            className={styles.jobTypeChipIcon}
-                          />
-                          Charge Up
-                        </span>
-                      ) : (
-                        <span className={styles.jobTypeChip}>
-                          <PencilLine
-                            size={11}
-                            weight="regular"
-                            className={styles.jobTypeChipIcon}
-                          />
-                          Estimate
-                        </span>
-                      );
-
-                    return (
-                      <tr key={job.id}>
-                        <td>{jobTypeChip}</td>
-
-                        <td>
-                          <span
-                            className={
-                              job.status === "Active"
-                                ? styles.statusActive
-                                : job.status === "Complete"
-                                  ? styles.statusComplete
-                                  : styles.statusPending
-                            }
-                          >
-                            {job.status}
-                          </span>
-                        </td>
-
-                        <td>{job.title}</td>
-                        <td>{job.customer}</td>
-                        <td>{job.date}</td>
-                        <td>{assignedNames}</td>
-
-                        <td>
+                      {openHeaderMenu === "jobType" && (
+                        <div className={styles.thMenu} role="menu">
                           <button
-                            className={styles.detailsBtn}
                             type="button"
-                            aria-label={`View job ${job.title}`}
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobTypeFilter("");
+                              setOpenHeaderMenu(null);
+                            }}
                           >
-                            View
+                            All
                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobTypeFilter("CHARGE UP");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            Charge Up
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobTypeFilter("ESTIMATE");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            Estimate
+                          </button>
+                        </div>
+                      )}
+
+                      {jobTypeFilter && (
+                        <div className={styles.thActiveFilter}>
+                          {jobTypeFilter}
+                        </div>
+                      )}
+                    </th>
+
+                    {/* ✅ Status dropdown */}
+                    <th className={styles.thMenuWrap}>
+                      <button
+                        type="button"
+                        className={styles.thMenuBtn}
+                        onClick={() =>
+                          setOpenHeaderMenu((p) =>
+                            p === "status" ? null : "status",
+                          )
+                        }
+                        aria-label="Filter by Status"
+                      >
+                        <span>Status</span>
+                        {openHeaderMenu === "status" ? (
+                          <ChevronUp className={styles.thChevronIcon} />
+                        ) : (
+                          <ChevronDown className={styles.thChevronIcon} />
+                        )}
+                      </button>
+
+                      {openHeaderMenu === "status" && (
+                        <div className={styles.thMenu} role="menu">
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobStatusFilter("");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            All
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobStatusFilter("Pending");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            Pending
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobStatusFilter("Active");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            Active
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.thMenuItem}
+                            onClick={() => {
+                              setJobStatusFilter("Complete");
+                              setOpenHeaderMenu(null);
+                            }}
+                          >
+                            Complete
+                          </button>
+                        </div>
+                      )}
+
+                      {jobStatusFilter && (
+                        <div className={styles.thActiveFilter}>
+                          {jobStatusFilter}
+                        </div>
+                      )}
+                    </th>
+
+                    <th>Job</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Assigned</th>
+                    <th className={styles.actionsCol}>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {jobsLoading ? (
+                    <tr>
+                      <td colSpan={7} className={styles.tableStateCell}>
+                        <div className={styles.tableState}>
+                          <div className={styles.skeletonLineLg} />
+                          <div className={styles.skeletonLineSm} />
+                        </div>
+                      </td>
+                    </tr>
+                  ) : visibleJobs.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className={styles.tableStateCell}>
+                        <div className={styles.tableEmpty}>
+                          <div className={styles.tableEmptyIcon}>🐝</div>
+                          <div className={styles.tableEmptyTitle}>
+                            No jobs found
+                          </div>
+                          <div className={styles.tableEmptyText}>
+                            Try adjusting search or filters, or create a new
+                            job.
+                          </div>
+
+                          {/* ✅ Use Honeycomb button style here too */}
+                          <button
+                            type="button"
+                            className={`${styles.detailsBtn} ${styles.detailsBtnSm}`}
+                            onClick={() => setShowNewJobModal(true)}
+                          >
+                            <span className={styles.qaIcon}>
+                              <Briefcase size={18} weight="bold" />
+                            </span>
+                            <span>Create Job</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    visibleJobs.map((job) => {
+                      const jobTypeChip =
+                        job.jobType === "CHARGE UP" ? (
+                          <span className={styles.jobTypeChipModern}>
+                            <FileText
+                              size={12}
+                              weight="regular"
+                              className={styles.jobTypeChipIconModern}
+                            />
+                            Charge Up
+                          </span>
+                        ) : (
+                          <span className={styles.jobTypeChipModern}>
+                            <PencilLine
+                              size={12}
+                              weight="regular"
+                              className={styles.jobTypeChipIconModern}
+                            />
+                            Estimate
+                          </span>
+                        );
+
+                      return (
+                        <tr key={job.id} className={styles.jobRow}>
+                          <td>{jobTypeChip}</td>
+
+                          <td>
+                            <span
+                              className={
+                                job.status === "Active"
+                                  ? styles.statusActive
+                                  : job.status === "Complete"
+                                    ? styles.statusComplete
+                                    : styles.statusPending
+                              }
+                            >
+                              {job.status}
+                            </span>
+                          </td>
+
+                          <td>
+                            <div className={styles.jobMainCell}>
+                              <div className={styles.jobTitle}>{job.title}</div>
+                              <div className={styles.jobSubtle}>#{job.id}</div>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className={styles.customerCell}>
+                              {job.customer}
+                            </div>
+                          </td>
+
+                          <td>
+                            <div className={styles.dateCell}>{job.date}</div>
+                          </td>
+
+                          <td>{renderAssigneeAvatars(job)}</td>
+
+                          <td className={styles.actionsCol}>
+                            <button
+                              className={styles.viewBtnModern}
+                              type="button"
+                              aria-label={`View job ${job.title}`}
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className={styles.sideColumn}>
