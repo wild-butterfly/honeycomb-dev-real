@@ -38,7 +38,7 @@
   cursor: pointer;
   width: 44px;
   height: 44px;
-  z-index: 10001; /* 🔴 menünün de üstünde */
+  z-index: 10001;
 }
 
 .bar {
@@ -95,25 +95,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.searchBox {
-  display: flex;
-  align-items: center;
-  border: 2px solid #d3b84a;
-  background: #fffef6;
-  border-radius: 4px;
-  padding: 0 8px;
-  height: 34px;
-  min-width: 170px;
-}
-
-.searchInput {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 0.95rem;
-  padding-right: 24px;
+  flex-wrap: nowrap;
 }
 
 /* ================= BUTTON SYSTEM (NAVBAR) ================= */
@@ -129,6 +111,9 @@
   align-items: center;
   gap: 8px;
   line-height: 1;
+
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Primary = New Job */
@@ -137,6 +122,7 @@
   border: 2px solid #f3c623;
   color: #9c7c00;
   box-shadow: 0 8px 18px rgba(243, 198, 35, 0.16);
+  min-width: 118px;
 }
 
 .btnPrimary:hover {
@@ -209,10 +195,9 @@
     border-bottom: 1px solid #ffe06644;
   }
 
-  .searchBox,
-  .actionBtn,
-  .actionBtnSecondary {
+  .btn {
     width: 100%;
+    justify-content: center;
   }
 
   .menuOverlay {
@@ -224,10 +209,6 @@
   }
 }
 
-.btn {
-  width: 100%;
-  justify-content: center;
-}
 /* ================= DESKTOP (≥1025px) ================= */
 @media (min-width: 1025px) {
   .hamburger {
