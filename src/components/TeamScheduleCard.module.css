@@ -1,13 +1,90 @@
 .card {
-  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 200%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.85)
+  );
+
   border-radius: 20px;
-  padding: 28px;
-  border: 1px solid rgba(244, 180, 0, 0.25);
+
+  padding: 26px;
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+
+  border: 1px solid rgba(0, 0, 0, 0.05);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
+
+.card:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(244, 180, 0, 0.15);
+}
+
+/* HEADER */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.headerIcon {
+  width: 20px;
+  color: #facc15;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* BODY */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ROW */
 
 .row {
   display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  font-size: 14px;
+  gap: 12px;
+}
+
+.icon {
+  width: 18px;
+  color: #facc15;
+
+  margin-top: 2px;
+}
+
+.label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.value {
+  font-weight: 600;
+}
+
+/* VARIANCE COLORS */
+
+.positive {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.negative {
+  color: #dc2626;
+  font-weight: 600;
 }

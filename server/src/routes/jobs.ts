@@ -3,6 +3,8 @@ import * as controller from "../controllers/jobs.controller";
 import { withDbContext } from "../middleware/dbContext";
 import { requireAuth, requireRole } from "../middleware/auth";
 
+
+
 const router = Router();
 
 /* 🔐 RLS context */
@@ -13,20 +15,24 @@ router.use(withDbContext);
    JOB CRUD
 ================================ */
 
-/* GET ALL → admin + employee */
+/* GET ALL */
 router.get("/", controller.getAll);
 
-/* GET ONE → admin + employee */
+/* ⭐ ACTIVITY FIRST */
+router.get("/:id/activity", controller.getActivity);
+
+/* GET ONE */
 router.get("/:id", controller.getOne);
 
-/* CREATE → admin only */
+/* CREATE */
 router.post("/", requireRole(["admin"]), controller.create);
 
-/* UPDATE → admin only */
+/* UPDATE */
 router.put("/:id", requireRole(["admin"]), controller.update);
 
-/* DELETE → admin only */
+/* DELETE */
 router.delete("/:id", requireRole(["admin"]), controller.remove);
+
 
 /* ===============================
    ASSIGNMENTS
@@ -43,6 +49,7 @@ router.put(
   requireRole(["admin"]),
   controller.unassignEmployee
 );
+
 
 /* ===============================
    JOB → LABOUR
@@ -63,5 +70,6 @@ router.delete(
   requireRole(["admin"]),
   controller.deleteLabour
 );
+
 
 export default router;

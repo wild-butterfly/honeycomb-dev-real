@@ -527,3 +527,100 @@ export const deleteLabour = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Delete labour failed" });
   }
 };
+
+/* ===============================
+   GET JOB ACTIVITY
+================================ */
+/* ===============================
+   GET JOB ACTIVITY ⭐ FINAL ENTERPRISE
+================================ */
+export const getActivity = async (req: Request, res: Response) => {
+
+  try {
+
+    const db = (req as any).db;
+    const { id } = req.params;
+
+    const result = await db.query(`
+
+      SELECT * FROM (
+
+        /* LABOUR ADDED */
+
+        SELECT
+          'labour_added' AS type,
+          'Labour added' AS title,
+          e.name AS user_name,
+          l.created_at AS date
+        FROM labour_entries l
+        JOIN employees e ON e.id = l.employee_id
+        WHERE l.job_id = $1
+
+
+        UNION ALL
+
+
+        /* STAFF ASSIGNED */
+
+        SELECT
+          'assigned' AS type,
+          'Staff assigned' AS title,
+          e.name AS user_name,
+          ja.created_at AS date
+        FROM job_assignees ja
+        JOIN employees e ON e.id = ja.employee_id
+        WHERE ja.job_id = $1
+
+
+        UNION ALL
+
+
+        /* JOB CREATED */
+
+        SELECT
+          'job_created' AS type,
+          'Job created' AS title,
+          'System' AS user_name,
+          j.created_at AS date
+        FROM jobs j
+        WHERE j.id = $1
+
+
+        UNION ALL
+
+
+        /* JOB UPDATED */
+
+        SELECT
+          'job_updated' AS type,
+          'Job updated' AS title,
+          'System' AS user_name,
+          j.updated_at AS date
+        FROM jobs j
+        WHERE j.id = $1
+        AND j.updated_at IS NOT NULL
+
+
+      ) activity
+
+      ORDER BY date DESC
+
+      LIMIT 100
+
+    `, [id]);
+
+    res.json(result.rows);
+
+  }
+  catch (err) {
+
+    console.error("Activity error:", err);
+
+    res.status(500).json({
+      error: "Activity load failed"
+    });
+
+  }
+
+};
+

@@ -1,35 +1,88 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./ActivitySection.module.css";
+import { ClockIcon } from "@heroicons/react/24/outline";
+import { apiGet } from "../services/api";
 
-const ActivitySection: React.FC<{ job: any }> = ({ job }) => {
-  const activities = [
-    {
-      date: "30 Oct 2025",
-      title: "Prices Held for 2026",
-      description: "Client confirmed pricing agreement for next cycle.",
-      type: "update",
-    },
-    {
-      date: "18 Dec 2024",
-      title: "Logo Updated",
-      description: "Client requested to use Asset Test & Tag logo.",
-      type: "note",
-    },
-  ];
+interface ActivityItem {
+  type: string;
+  title: string;
+  user_name: string;
+  date: string;
+}
+
+interface Props {
+  jobId: number;
+}
+
+const ActivitySection: React.FC<Props> = ({ jobId }) => {
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await apiGet<ActivityItem[]>(`/jobs/${jobId}/activity`);
+
+        setActivity(data || []);
+      } catch (err) {
+        console.error("Activity load failed", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [jobId]);
+
+  const formatTime = (date: string) => {
+    const d = new Date(date);
+
+    return d.toLocaleString("en-AU", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
-    <div className={styles.wrapper}>
-      <h2 className={styles.heading}>Activity & Notes</h2>
+    <div className={styles.card}>
+      {/* HEADER */}
+
+      <div className={styles.header}>
+        <ClockIcon className={styles.headerIcon} />
+
+        <div className={styles.title}>Activity</div>
+      </div>
+
+      {/* CONTENT */}
 
       <div className={styles.timeline}>
-        {activities.map((a, index) => (
+        {loading && <div className={styles.empty}>Loading activity...</div>}
+
+        {!loading && activity.length === 0 && (
+          <div className={styles.empty}>No activity yet</div>
+        )}
+
+        {activity.map((item, index) => (
           <div key={index} className={styles.item}>
-            <div className={styles.dot}></div>
+            {/* ICON COLUMN */}
+
+            <div className={styles.iconWrapper}>
+              <div className={styles.iconDot} />
+
+              {index !== activity.length - 1 && <div className={styles.line} />}
+            </div>
+
+            {/* CONTENT */}
 
             <div className={styles.content}>
-              <div className={styles.date}>{a.date}</div>
-              <div className={styles.title}>{a.title}</div>
-              <div className={styles.description}>{a.description}</div>
+              <div className={styles.itemTitle}>{item.title}</div>
+
+              <div className={styles.subtitle}>{item.user_name}</div>
+
+              <div className={styles.time}>{formatTime(item.date)}</div>
             </div>
           </div>
         ))}

@@ -1,8 +1,8 @@
 .featuresBg {
   background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
-  /* ↓ Yükseklik zorlamasını kaldır – boş alanın sebebiydi */
-  /* min-height: calc(100vh - var(--header-h, 0px)); */
   min-height: 0;
+  flex: 1;
+  width: 100%;
   font-family: "Roboto", Arial, sans-serif;
   box-sizing: border-box;
   display: flex;
@@ -51,11 +51,16 @@
 .featureCard {
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 4px 32px #f5b40116, 0 1px 24px #ffe0660c inset;
+  box-shadow:
+    0 4px 32px #f5b40116,
+    0 1px 24px #ffe0660c inset;
   border: 1.5px solid #ffe066;
   text-align: left;
   padding: 28px 22px 22px 22px;
-  transition: transform 0.15s, box-shadow 0.17s, border 0.13s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.17s,
+    border 0.13s;
   position: relative;
 }
 

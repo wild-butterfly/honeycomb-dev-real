@@ -34,13 +34,12 @@ type CustomerType = {
 ====================================================== */
 
 const App: React.FC = () => {
-  // ✅ SADECE ROUTE / PATH KONTROLÜ İÇİN
   const location = useLocation();
 
   const [search, setSearch] = useState("");
   const [customers, setCustomers] = useState<CustomerType[]>([]);
 
-  // ✅ Footer / Navbar kontrolü
+  // Dashboard sayfalarında navbar/footer gizli
   const isDashboard = location.pathname.startsWith("/dashboard");
 
   const handleAddCustomer = (customer: Omit<CustomerType, "id">) => {
@@ -48,7 +47,6 @@ const App: React.FC = () => {
       ...customer,
       id: Date.now(),
     };
-
     setCustomers((prev) => [...prev, newCustomer]);
   };
 
@@ -56,6 +54,7 @@ const App: React.FC = () => {
     <div id="root-layout" className={isDashboard ? "no-footer" : undefined}>
       {!isDashboard && <Navbar />}
 
+      {/* ✅ Kritik: main flex:1 olacak */}
       <main id="app-content">
         <Routes>
           {/* ================= PUBLIC ================= */}

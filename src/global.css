@@ -93,9 +93,10 @@ body.has-fixed-header #root-layout {
 #app-content {
   flex: 1 1 auto;
   min-height: 0;
-  display: block;
-}
 
+  display: flex;
+  flex-direction: column;
+}
 /* ---------- Page Containers ---------- */
 .page,
 .homepage,
@@ -104,6 +105,10 @@ body.has-fixed-header #root-layout {
 .aboutPage,
 .helpBg {
   min-height: 0;
+  width: 100%;
+
+  flex: 1 0 auto;
+
   padding-bottom: clamp(8px, 2vw, 16px);
 }
 
@@ -236,13 +241,12 @@ textarea:-webkit-autofill {
 
 /* ---------- Mobile Safe Area ---------- */
 @media (max-width: 768px) {
-  #app-content,
   .page,
   .homepage,
   .featuresBg,
   .pricingBg,
   .aboutPage,
   .helpBg {
-    padding-bottom: 0px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
   }
 }

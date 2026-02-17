@@ -4,8 +4,11 @@
   display: flex;
   flex-direction: column;
   font-family: "Roboto", Arial, sans-serif;
-  padding-bottom: 0; /* 🔥 fazla alt boşluğu kaldırır */
-  margin-bottom: 0; /* olası alt marjinleri sıfırla */
+  padding-bottom: 0;
+  margin-bottom: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ============ HERO ============ */
@@ -49,7 +52,11 @@
   text-decoration: none;
   font-weight: 700;
   box-shadow: 0 2px 10px #f9cb4640;
-  transition: background 0.18s, color 0.16s, border 0.15s, box-shadow 0.14s;
+  transition:
+    background 0.18s,
+    color 0.16s,
+    border 0.15s,
+    box-shadow 0.14s;
 }
 .ctaBtn:hover,
 .ctaBtn:focus {
@@ -70,7 +77,8 @@
   pointer-events: none;
   filter: drop-shadow(0 4px 10px rgba(255, 214, 0, 0.45));
   z-index: 3;
-  animation: beeFlight 6s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
+  animation:
+    beeFlight 6s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
     beeHover 3s ease-in-out 6s infinite;
   will-change: transform, opacity;
 }
@@ -121,7 +129,8 @@
     top: -20px;
     width: 56px;
     height: 56px;
-    animation: beeFlightMob 5.5s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
+    animation:
+      beeFlightMob 5.5s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
       beeHoverMob 2.6s ease-in-out 5.5s infinite;
   }
 
@@ -199,10 +208,15 @@
   background: #fff;
   border-radius: 18px;
   padding: 36px 20px 24px 20px; /* alt pad biraz az */
-  box-shadow: 0 4px 28px #ffe06622, 0 1px 14px #ffe06611 inset;
+  box-shadow:
+    0 4px 28px #ffe06622,
+    0 1px 14px #ffe06611 inset;
   border: 1.7px solid #ffe066;
   text-align: center;
-  transition: transform 0.16s, box-shadow 0.17s, border 0.12s;
+  transition:
+    transform 0.16s,
+    box-shadow 0.17s,
+    border 0.12s;
   min-width: 270px;
   max-width: 320px;
   margin-bottom: 0;

@@ -1,41 +1,90 @@
+// src/components/TeamScheduleCard.tsx
+// Honeycomb © 2026
+
 import React from "react";
 import styles from "./TeamScheduleCard.module.css";
 
-const TeamScheduleCard: React.FC<{ job: any }> = ({ job }) => {
+import {
+  UserGroupIcon,
+  ClockIcon,
+  CalendarDaysIcon,
+  ArrowTrendingUpIcon,
+} from "@heroicons/react/24/outline";
+
+interface Props {
+  job: any;
+}
+
+const TeamScheduleCard: React.FC<Props> = ({ job }) => {
+  const assigned = job?.assigned_staff ?? 0;
+  const scheduled = job?.scheduled_hours ?? 0;
+  const logged = job?.logged_hours ?? 0;
+
+  const variance = logged - scheduled;
+
   return (
     <div className={styles.card}>
-      <h3>Team & Scheduling</h3>
+      {/* HEADER */}
 
-      <div className={styles.infoRow}>
-        <span>Assigned Staff</span>
-        <span>{job.assigned_staff || 0}</span>
+      <div className={styles.header}>
+        <UserGroupIcon className={styles.headerIcon} />
+
+        <div className={styles.title}>Team & Scheduling</div>
       </div>
 
-      <div className={styles.infoRow}>
-        <span>Scheduled</span>
-        <span>{job.scheduled_hours || 0}h</span>
-      </div>
+      {/* BODY */}
 
-      <div className={styles.infoRow}>
-        <span>Logged</span>
-        <span>{job.completed_hours || 0}h</span>
-      </div>
+      <div className={styles.body}>
+        {/* ASSIGNED */}
 
-      <div className={styles.infoRow}>
-        <span>Variance</span>
-        <span>{(job.completed_hours || 0) - (job.scheduled_hours || 0)}h</span>
-      </div>
+        <div className={styles.row}>
+          <UserGroupIcon className={styles.icon} />
 
-      <div className={styles.divider} />
+          <div>
+            <div className={styles.label}>Assigned Staff</div>
 
-      <div className={styles.infoRow}>
-        <span>Next Visit</span>
-        <span>{job.next_visit || "—"}</span>
-      </div>
+            <div className={styles.value}>{assigned}</div>
+          </div>
+        </div>
 
-      <div className={styles.infoRow}>
-        <span>Upcoming Booking</span>
-        <span>{job.upcoming_booking || 0}</span>
+        {/* SCHEDULED */}
+
+        <div className={styles.row}>
+          <ClockIcon className={styles.icon} />
+
+          <div>
+            <div className={styles.label}>Scheduled Hours</div>
+
+            <div className={styles.value}>{scheduled}h</div>
+          </div>
+        </div>
+
+        {/* LOGGED */}
+
+        <div className={styles.row}>
+          <CalendarDaysIcon className={styles.icon} />
+
+          <div>
+            <div className={styles.label}>Logged Hours</div>
+
+            <div className={styles.value}>{logged}h</div>
+          </div>
+        </div>
+
+        {/* VARIANCE */}
+
+        <div className={styles.row}>
+          <ArrowTrendingUpIcon className={styles.icon} />
+
+          <div>
+            <div className={styles.label}>Variance</div>
+
+            <div className={variance >= 0 ? styles.positive : styles.negative}>
+              {variance >= 0 ? "+" : ""}
+              {variance}h
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

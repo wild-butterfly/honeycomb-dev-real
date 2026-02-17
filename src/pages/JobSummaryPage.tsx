@@ -148,7 +148,8 @@ const JobSummaryPage: React.FC = () => {
           </div>
 
           <FinancialOverviewCard job={job} />
-          <ActivitySection job={job} />
+
+          <ActivitySection jobId={Number(job.id)} />
         </div>
       </div>
     </div>
