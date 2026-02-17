@@ -251,10 +251,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             : "Pending";
 
         // date can be ISO or already dd/mm/yyyy
-        const date =
-          typeof j.date === "string" && j.date.includes("/")
-            ? j.date
-            : toDDMMYYYY(safeDate(j.date ?? j.start ?? j.createdAt));
+        const date = toDDMMYYYY(safeDate(j.created_at_iso ?? j.created_at));
 
         const assignedEmployeeIds = uniqIntList(j.assignedEmployeeIds);
         const scheduledEmployeeIds = uniqIntList(j.scheduledEmployeeIds);
@@ -827,14 +824,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     <th>Customer</th>
                     <th>Date</th>
                     <th>Assigned</th>
-                    <th className={styles.actionsCol}>Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {jobsLoading ? (
                     <tr>
-                      <td colSpan={7} className={styles.tableStateCell}>
+                      <td colSpan={6} className={styles.tableStateCell}>
                         <div className={styles.tableState}>
                           <div className={styles.skeletonLineLg} />
                           <div className={styles.skeletonLineSm} />
@@ -843,7 +839,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     </tr>
                   ) : visibleJobs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className={styles.tableStateCell}>
+                      <td colSpan={6} className={styles.tableStateCell}>
                         <div className={styles.tableEmpty}>
                           <div className={styles.tableEmptyIcon}>🐝</div>
                           <div className={styles.tableEmptyTitle}>
@@ -910,10 +906,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                           </td>
 
                           <td>
-                            <div className={styles.jobMainCell}>
-                              <div className={styles.jobTitle}>{job.title}</div>
-                              <div className={styles.jobSubtle}>#{job.id}</div>
-                            </div>
+                            <button
+                              type="button"
+                              className={styles.jobLinkCell}
+                              onClick={() =>
+                                navigate(`/dashboard/jobs/${job.id}`)
+                              }
+                              title="Open job"
+                            >
+                              <div className={styles.jobMainCell}>
+                                <div className={styles.jobTitle}>
+                                  {job.title}
+                                </div>
+                                <div className={styles.jobSubtle}>
+                                  #{job.id}
+                                </div>
+                              </div>
+                            </button>
                           </td>
 
                           <td>
@@ -927,18 +936,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                           </td>
 
                           <td>{renderAssigneeAvatars(job)}</td>
-
-                          <td className={styles.actionsCol}>
-                            <button
-                              className={styles.viewBtnModern}
-                              type="button"
-                              onClick={() =>
-                                navigate(`/dashboard/jobs/${job.id}`)
-                              }
-                            >
-                              View
-                            </button>
-                          </td>
                         </tr>
                       );
                     })

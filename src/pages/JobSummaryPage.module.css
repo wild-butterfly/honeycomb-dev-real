@@ -6,9 +6,9 @@
     repeating-linear-gradient(
       90deg,
       #fff8d6,
-      #fff8d6 8px,
-      #fffbe9 9px,
-      #fffbe9 20px
+      #fff8d6 10px,
+      #fffbe9 10px,
+      #fffbe9 22px
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
 
@@ -18,48 +18,65 @@
 .main {
   flex: 1;
   display: flex;
+  justify-content: center;
+}
+.pageContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+
+  background: rgba(255, 252, 235, 0.78);
+
+  /* ✅ premium glass */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border-radius: 32px;
+
+  /* ✅ turuncu glow yok → daha enterprise */
+  border: 1px solid rgba(15, 23, 42, 0.08);
+
+  box-shadow:
+    0 28px 70px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 0 2px rgba(244, 180, 0, 0.1) inset;
+
+  padding: 40px 40px 64px 40px;
 }
 
+/* ✅ üstteki turuncu bandı kaldırıyoruz → çok hafif koyu “shade” */
 .pageContainer::before {
   content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
 
+  /* turuncu yerine çok hafif slate gölge */
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.05), transparent);
+
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+.pageContainer::after {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-
-  height: 80px;
-
-  background: linear-gradient(to bottom, rgba(244, 180, 0, 0.12), transparent);
-
+  height: 90px;
   border-radius: 32px 32px 0 0;
-
   pointer-events: none;
-}
-.pageContainer {
-  /* Layout control */
-  display: flex;
-  flex-direction: column;
 
-  gap: 40px;
-
-  /* Glass look */
   background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0.4)
+    to bottom,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0)
   );
-
-  backdrop-filter: blur(40px);
-
-  border-radius: 32px;
-
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(244, 180, 0, 0.15) inset;
-
-  /* Internal breathing space */
-  padding: 40px 40px 64px 40px;
 }
 
 /* GRID */

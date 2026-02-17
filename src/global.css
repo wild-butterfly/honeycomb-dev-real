@@ -49,6 +49,12 @@ body,
   padding: 0;
 }
 
+/* Keep horizontal overflow locked globally (single source of truth) */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* ======================================================
    CLEAN WHITE BACKGROUND
    ====================================================== */
@@ -74,8 +80,6 @@ body {
       transparent 45%
     ),
     #ffffff;
-
-  overflow-x: hidden;
 }
 
 /* ---------- App Layout ---------- */
@@ -97,6 +101,7 @@ body.has-fixed-header #root-layout {
   display: flex;
   flex-direction: column;
 }
+
 /* ---------- Page Containers ---------- */
 .page,
 .homepage,
@@ -208,7 +213,7 @@ button {
 }
 
 /* ======================================================
-   Fix Chrome Autofill Blue Background
+   Inputs + Autofill (Chrome)
    ====================================================== */
 
 input,

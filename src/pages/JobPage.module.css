@@ -1,7 +1,6 @@
 /* =====================================================
    PAGE LAYOUT
 ===================================================== */
-
 .pageWrapper {
   display: flex;
   min-height: 100vh;
@@ -10,40 +9,87 @@
     repeating-linear-gradient(
       90deg,
       #fff8d6,
-      #fff8d6 8px,
-      #fffbe9 9px,
-      #fffbe9 20px
+      #fff8d6 10px,
+      #fffbe9 10px,
+      #fffbe9 22px
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
 
-  padding: 30px 20px;
+  padding: 40px 24px;
 }
 
-.mainCard {
+.main {
   flex: 1;
-  max-width: 1500px;
-  /* Glass effect */
-  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 200%);
+  display: flex;
+  justify-content: center;
+}
 
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* =====================================================
+   PREMIUM ENTERPRISE CONTAINER (MATCHES JOB SUMMARY)
+===================================================== */
+.pageContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
 
-  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 
-  border: 1px solid rgba(255, 200, 0, 0.35);
+  background: rgba(255, 252, 235, 0.78);
+
+  /* ✅ premium glass */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border-radius: 32px;
+
+  border: 1px solid rgba(15, 23, 42, 0.08);
 
   box-shadow:
-    0 15px 50px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 200, 0, 0.1) inset;
+    0 28px 70px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 0 2px rgba(244, 180, 0, 0.1) inset;
 
-  padding: 42px 48px;
-  margin-left: 0px;
+  padding: 40px 40px 64px 40px;
+}
+
+/* ✅ üstte turuncu band yok → çok hafif slate shade */
+.pageContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
+
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.05), transparent);
+
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+
+/* ✅ üst highlight (premium cam hissi) */
+.pageContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 90px;
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0)
+  );
 }
 
 /* =====================================================
    HEADER
 ===================================================== */
-
 .pageHeader h1 {
   margin: 0;
   font-size: 20px;
@@ -51,10 +97,10 @@
   color: #1f2937;
   letter-spacing: -0.5px;
 }
-/* =====================================================
-   GENERIC SECTION 
-===================================================== */
 
+/* =====================================================
+   GENERIC SECTION
+===================================================== */
 .section {
   margin-top: 26px;
 }
@@ -62,7 +108,6 @@
 /* =====================================================
    SECTION TITLE
 ===================================================== */
-
 .sectionTitle {
   font-size: 14px;
   margin-bottom: 12px;
@@ -73,26 +118,130 @@
 }
 
 /* =====================================================
-   NOTES / DESCRIPTION CARD
+   NOTES / DESCRIPTION CARD (SINGLE GLASS SURFACE)
 ===================================================== */
-
 .detailBox {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(6px);
+  position: relative;
 
-  border: 1px solid rgba(255, 204, 41, 0.25);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-radius: 20px;
+  padding: 28px;
+
+  border: 1px solid rgba(15, 23, 42, 0.06);
+
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.06),
+    0 10px 35px rgba(0, 0, 0, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
-  padding: 28px;
-  border-radius: 18px;
-
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
 }
 
-/* ================= FILTER + ACTION ROW ================= */
+/* Edit mode highlight */
+.editing {
+  box-shadow:
+    0 0 0 3px rgba(244, 180, 0, 0.12),
+    0 20px 50px rgba(0, 0, 0, 0.08);
+}
 
+/* =====================================================
+   READ MODE
+===================================================== */
+.clickToEdit {
+  cursor: pointer;
+  padding: 18px 6px;
+
+  font-size: 15px;
+  line-height: 1.7;
+  color: #2d2d2d;
+
+  border-radius: 12px;
+
+  transition:
+    background 0.25s ease,
+    transform 0.2s ease;
+}
+
+.clickToEdit:hover {
+  background: rgba(244, 180, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* =====================================================
+   EDIT MODE
+===================================================== */
+.textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+
+  background: transparent;
+  border: none;
+  outline: none;
+
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #2d2d2d;
+}
+
+.textarea:focus {
+  outline: none;
+}
+
+/* =====================================================
+   ACTION BUTTON ROW
+===================================================== */
+.editActionsInline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* =====================================================
+   BUTTONS – CLEAN MODERN STYLE
+===================================================== */
+.primaryBtn,
+.secondaryBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+/* Primary */
+.primaryBtn {
+  background-color: #f4b400;
+  color: black;
+  border: 2px solid #f3c623;
+}
+
+.primaryBtn:hover {
+  background-color: #fff;
+  color: #9c7c00;
+}
+
+/* Secondary */
+.secondaryBtn {
+  background: #fff;
+  border: 2px solid #f3c623;
+  color: #3a2f00;
+}
+
+.secondaryBtn:hover {
+  background: #9c7c00;
+  color: #fff;
+  border: 2px solid #f8f4bf;
+}
+
+/* =====================================================
+   FILTER + ACTION ROW
+===================================================== */
 .filterActionRow {
   display: flex;
   align-items: flex-end;
@@ -108,8 +257,9 @@
   transform: translateY(-35px);
 }
 
-/* ================= BUTTONS ================= */
-
+/* =====================================================
+   ASSIGN / SCHEDULE BUTTONS
+===================================================== */
 .assignBtn,
 .scheduleBtn {
   padding: 8px 16px;
@@ -152,25 +302,23 @@
   transform: none;
 }
 
-/* ==========================================
+/* =====================================================
    HONEYCOMB TABS WRAPPER
-========================================== */
-
+===================================================== */
 .hcTabs {
   display: flex;
   gap: 32px;
 
-  margin-top: 32px; /* üstte boşluk */
+  margin-top: 32px;
   margin-bottom: 28px;
 
   padding-bottom: 12px;
-  border-bottom: 1px solid #e7e2d3;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-/* ==========================================
+/* =====================================================
    BASE TAB
-========================================== */
-
+===================================================== */
 .hcTab {
   position: relative;
 
@@ -187,21 +335,16 @@
   transition: all 0.25s ease;
 }
 
-/* Hover */
-
 .hcTab:hover {
   color: #1f1f1f;
 }
 
-/* ==========================================
+/* =====================================================
    ACTIVE TAB
-========================================== */
-
+===================================================== */
 .hcTabActive {
   color: #1f1f1f;
 }
-
-/* Honey underline animation */
 
 .hcTab::after {
   content: "";
@@ -223,127 +366,34 @@
 }
 
 /* =====================================================
-   NOTES CONTAINER (SINGLE GLASS SURFACE)
+   SECTION CONTENT
 ===================================================== */
-
-.detailBox {
-  position: relative;
-
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  border-radius: 20px;
-
-  padding: 28px;
-
-  box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-
-  transition: all 0.3s ease;
-}
-
-/* Edit mode highlight */
-.editing {
-  box-shadow:
-    0 0 0 3px rgba(244, 180, 0, 0.12),
-    0 20px 50px rgba(0, 0, 0, 0.08);
-}
-
-/* =====================================================
-   READ MODE
-===================================================== */
-
-.clickToEdit {
-  cursor: pointer;
-
-  padding: 18px 6px;
-
-  font-size: 15px;
-  line-height: 1.7;
-  color: #2d2d2d;
-
-  border-radius: 12px;
-
-  transition:
-    background 0.25s ease,
-    transform 0.2s ease;
-}
-
-.clickToEdit:hover {
-  background: rgba(244, 180, 0, 0.06);
-  transform: translateY(-1px);
-}
-
-/* =====================================================
-   EDIT MODE
-===================================================== */
-
-.textarea {
+.sectionContent {
   width: 100%;
-  min-height: 160px;
-  resize: vertical;
-
-  background: transparent;
-  border: none;
-  outline: none;
-
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 1.7;
-  color: #2d2d2d;
-}
-
-/* Remove old ugly focus ring completely */
-.textarea:focus {
-  outline: none;
 }
 
 /* =====================================================
-   ACTION BUTTON ROW
+   RESPONSIVE
 ===================================================== */
+@media (max-width: 1100px) {
+  .pageContainer {
+    padding: 28px 22px 40px 22px;
+  }
 
-.editActionsInline {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+  .actionButtons {
+    transform: none;
+    align-items: center;
+  }
 }
 
-/* =====================================================
-   BUTTONS – CLEAN MODERN STYLE
-===================================================== */
+@media (max-width: 860px) {
+  .filterActionRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
 
-.primaryBtn,
-.secondaryBtn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.primaryBtn {
-  background-color: #f4b400;
-  color: black;
-  border: 2px solid #f3c623;
-}
-
-.primaryBtn:hover {
-  background-color: #fff;
-  color: #9c7c00;
-}
-
-.secondaryBtn {
-  background: #fff;
-  border: 2px solid #f3c623;
-  color: #3a2f00;
-}
-
-.secondaryBtn:hover {
-  background: #9c7c00;
-  color: #fff;
-  border: 2px solid #f8f4bf;
+  .actionButtons {
+    justify-content: flex-end;
+  }
 }

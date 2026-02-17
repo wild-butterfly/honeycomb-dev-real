@@ -321,155 +321,157 @@ const JobPage: React.FC = () => {
           }}
         />
       )}
+
       <LeftSidebar />
 
-      <div className={styles.mainCard}>
-        {/* HEADER */}
-        <div className={styles.pageHeader}>
-          <h1>{job.title}</h1>
-        </div>
+      <div className={styles.main}>
+        <div className={styles.pageContainer}>
+          {/* HEADER */}
+          <div className={styles.pageHeader}>
+            <h1>{job.title}</h1>
+          </div>
 
-        {/* NOTES */}
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Job Phase Description</h2>
+          {/* NOTES */}
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Job Phase Description</h2>
 
-          <div
-            className={`${styles.detailBox} ${
-              isEditingNotes ? styles.editing : ""
-            }`}
-          >
-            {!isEditingNotes ? (
-              <div
-                className={styles.clickToEdit}
-                onClick={() => {
-                  setNotesDraft(job.notes || "");
-                  setIsEditingNotes(true);
-                }}
-              >
-                {job.notes || (
-                  <span style={{ opacity: 0.5 }}>Add job phase notes…</span>
-                )}
-              </div>
-            ) : (
-              <>
-                <textarea
-                  className={styles.textarea}
-                  value={notesDraft}
-                  onChange={(e) => setNotesDraft(e.target.value)}
-                  autoFocus
-                />
-
-                <div className={styles.editActionsInline}>
-                  <button
-                    className={styles.primaryBtn}
-                    disabled={savingNotes}
-                    onClick={handleSaveNotes}
-                  >
-                    Save
-                  </button>
-
-                  <button
-                    className={styles.secondaryBtn}
-                    onClick={() => setIsEditingNotes(false)}
-                  >
-                    Cancel
-                  </button>
+            <div
+              className={`${styles.detailBox} ${
+                isEditingNotes ? styles.editing : ""
+              }`}
+            >
+              {!isEditingNotes ? (
+                <div
+                  className={styles.clickToEdit}
+                  onClick={() => {
+                    setNotesDraft(job.notes || "");
+                    setIsEditingNotes(true);
+                  }}
+                >
+                  {job.notes || (
+                    <span style={{ opacity: 0.5 }}>Add job phase notes…</span>
+                  )}
                 </div>
+              ) : (
+                <>
+                  <textarea
+                    className={styles.textarea}
+                    value={notesDraft}
+                    onChange={(e) => setNotesDraft(e.target.value)}
+                    autoFocus
+                  />
+
+                  <div className={styles.editActionsInline}>
+                    <button
+                      className={styles.primaryBtn}
+                      disabled={savingNotes}
+                      onClick={handleSaveNotes}
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      className={styles.secondaryBtn}
+                      onClick={() => setIsEditingNotes(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* TABS */}
+          <div className={styles.hcTabs}>
+            <button
+              className={`${styles.hcTab} ${
+                activeTab === "scheduling" ? styles.hcTabActive : ""
+              }`}
+              onClick={() => setActiveTab("scheduling")}
+            >
+              Scheduling
+            </button>
+
+            <button
+              className={`${styles.hcTab} ${
+                activeTab === "labour" ? styles.hcTabActive : ""
+              }`}
+              onClick={() => setActiveTab("labour")}
+            >
+              Labour
+            </button>
+          </div>
+
+          {/* CONTENT */}
+          <div className={styles.sectionContent}>
+            {activeTab === "scheduling" && (
+              <>
+                <div className={styles.filterActionRow}>
+                  <AssigneeFilterBar
+                    employees={employees.map((e) => ({
+                      id: e.id,
+                      name: e.name,
+                    }))}
+                    selectedAssignee={selectedAssignee}
+                    onChange={setSelectedAssignee}
+                  />
+
+                  <div className={styles.actionButtons}>
+                    <button
+                      className={styles.assignBtn}
+                      disabled={selectedAssignee === "all"}
+                      onClick={handleAssignEmployee}
+                    >
+                      Assign
+                    </button>
+
+                    <button
+                      className={styles.scheduleBtn}
+                      disabled={selectedAssignee === "all"}
+                      onClick={handleScheduleEmployee}
+                    >
+                      Schedule
+                    </button>
+                  </div>
+                </div>
+
+                <JobAssignedEmployeesSection
+                  assignments={assignments}
+                  assignees={assignees}
+                  employees={employees}
+                  onSelectAssignment={(range) => {
+                    setActiveAssignment(range);
+                    setActiveTab("labour");
+                  }}
+                  onCompleteAssignments={handleCompleteAssignments}
+                  onReopenAssignments={handleReopenAssignments}
+                  onRequestDeleteAssignment={(id) =>
+                    setConfirmDeleteAssignment(id)
+                  }
+                  onRequestUnassignEmployee={(employeeId, name) =>
+                    setConfirmUnassign({ employeeId, name })
+                  }
+                />
               </>
             )}
-          </div>
-        </div>
 
-        {/* TABS */}
-        <div className={styles.hcTabs}>
-          <button
-            className={`${styles.hcTab} ${
-              activeTab === "scheduling" ? styles.hcTabActive : ""
-            }`}
-            onClick={() => setActiveTab("scheduling")}
-          >
-            Scheduling
-          </button>
-
-          <button
-            className={`${styles.hcTab} ${
-              activeTab === "labour" ? styles.hcTabActive : ""
-            }`}
-            onClick={() => setActiveTab("labour")}
-          >
-            Labour
-          </button>
-        </div>
-
-        {/* CONTENT OUTSIDE TABS */}
-        <div className={styles.sectionContent}>
-          {activeTab === "scheduling" && (
-            <>
-              <div className={styles.filterActionRow}>
-                <AssigneeFilterBar
-                  employees={employees.map((e) => ({
-                    id: e.id,
-                    name: e.name,
-                  }))}
-                  selectedAssignee={selectedAssignee}
-                  onChange={setSelectedAssignee}
-                />
-
-                <div className={styles.actionButtons}>
-                  <button
-                    className={styles.assignBtn}
-                    disabled={selectedAssignee === "all"}
-                    onClick={handleAssignEmployee}
-                  >
-                    Assign
-                  </button>
-
-                  <button
-                    className={styles.scheduleBtn}
-                    disabled={selectedAssignee === "all"}
-                    onClick={handleScheduleEmployee}
-                  >
-                    Schedule
-                  </button>
-                </div>
-              </div>
-
-              <JobAssignedEmployeesSection
-                assignments={assignments}
-                assignees={assignees}
-                employees={employees}
-                onSelectAssignment={(range) => {
-                  setActiveAssignment(range);
-                  setActiveTab("labour");
-                }}
-                onCompleteAssignments={handleCompleteAssignments}
-                onReopenAssignments={handleReopenAssignments}
-                onRequestDeleteAssignment={(id) =>
-                  setConfirmDeleteAssignment(id)
-                }
-                onRequestUnassignEmployee={(employeeId, name) =>
-                  setConfirmUnassign({ employeeId, name })
-                }
+            {activeTab === "labour" && activeAssignment && (
+              <LabourTimeEntrySection
+                jobId={Number(job.id)}
+                assignment={activeAssignment}
               />
-            </>
-          )}
+            )}
 
-          {activeTab === "labour" && activeAssignment && (
-            <LabourTimeEntrySection
-              jobId={Number(job.id)}
-              assignment={activeAssignment}
-            />
-          )}
-
-          {activeTab === "labour" && !activeAssignment && (
-            <div style={{ padding: 16, color: "#888" }}>
-              Select a scheduled time block first
-            </div>
-          )}
+            {activeTab === "labour" && !activeAssignment && (
+              <div style={{ padding: 16, color: "#888" }}>
+                Select a scheduled time block first
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 export default JobPage;

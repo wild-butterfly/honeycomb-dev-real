@@ -11,6 +11,7 @@ export const getAll = async (req: Request, res: Response) => {
     const result = await db.query(`
       SELECT
         j.*,
+        to_char(j.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at_iso,
 
         /* scheduled assignments (calendar) */
         COALESCE(
@@ -73,6 +74,7 @@ export const getOne = async (req: Request, res: Response) => {
       `
       SELECT
         j.*,
+        to_char(j.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS created_at_iso,
         COALESCE(
           json_agg(
             DISTINCT jsonb_build_object(
@@ -356,12 +358,7 @@ export const addLabour = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Employee required" });
     }
 
-    /*
-      RLS sayesinde:
-      - Job başka company ise SELECT 0 rows döner
-      - Employee başka company ise INSERT fail olur
-      - Assignment başka company ise SELECT 0 rows döner
-    */
+ 
 
     // 1️⃣ Job exists? (RLS filtered)
     const jobCheck = await db.query(
