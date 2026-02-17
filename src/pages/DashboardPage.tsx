@@ -51,8 +51,9 @@ type JobType = {
   jobType: "CHARGE UP" | "ESTIMATE";
   status: "Pending" | "Active" | "Complete";
   customer: string;
-  date: string; // dd/mm/yyyy
-  assignedEmployeeIds: number[]; // ✅ backend should provide
+  date: string;
+  assignedEmployeeIds: number[];
+  scheduledEmployeeIds?: number[];
 };
 
 /* ───────── Small UI bits ───────── */

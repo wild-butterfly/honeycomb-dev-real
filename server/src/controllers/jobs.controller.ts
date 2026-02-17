@@ -2,35 +2,64 @@
 import { Request, Response } from "express";
 
 /* ===============================
-   GET ALL JOBS + ASSIGNMENTS
+   GET ALL JOBS + ASSIGNMENTS + ASSIGNEES
 ================================ */
 export const getAll = async (req: Request, res: Response) => {
   const db = (req as any).db;
 
-  const result = await db.query(`
-    SELECT
-      j.*,
-      COALESCE(
-        json_agg(
-          json_build_object(
-            'id', a.id,
-            'employee_id', a.employee_id,
-            'start_time', to_char(a.start_time, 'YYYY-MM-DD HH24:MI:SS'),
-            'end_time',   to_char(a.end_time,   'YYYY-MM-DD HH24:MI:SS'),
-            'completed', a.completed
-          )
-        ) FILTER (WHERE a.id IS NOT NULL),
-        '[]'
-      ) AS assignments
-    FROM jobs j
-    LEFT JOIN assignments a ON a.job_id = j.id
-    GROUP BY j.id
-    ORDER BY j.created_at DESC
-  `);
+  try {
+    const result = await db.query(`
+      SELECT
+        j.*,
 
-  res.json(result.rows);
+        /* scheduled assignments (calendar) */
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', a.id,
+              'employee_id', a.employee_id,
+              'start_time', to_char(a.start_time, 'YYYY-MM-DD"T"HH24:MI:SS'),
+              'end_time',   to_char(a.end_time,   'YYYY-MM-DD"T"HH24:MI:SS'),
+              'completed', a.completed
+            )
+          ) FILTER (WHERE a.id IS NOT NULL),
+          '[]'::json
+        ) AS assignments,
+
+        /* scheduled employees (dashboard wants these) */
+        COALESCE(
+          array_agg(DISTINCT a.employee_id) FILTER (WHERE a.employee_id IS NOT NULL),
+          '{}'::int[]
+        ) AS "scheduledEmployeeIds",
+
+        /* watchers / manually assigned */
+        COALESCE(
+          array_agg(DISTINCT ja.employee_id) FILTER (WHERE ja.employee_id IS NOT NULL),
+          '{}'::int[]
+        ) AS "assignedEmployeeIds",
+
+        /* optional: full assignee objects (from job_assignees) */
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object('id', e.id, 'name', e.name)
+          ) FILTER (WHERE e.id IS NOT NULL),
+          '[]'::json
+        ) AS assignees
+
+      FROM jobs j
+      LEFT JOIN assignments a ON a.job_id = j.id
+      LEFT JOIN job_assignees ja ON ja.job_id = j.id
+      LEFT JOIN employees e ON e.id = ja.employee_id
+      GROUP BY j.id
+      ORDER BY j.created_at DESC
+    `);
+
+    return res.json(result.rows);
+  } catch (err) {
+    console.error("jobs.getAll error:", err);
+    return res.status(500).json({ error: "Failed to fetch jobs" });
+  }
 };
-
 /* ===============================
    GET ONE JOB
 ================================ */
@@ -175,34 +204,46 @@ export const update = async (req: Request, res: Response) => {
 
 
 /* ===============================
-   DELETE JOB
+   DELETE JOB  ✅ FIXED
 ================================ */
 export const remove = async (req: Request, res: Response) => {
+  const db = (req as any).db; // 🔐 request-scoped connection
+
   try {
-    const db = (req as any).db;   // 🔐 request-scoped connection
+    const jobId = Number(req.params.id);
 
-    const { id } = req.params;
+    if (!Number.isInteger(jobId)) {
+      return res.status(400).json({ error: "Invalid job id" });
+    }
 
-    await db.query(
-      `DELETE FROM assignments WHERE job_id = $1`,
-      [id]
-    );
+    // ✅ Transaction = no half-deletes
+    await db.query("BEGIN");
 
-    const result = await db.query(
-      `DELETE FROM jobs WHERE id = $1`,
-      [id]
-    );
+    // ✅ Delete dependent rows first (prevents FK errors + orphan rows)
+    await db.query(`DELETE FROM labour_entries WHERE job_id = $1`, [jobId]);
+    await db.query(`DELETE FROM job_assignees  WHERE job_id = $1`, [jobId]);
+    await db.query(`DELETE FROM assignments    WHERE job_id = $1`, [jobId]);
+
+    const result = await db.query(`DELETE FROM jobs WHERE id = $1`, [jobId]);
 
     if (!result.rowCount) {
+      await db.query("ROLLBACK");
       return res.status(404).json({ error: "Job not found" });
     }
 
+    await db.query("COMMIT");
+
     res.json({ success: true });
   } catch (err) {
+    try {
+      await (req as any).db.query("ROLLBACK");
+    } catch {}
+
     console.error("DELETE job error", err);
     res.status(500).json({ error: "Job delete failed" });
   }
 };
+
 
 /* ===============================
    UNASSIGN EMPLOYEE FROM JOB
@@ -528,9 +569,7 @@ export const deleteLabour = async (req: Request, res: Response) => {
   }
 };
 
-/* ===============================
-   GET JOB ACTIVITY
-================================ */
+
 /* ===============================
    GET JOB ACTIVITY ⭐ FINAL ENTERPRISE
 ================================ */
