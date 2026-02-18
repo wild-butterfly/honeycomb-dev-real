@@ -48,9 +48,9 @@ nav,
 
 /* ✅ Added: gives nicer spacing between navbar and charts */
 .chartsSection {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 12px;
+  padding: 0 20px;
 }
 
 /* ----------- CHARTS ROW ----------- */
@@ -59,7 +59,7 @@ nav,
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
   gap: 24px;
   margin: 0 auto 28px auto;
-  max-width: 1280px;
+  max-width: 1400px;
   align-items: stretch;
   padding-top: 30px;
 }
@@ -83,7 +83,7 @@ nav,
 
 /* ----------- ACTIONS ----------- */
 .actionsRow {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto 18px auto;
   display: flex;
   justify-content: flex-end;
@@ -125,7 +125,7 @@ nav,
 
 /* ----------- GRID ROWS ----------- */
 .bottomGrid {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   gap: 34px;
@@ -317,11 +317,14 @@ nav,
 
 /* ----------- SIDE COLUMN: QUICK ACTIONS & TASKS ----------- */
 .sideColumn {
-  flex: 1;
+  flex: 0 0 300px;
   display: flex;
   flex-direction: column;
   gap: 22px;
-  min-width: 220px;
+
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
 }
 
 /* Quick Actions Card */
@@ -485,7 +488,8 @@ nav,
   background: #fffde4;
   border: 1.5px solid #ffe066;
   border-radius: 13px;
-  padding: 13px 15px 11px 15px;
+
+  padding: 20px 16px 16px 16px;
   margin-bottom: 14px;
   box-shadow: 0 2px 10px #ffd60015;
   font-size: 1.01rem;
@@ -496,8 +500,9 @@ nav,
   flex-direction: column;
   gap: 6px;
   animation: taskIn 0.23s cubic-bezier(0.41, 1.49, 0.41, 1.01) backwards;
-  min-width: 165px;
-  max-width: 240px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 .taskCardLi:last-child {
   margin-bottom: 0;
@@ -1587,11 +1592,11 @@ nav,
 }
 
 .jobsTableModern {
+  min-width: 860px;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.98rem;
-  min-width: 860px;
   table-layout: fixed;
 }
 
@@ -1616,6 +1621,43 @@ nav,
   border-bottom: 1px solid rgba(244, 238, 198, 0.9);
   color: #232323;
   background: rgba(255, 255, 255, 0.55);
+}
+
+/* Control exact column widths */
+/* Job Type */
+.jobsTableModern th:nth-child(1),
+.jobsTableModern td:nth-child(1) {
+  width: 14%;
+}
+
+/* Status */
+.jobsTableModern th:nth-child(2),
+.jobsTableModern td:nth-child(2) {
+  width: 13%;
+}
+
+/* Job Number */
+.jobsTableModern th:nth-child(3),
+.jobsTableModern td:nth-child(3) {
+  width: 16%;
+}
+
+/* Customer */
+.jobsTableModern th:nth-child(4),
+.jobsTableModern td:nth-child(4) {
+  width: 32%;
+}
+
+/* Date */
+.jobsTableModern th:nth-child(5),
+.jobsTableModern td:nth-child(5) {
+  width: 13%;
+}
+
+/* Assigned */
+.jobsTableModern th:nth-child(6),
+.jobsTableModern td:nth-child(6) {
+  width: 12%;
 }
 
 .jobRow {
@@ -1653,10 +1695,6 @@ nav,
   border-radius: 10px;
 }
 
-.jobLinkCell:hover .jobTitle {
-  text-decoration: underline;
-}
-
 .jobTitle {
   font-weight: 800;
   color: #1f1f1f;
@@ -1666,7 +1704,27 @@ nav,
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  max-width: 360px;
+  max-width: 300px;
+
+  position: relative;
+}
+
+.jobLinkCell:hover .jobTitle {
+  color: #b99a2a;
+}
+.jobTitle::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background: linear-gradient(90deg, #ffd600, #f2b705);
+  transition: width 0.18s ease;
+}
+
+.jobLinkCell:hover .jobTitle::after {
+  width: 100%;
 }
 
 .jobSubtle {
@@ -1685,7 +1743,7 @@ nav,
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 260px;
+  max-width: 420px;
 }
 
 .dateCell {

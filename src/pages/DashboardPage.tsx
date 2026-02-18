@@ -915,12 +915,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                               title="Open job"
                             >
                               <div className={styles.jobMainCell}>
-                                <div className={styles.jobTitle}>
-                                  {job.title}
-                                </div>
-                                <div className={styles.jobSubtle}>
-                                  #{job.id}
-                                </div>
+                                {(() => {
+                                  const firstSpace = job.title.indexOf(" ");
+
+                                  const jobNumber =
+                                    firstSpace === -1
+                                      ? job.title
+                                      : job.title.substring(0, firstSpace);
+
+                                  const jobName =
+                                    firstSpace === -1
+                                      ? ""
+                                      : job.title.substring(firstSpace + 1);
+
+                                  return (
+                                    <div>
+                                      <div className={styles.jobTitle}>
+                                        {jobNumber}
+                                      </div>
+
+                                      {jobName && (
+                                        <div className={styles.jobSubtle}>
+                                          {jobName}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </button>
                           </td>
