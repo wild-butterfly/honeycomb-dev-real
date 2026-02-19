@@ -28,9 +28,12 @@ export const create = async (req: Request, res: Response) => {
   try {
     const { description, assigned, due } = req.body;
 
-    if (!description) {
-      return res.status(400).json({ error: "Description required" });
-    }
+    const cleanAssigned = Array.isArray(assigned)
+  ? assigned
+      .filter((id) => id !== "" && id !== null && id !== undefined)
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id))
+  : [];
 
     const result = await db.query(
       `
@@ -41,13 +44,19 @@ export const create = async (req: Request, res: Response) => {
        current_setting('app.current_company_id')::int)
       RETURNING *
       `,
-      [description, assigned ?? [], due ?? null]
+      [
+        description,
+        cleanAssigned,
+        due || null
+      ]
     );
 
     res.status(201).json(result.rows[0]);
+
   } catch (err) {
-    console.error("tasks.create", err);
+    console.error("tasks.create error:", err);
     res.status(500).json({ error: "Task create failed" });
+    
   }
 };
 
