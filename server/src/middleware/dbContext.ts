@@ -26,22 +26,29 @@ export const withDbContext = async (
        SUPERADMIN (IMPERSONATION SUPPORT)
     ===================================================== */
 
-    if (role === "superadmin") {
+if (role === "superadmin") {
 
-      // if header provided → impersonate
-      const companyToUse = headerCompanyId || "0";
+  await client.query(
+    `SELECT set_config('app.current_role', $1, true)`,
+    [role]
+  );
 
-      await client.query(
-        `SELECT set_config('app.current_role', $1, true)`,
-        [role]
-      );
+  if (headerCompanyId && headerCompanyId !== "") {
 
-      await client.query(
-        `SELECT set_config('app.current_company_id', $1, true)`,
-        [String(companyToUse)]
-      );
+    await client.query(
+      `SELECT set_config('app.current_company_id', $1, true)`,
+      [headerCompanyId]
+    );
 
-    }
+  } else {
+
+    await client.query(
+      `RESET app.current_company_id`
+    );
+
+  }
+
+}
 
     /* =====================================================
        NORMAL USERS

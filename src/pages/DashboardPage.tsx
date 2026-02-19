@@ -481,7 +481,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         className={`${styles.taskCardLi} ${isCompleted ? styles.completed : ""}`}
       >
         <div className={styles.taskTitleRow}>
-          <BeeIcon />
           <span>{task.description}</span>
 
           {showButtons && !isCompleted && (
