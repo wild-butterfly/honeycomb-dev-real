@@ -1,5 +1,5 @@
 // src/services/api.ts
-// Honeycomb API Service (Impersonation enabled)
+// Honeycomb API Service (FULLY FIXED)
 
 const API_BASE =
   process.env.REACT_APP_API_BASE || "http://localhost:3001/api";
@@ -15,43 +15,65 @@ async function request<T = any>(
 
   const token = localStorage.getItem("token");
 
-  // 🔥 NEW: superadmin company switch
-  const impersonateCompany = localStorage.getItem("impersonateCompany");
+  // ✅ correct key (FIXED)
+const impersonateCompanyRaw =
+  localStorage.getItem("impersonateCompany");
+
+const impersonateCompany =
+  impersonateCompanyRaw &&
+  impersonateCompanyRaw !== ""
+    ? impersonateCompanyRaw
+    : null;
 
   const url = `${API_BASE}${path}`;
 
   try {
+
     const res = await fetch(url, {
+
+      ...options,
+
       headers: {
+
         "Content-Type": "application/json",
 
-        // auth
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        // ✅ AUTH TOKEN
+        ...(token
+          ? { Authorization: `Bearer ${token}` }
+          : {}),
 
-        // 🔥 NEW — company override header
+        // ✅ COMPANY IMPERSONATION
         ...(impersonateCompany
           ? { "X-Company-Id": impersonateCompany }
           : {}),
 
         ...(options?.headers || {}),
+
       },
 
-      ...options,
     });
 
-    /* ================= HTTP ERROR ================= */
+    /* ================= HANDLE HTTP ERROR ================= */
 
     if (!res.ok) {
+
       let body: any = null;
 
       try {
+
         const text = await res.text();
-        body = text ? JSON.parse(text) : text;
+
+        body = text
+          ? JSON.parse(text)
+          : text;
+
       } catch {
+
         body = null;
+
       }
 
-      console.error("API error", {
+      console.error("API ERROR:", {
         url,
         status: res.status,
         body,
@@ -65,42 +87,42 @@ async function request<T = any>(
             body,
           },
           null,
-          2,
-        ),
+          2
+        )
       );
+
     }
 
-    /* ================= SAFE BODY PARSE ================= */
+    /* ================= SAFE RESPONSE PARSE ================= */
 
     const text = await res.text();
 
-    if (!text) return null;
+    if (!text)
+      return null;
 
     try {
+
       return JSON.parse(text) as T;
+
     } catch {
+
       return text as unknown as T;
+
     }
 
-  } catch (error: any) {
-
-    console.error("Network error:", error);
-
-    throw new Error(
-      JSON.stringify(
-        {
-          url,
-          message: "Server unreachable",
-        },
-        null,
-        2,
-      ),
-    );
   }
+  catch (error: any) {
+
+    console.error("NETWORK ERROR:", error);
+
+    throw error;
+
+  }
+
 }
 
 /* =========================================================
-   PUBLIC HELPERS
+   API HELPERS
 ========================================================= */
 
 export const apiGet = <T>(path: string) =>
@@ -124,30 +146,44 @@ export const apiDelete = (path: string) =>
   });
 
 /* =========================================================
-   IMPERSONATION HELPERS
+   IMPERSONATION
 ========================================================= */
 
-// 🔥 NEW helpers for easy switching
-
 export const setImpersonationCompany = (companyId: number | null) => {
-  if (companyId === null) {
+
+  if (!companyId)
     localStorage.removeItem("impersonateCompany");
-  } else {
-    localStorage.setItem("impersonateCompany", String(companyId));
-  }
+
+  else
+    localStorage.setItem(
+      "impersonateCompany",
+      String(companyId)
+    );
 
   window.location.reload();
+
 };
 
-export const getImpersonationCompany = () =>
-  localStorage.getItem("impersonateCompany");
+
+export const getImpersonationCompany =
+  () =>
+    localStorage.getItem(
+      "impersonateCompany"
+    );
 
 /* =========================================================
-   LOGOUT
+   AUTH HELPERS
 ========================================================= */
 
 export const logout = () => {
+
   localStorage.removeItem("token");
-  localStorage.removeItem("impersonateCompany"); // 🔥 clear switch
-  window.location.href = "/login";
+
+  localStorage.removeItem(
+    "impersonateCompany"
+  );
+
+  window.location.href =
+    "/login";
+
 };

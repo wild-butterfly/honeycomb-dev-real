@@ -4,7 +4,7 @@
 
 import { Router } from "express";
 import * as controller from "../controllers/tasksController";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/authMiddleware";
 import { withDbContext } from "../middleware/dbContext";
 
 const router = Router();

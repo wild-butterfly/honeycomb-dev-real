@@ -9,7 +9,7 @@ import {
 } from "../controllers/assignments.controller";
 
 import { withDbContext } from "../middleware/dbContext";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/authMiddleware";
 
 const router = Router();
 

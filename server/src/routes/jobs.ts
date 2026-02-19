@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as controller from "../controllers/jobs.controller";
 import { withDbContext } from "../middleware/dbContext";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/authMiddleware";
 
 
 

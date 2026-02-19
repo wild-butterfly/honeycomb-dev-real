@@ -22,42 +22,76 @@ export const getAll = async (req: Request, res: Response) => {
 };
 
 /* ================= CREATE ================= */
-export const create = async (req: Request, res: Response) => {
-  const db = (req as any).db;
+export const create = async (req: any, res: Response) => {
+
+  const db = req.db;
 
   try {
+
     const { description, assigned, due } = req.body;
 
+    const company_id =
+  req.headers["x-company-id"]
+  ||
+  req.user?.company_id
+  ||
+  null;
+
+
+const role =
+  req.user?.role;
+
+
+if (
+  role !== "superadmin"
+  &&
+  !company_id
+)
+{
+  return res.status(400).json({
+    error: "Invalid company_id"
+  });
+}
+
     const cleanAssigned = Array.isArray(assigned)
-  ? assigned
-      .filter((id) => id !== "" && id !== null && id !== undefined)
-      .map((id) => Number(id))
-      .filter((id) => Number.isInteger(id))
-  : [];
+      ? assigned
+          .filter((id) => id !== "" && id !== null && id !== undefined)
+          .map((id) => Number(id))
+          .filter((id) => Number.isInteger(id))
+      : [];
+
+
 
     const result = await db.query(
       `
       INSERT INTO tasks
       (description, assigned, due, status, company_id)
       VALUES
-      ($1, $2, $3, 'pending',
-       current_setting('app.current_company_id')::int)
+      ($1, $2, $3, 'pending', $4)
       RETURNING *
       `,
       [
         description,
         cleanAssigned,
-        due || null
+        due || null,
+        company_id
       ]
     );
 
+
     res.status(201).json(result.rows[0]);
 
-  } catch (err) {
-    console.error("tasks.create error:", err);
-    res.status(500).json({ error: "Task create failed" });
-    
   }
+  catch (err) {
+
+    console.error("tasks.create error:", err);
+
+    res.status(500).json({
+      error: "Task create failed"
+    });
+
+  }
+
 };
 
 /* ================= COMPLETE ================= */

@@ -74,42 +74,48 @@ const generateLabourForAssignment = async (db: any, assignmentId: number) => {
   const total = workedHours * rate;
 
   await db.query(
-    `
-    INSERT INTO labour_entries
-    (
-      job_id,
-      assignment_id,
-      employee_id,
-      start_time,
-      end_time,
-      worked_hours,
-      uncharged_hours,
-      chargeable_hours,
-      rate,
-      total,
-      notes,
-      source,
-      company_id
-    )
-    VALUES
-    (
-      $1,$2,$3,$4,$5,$6,0,$6,$7,$8,
-      'Auto-generated from completed assignment',
-        'auto',
-      current_setting('app.current_company_id')::int
-    )
-    `,
-    [
-      a.job_id,
-      a.id,
-      a.employee_id,
-      a.start_time,
-      a.end_time,
-      workedHours,
-      rate,
-      total,
-    ]
-  );
+`
+INSERT INTO labour_entries
+(
+ job_id,
+ assignment_id,
+ employee_id,
+ start_time,
+ end_time,
+ worked_hours,
+ uncharged_hours,
+ chargeable_hours,
+ rate,
+ total,
+ notes,
+ source,
+ company_id
+)
+SELECT
+ a.job_id,
+ a.id,
+ a.employee_id,
+ a.start_time,
+ a.end_time,
+ $2,
+ 0,
+ $2,
+ $3,
+ $4,
+ 'Auto-generated from completed assignment',
+ 'auto',
+ j.company_id
+FROM assignments a
+JOIN jobs j ON j.id = a.job_id
+WHERE a.id = $1
+`,
+[
+ assignmentId,
+ workedHours,
+ rate,
+ total
+]
+);
 };
 
 
@@ -174,39 +180,68 @@ export const getAllAssignments = async (req: Request, res: Response) => {
    CREATE ASSIGNMENT
 ================================ */
 export const createAssignment = async (req: Request, res: Response) => {
+
   const db = (req as any).db;
 
   try {
-    const { job_id, employee_id, start_time, end_time } = req.body;
 
-    if (
-      !Number.isInteger(Number(job_id)) ||
-      !Number.isInteger(Number(employee_id)) ||
-      !start_time ||
-      !end_time
-    ) {
-      return res.status(400).json({ error: "Invalid assignment payload" });
-    }
+    const {
+      job_id,
+      employee_id,
+      start_time,
+      end_time
+    } = req.body;
+
+    console.log("CREATE ASSIGNMENT:", req.body);
 
     const result = await db.query(
-      `
-      INSERT INTO assignments
-      (job_id, employee_id, start_time, end_time, company_id)
-      VALUES
-      ($1, $2, $3, $4, current_setting('app.current_company_id')::int)
-      RETURNING *
-      `,
-      [job_id, employee_id, start_time, end_time]
-    );
+
+`
+INSERT INTO assignments
+(
+  job_id,
+  employee_id,
+  start_time,
+  end_time,
+  company_id
+)
+SELECT
+  $1,
+  $2,
+  $3::timestamp,
+  $4::timestamp,
+  company_id
+FROM jobs
+WHERE id = $1
+RETURNING *
+`,
+
+[
+ job_id,
+ employee_id,
+ start_time,
+ end_time
+]
+
+);
 
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("assignments.create", err);
-    res.status(500).json({ error: "Assignment create failed" });
+
   }
+  catch (err: any) {
+
+    console.error(
+      "ASSIGNMENT CREATE ERROR FULL:",
+      err
+    );
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
 };
-
-
 /* ===============================
    UPDATE ASSIGNMENT
 ================================ */

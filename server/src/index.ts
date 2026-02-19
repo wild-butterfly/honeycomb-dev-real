@@ -1,9 +1,10 @@
-// server/src/index.ts
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { pool } from "./db";
+
+import { requireAuth } from "./middleware/authMiddleware";
+import { withDbContext } from "./middleware/dbContext";
 
 /* ROUTES */
 import meRoutes from "./routes/me";
@@ -18,64 +19,52 @@ dotenv.config();
 
 const app = express();
 
-/* =========================================================
-   GLOBAL MIDDLEWARE
-========================================================= */
+/* GLOBAL */
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "*",
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  credentials: true,
+}));
 
 app.use(express.json());
 
-/* =========================================================
-   HEALTH CHECK
-========================================================= */
+/* HEALTH */
 
 app.get("/", (_req, res) => {
   res.send("Honeycomb API running 🚀");
 });
 
-/* =========================================================
-   PUBLIC ROUTES (NO AUTH)
-========================================================= */
-
+/* PUBLIC */
 app.use("/api/auth", authRoutes);
 
-/* =========================================================
-   PROTECTED ROUTES
-========================================================= */
+/* PROTECTED ROUTES */
 
-app.use("/api/me", meRoutes);
-app.use("/api/employees", employeeRoutes);
-app.use("/api/companies", companyRoutes);
-app.use("/api/jobs", jobRoutes);
-app.use("/api/assignments", assignmentRoutes);
-app.use("/api/tasks", tasksRoutes);
+app.use("/api/me", requireAuth, withDbContext, meRoutes);
 
-/* =========================================================
-   404 FALLBACK
-========================================================= */
+app.use("/api/employees", requireAuth, withDbContext, employeeRoutes);
+
+app.use("/api/companies", requireAuth, withDbContext, companyRoutes);
+
+app.use("/api/jobs", requireAuth, withDbContext, jobRoutes);
+
+app.use("/api/assignments", requireAuth, withDbContext, assignmentRoutes);
+
+app.use("/api/tasks", requireAuth, withDbContext, tasksRoutes);
+
+/* 404 */
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-/* =========================================================
-   GLOBAL ERROR HANDLER
-========================================================= */
+/* ERROR */
 
 app.use((err: any, _req: any, res: any, _next: any) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
-/* =========================================================
-   SERVER START
-========================================================= */
+/* START */
 
 const PORT = Number(process.env.PORT || 3001);
 
@@ -83,15 +72,12 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Honeycomb API running on http://localhost:${PORT}`);
 });
 
-/* =========================================================
-   GRACEFUL SHUTDOWN
-========================================================= */
+/* SHUTDOWN */
 
 process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
   await pool.end();
   server.close(() => {
-    console.log("Server closed.");
     process.exit(0);
   });
 });

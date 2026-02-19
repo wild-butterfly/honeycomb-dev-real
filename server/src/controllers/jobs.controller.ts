@@ -117,31 +117,104 @@ export const getOne = async (req: Request, res: Response) => {
   }
 };
 
+
+
 /* ===============================
    CREATE JOB
+   ✅ FINAL ENTERPRISE SAFE VERSION
 ================================ */
-export const create = async (req: Request, res: Response) => {
+
+export const create = async (
+  req: Request,
+  res: Response
+) => {
+
   const db = (req as any).db;
 
   try {
+
     const { title, status = "active" } = req.body;
 
-    const result = await db.query(
-      `
-      INSERT INTO jobs (title, status, company_id)
-      VALUES ($1, $2, current_setting('app.current_company_id')::int)
-      RETURNING *
-      `,
-      [title, status]
+    if (!title)
+      return res.status(400)
+        .json({
+          error: "Title required"
+        });
+
+
+    /* ===================================================
+       GET COMPANY FROM DB CONTEXT
+    =================================================== */
+
+    const ctx =
+      await db.query(`
+        SELECT
+          current_setting(
+            'app.current_company_id',
+            true
+          ) AS company_id
+      `);
+
+
+    const companyId =
+      ctx.rows[0]?.company_id;
+
+
+    if (!companyId)
+      return res.status(400)
+        .json({
+          error:
+            "No company selected"
+        });
+
+
+    /* ===================================================
+       INSERT
+    =================================================== */
+
+    const result =
+      await db.query(
+        `
+        INSERT INTO jobs
+        (
+          title,
+          status,
+          company_id
+        )
+        VALUES
+        (
+          $1,
+          $2,
+          $3
+        )
+        RETURNING *
+        `,
+        [
+          title,
+          status,
+          companyId
+        ]
+      );
+
+
+    res.json(
+      result.rows[0]
     );
 
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("CREATE job error", err);
-    res.status(500).json({ error: "Job create failed" });
   }
-};
+  catch (err)
+  {
 
+    console.error(err);
+
+    res.status(500)
+      .json({
+        error: "Create failed"
+      });
+
+  }
+
+};
 /* ===============================
    UPDATE JOB
 ================================ */

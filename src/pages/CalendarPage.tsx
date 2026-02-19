@@ -22,6 +22,7 @@ import type {
 
 import { fetchEmployees } from "../services/employees";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
+import { useCompany } from "../context/CompanyContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
 /* =========================================================
@@ -68,7 +69,8 @@ const CalendarPage: React.FC = () => {
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [jobs, setJobs] = useState<CalendarJob[]>([]);
-  const [companyId, setCompanyId] = useState<number | null>(null);
+
+  const { companyId, loading } = useCompany();
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [rangeMode, setRangeMode] = useState<"day" | "week" | "month">("day");
@@ -81,7 +83,7 @@ const CalendarPage: React.FC = () => {
     assignmentId: number | null;
   } | null>(null);
   const location = useLocation();
-  const navigate = useNavigate();
+
   const cloneContext = useMemo(() => {
     const params = new URLSearchParams(location.search);
 
@@ -92,14 +94,6 @@ const CalendarPage: React.FC = () => {
 
     return { jobId };
   }, [location.search]);
-
-  /* ================= LOAD COMPANY ================= */
-
-  useEffect(() => {
-    apiGet<{ company_id: number }>("/me").then((me) => {
-      if (me?.company_id) setCompanyId(me.company_id);
-    });
-  }, []);
 
   /* ================= DATE NAV ================= */
 
@@ -186,8 +180,10 @@ const CalendarPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!companyId) return;
+
     loadAll();
-  }, [loadAll]);
+  }, [companyId, loadAll]);
 
   /* ================= MOVE ASSIGNMENT ================= */
 
@@ -208,44 +204,80 @@ const CalendarPage: React.FC = () => {
   /* ================= ADD JOB + ASSIGNMENT ================= */
 
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
-    if (!companyId) return;
+    try {
+      setOpenContext(null);
 
-    setOpenContext(null);
+      /* -------------------------------------------------- */
+      /* CREATE JOB — company_id gönderme
+       backend header'dan alacak
+    -------------------------------------------------- */
 
-    const job = await apiPost<CreateJobResponse>("/jobs", {
-      title: "New Job",
-      status: "active",
-      company_id: companyId,
-    });
+      const payload = {
+        title: "New Job",
+        status: "active",
+        // ❌ REMOVE company_id
+      };
 
-    if (!job?.id) return;
+      console.log("Creating job (company via header)");
 
-    await apiPost("/assignments", {
-      job_id: job.id,
-      employee_id: employeeId,
-      start_time: toLocalSqlTime(start),
-      end_time: toLocalSqlTime(end),
-    });
+      const job = await apiPost<CreateJobResponse>("/jobs", payload);
 
-    await loadAll();
-    setOpenContext({ jobId: job.id, assignmentId: null });
+      if (!job?.id) return;
+
+      /* -------------------------------------------------- */
+      /* CREATE ASSIGNMENT
+    -------------------------------------------------- */
+
+      await apiPost("/assignments", {
+        job_id: job.id,
+        employee_id: employeeId,
+        start_time: toLocalSqlTime(start),
+        end_time: toLocalSqlTime(end),
+      });
+
+      await loadAll();
+
+      setOpenContext({
+        jobId: job.id,
+        assignmentId: null,
+      });
+    } catch (err) {
+      console.error(err);
+
+      alert("No company selected.\n\nPlease select a company first.");
+    }
   };
+
+  /* ================= CLONE ASSIGNMENT ================= */
 
   const handleCloneAssignmentAt = async (
     employeeId: number,
     start: Date,
     end: Date,
   ) => {
-    if (!cloneContext) return;
+    if (!cloneContext) {
+      console.error("Clone context missing");
 
-    await apiPost("/assignments", {
-      job_id: cloneContext.jobId,
-      employee_id: employeeId,
-      start_time: toLocalSqlTime(start),
-      end_time: toLocalSqlTime(end),
-    });
+      return;
+    }
 
-    await loadAll();
+    try {
+      await apiPost("/assignments", {
+        job_id: cloneContext.jobId,
+
+        employee_id: employeeId,
+
+        start_time: toLocalSqlTime(start),
+
+        end_time: toLocalSqlTime(end),
+      });
+
+      console.log("✅ Assignment cloned");
+
+      await loadAll();
+    } catch (err) {
+      console.error("❌ Clone Assignment failed:", err);
+    }
   };
   /* ================= FILTER ================= */
 

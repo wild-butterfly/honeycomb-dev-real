@@ -19,6 +19,7 @@ import HelpPage from "./pages/HelpPage";
 import JobSummaryPage from "./pages/JobSummaryPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
+import { CompanyProvider } from "./context/CompanyContext";
 
 /* ======================================================
    TYPES
@@ -121,7 +122,10 @@ const App: React.FC = () => {
 
 const RootApp: React.FC = () => (
   <BrowserRouter>
-    <App />
+    {/* ✅ CRITICAL FIX — GLOBAL COMPANY CONTEXT */}
+    <CompanyProvider>
+      <App />
+    </CompanyProvider>
   </BrowserRouter>
 );
 

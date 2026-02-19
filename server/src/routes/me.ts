@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { withDbContext } from "../middleware/dbContext";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth } from "../middleware/authMiddleware";
 
 const router = Router();
 

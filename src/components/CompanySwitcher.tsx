@@ -1,42 +1,38 @@
-import { useEffect, useState } from "react";
-import { setImpersonationCompany } from "../services/api";
 import styles from "./CompanySwitcher.module.css";
 
+import { useCompany } from "../context/CompanyContext";
+
 export default function CompanySwitcher() {
-  const [user, setUser] = useState<any>(null);
-  const [selected, setSelected] = useState("");
+  const {
+    companyId,
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    setCompanyId,
 
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    setUser(payload);
-  }, []);
+    companies,
+  } = useCompany();
 
-  useEffect(() => {
-    const saved = localStorage.getItem("impersonationCompany");
-    if (saved) setSelected(saved);
-  }, []);
+  const handleSwitch = (val: string) => {
+    const id = val === "" ? null : Number(val);
 
-  if (!user || user.role !== "superadmin") return null;
+    setCompanyId(id);
+
+    if (id === null) localStorage.removeItem("impersonateCompany");
+    else localStorage.setItem("impersonateCompany", String(id));
+  };
 
   return (
     <div className={styles.wrapper}>
       <select
-        className={styles.select}
-        value={selected}
-        onChange={(e) => {
-          const val = e.target.value;
-
-          setSelected(val);
-          localStorage.setItem("impersonationCompany", val);
-
-          setImpersonationCompany(val ? Number(val) : null);
-        }}
+        value={companyId ?? ""}
+        onChange={(e) => handleSwitch(e.target.value)}
       >
         <option value="">🌍 God Mode</option>
-        <option value="1">A1</option>
+
+        {companies.map((c: any) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
       </select>
     </div>
   );

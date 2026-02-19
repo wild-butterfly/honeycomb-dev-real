@@ -6,7 +6,7 @@ import {
 } from "../controllers/labourController";
 
 import { withDbContext } from "../middleware/dbContext";
-import { requireAuth, requireRole } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/authMiddleware";
 
 const router = Router();
 
