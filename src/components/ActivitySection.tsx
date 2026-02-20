@@ -17,13 +17,24 @@ interface Props {
 const ActivitySection: React.FC<Props> = ({ jobId }) => {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  const pageSize = 5;
 
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await apiGet<ActivityItem[]>(`/jobs/${jobId}/activity`);
+        setLoading(true);
+        const limit = pageSize + 1;
+        const offset = page * pageSize;
+        const data = await apiGet<ActivityItem[]>(
+          `/jobs/${jobId}/activity?limit=${limit}&offset=${offset}`,
+        );
 
-        setActivity(data || []);
+        const items = data || [];
+        setHasMore(items.length > pageSize);
+        setActivity(items.slice(0, pageSize));
       } catch (err) {
         console.error("Activity load failed", err);
       } finally {
@@ -32,7 +43,7 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
     };
 
     load();
-  }, [jobId]);
+  }, [jobId, page]);
 
   const formatTime = (date: string) => {
     const d = new Date(date);
@@ -86,6 +97,28 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className={styles.pagination}>
+        <button
+          className={styles.pageButton}
+          type="button"
+          onClick={() => setPage((p) => Math.max(p - 1, 0))}
+          disabled={page === 0}
+        >
+          Previous
+        </button>
+
+        <span className={styles.pageInfo}>Page {page + 1}</span>
+
+        <button
+          className={styles.pageButton}
+          type="button"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={!hasMore}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

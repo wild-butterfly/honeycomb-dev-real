@@ -12,6 +12,7 @@ import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import ConfirmModal from "../components/ConfirmModal";
 
 import styles from "./DashboardPage.module.css";
+import taskStyles from "./DashboardTasksCard.module.css";
 import {
   Briefcase,
   UserPlus,
@@ -64,7 +65,7 @@ type JobType = {
 /* ───────── Small UI bits ───────── */
 
 const BeeIcon: React.FC = () => (
-  <span className={styles.beeIcon} role="img" aria-label="bee">
+  <span className={taskStyles.beeIcon} role="img" aria-label="bee">
     🐝
   </span>
 );
@@ -482,14 +483,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     return (
       <div
         key={task.id}
-        className={`${styles.taskCardLi} ${isCompleted ? styles.completed : ""}`}
+        className={`${taskStyles.taskCardLi} ${
+          isCompleted ? taskStyles.completed : ""
+        }`}
       >
-        <div className={styles.taskTitleRow}>
+        <div className={taskStyles.taskTitleRow}>
           <span>{task.description}</span>
 
           {showButtons && !isCompleted && (
             <button
-              className={styles.toggleBtn}
+              className={taskStyles.toggleBtn}
               onClick={handleToggle}
               type="button"
             >
@@ -498,27 +501,27 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           )}
         </div>
 
-        <div className={styles.taskDetailRow}>
-          <span className={styles.taskLabel}>Assigned:</span>
+        <div className={taskStyles.taskDetailRow}>
+          <span className={taskStyles.taskLabel}>Assigned:</span>
           <span>{assignedNames}</span>
         </div>
 
-        <div className={styles.taskDetailRow}>
-          <span className={styles.taskLabel}>Due:</span>
+        <div className={taskStyles.taskDetailRow}>
+          <span className={taskStyles.taskLabel}>Due:</span>
           <span>{formatTaskDue(task.due)}</span>
         </div>
 
         {showButtons && !isCompleted && open && (
-          <div className={styles.taskBtnRow}>
+          <div className={taskStyles.taskBtnRow}>
             <button
-              className={styles.taskDoneBtn}
+              className={taskStyles.taskDoneBtn}
               onClick={() => handleCompleteTask(task.id)}
               type="button"
             >
               ✓
             </button>
             <button
-              className={styles.taskDeleteBtn}
+              className={taskStyles.taskDeleteBtn}
               onClick={() => handleDeleteTask(Number(task.id))}
               type="button"
             >
@@ -1009,9 +1012,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </button>
             </div>
 
-            <div className={styles.tasksCard}>
-              <div className={styles.tasksHeaderRow}>
-                <h4 className={styles.tasksTitle}>Tasks</h4>
+            <div className={taskStyles.tasksCard}>
+              <div className={taskStyles.tasksHeaderRow}>
+                <h4 className={taskStyles.tasksTitle}>Tasks</h4>
               </div>
 
               <TaskAssigneeFilterBar
@@ -1021,24 +1024,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               />
 
               <button
-                className={styles.addTaskBtn}
+                className={taskStyles.addTaskBtn}
                 type="button"
                 onClick={() => setShowAddTask(true)}
               >
                 + Add Task
               </button>
 
-              <div className={styles.tasksList}>
+              <div className={taskStyles.tasksList}>
                 {visibleOpenTasksForSmallCard.length === 0 ? (
-                  <div className={styles.emptyState}>
+                  <div className={taskStyles.emptyState}>
                     <BeeIcon />
-                    <div className={styles.emptyTitle}>There are no tasks</div>
-                    <div className={styles.emptyText}>
+                    <div className={taskStyles.emptyTitle}>
+                      There are no tasks
+                    </div>
+                    <div className={taskStyles.emptyText}>
                       Add more tasks to be on top of your work every day.
                     </div>
                   </div>
                 ) : (
-                  <div className={styles.taskListUl}>
+                  <div className={taskStyles.taskListUl}>
                     {visibleOpenTasksForSmallCard.map((task) =>
                       renderTaskCard(task, true),
                     )}
@@ -1047,7 +1052,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <button
-                className={styles.viewAllBtn}
+                className={taskStyles.viewAllBtn}
                 type="button"
                 onClick={() => setShowTaskPanel(true)}
               >
@@ -1066,12 +1071,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         )}
 
         {showTaskPanel && (
-          <div className={styles.taskPanelOverlay}>
-            <div className={styles.taskPanel} role="dialog" aria-modal="true">
-              <div className={styles.taskPanelHeader}>
-                <span className={styles.tasksTitle}>Tasks</span>
+          <div className={taskStyles.taskPanelOverlay}>
+            <div
+              className={taskStyles.taskPanel}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className={taskStyles.taskPanelHeader}>
+                <span className={taskStyles.tasksTitle}>Tasks</span>
                 <button
-                  className={styles.closeBtn}
+                  className={taskStyles.closeBtn}
                   type="button"
                   onClick={() => setShowTaskPanel(false)}
                   aria-label="Close task panel"
@@ -1088,12 +1097,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 />
               </div>
 
-              <div className={styles.taskPanelFilterRow}>
+              <div className={taskStyles.taskPanelFilterRow}>
                 <button
                   className={
                     showCompleted
-                      ? styles.showCompletedBtnActive
-                      : styles.showCompletedBtn
+                      ? taskStyles.showCompletedBtnActive
+                      : taskStyles.showCompletedBtn
                   }
                   type="button"
                   onClick={() => setShowCompleted((sc) => !sc)}
@@ -1103,25 +1112,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               {showCompleted && completedTasks.length > 0 && (
-                <div className={styles.completedActionsRow}>
+                <div className={taskStyles.completedActionsRow}>
                   <button
-                    className={styles.cleanCompletedBtn}
+                    className={taskStyles.cleanCompletedBtn}
                     type="button"
                     onClick={() => setShowCleanConfirm(true)}
                   >
-                    <TrashIcon className={styles.cleanIcon} />
+                    <TrashIcon className={taskStyles.cleanIcon} />
                     <span>Clean completed ({completedTasks.length})</span>
                   </button>
                 </div>
               )}
 
               {!showCompleted && (
-                <div className={styles.taskPanelTabsRow}>
+                <div className={taskStyles.taskPanelTabsRow}>
                   <button
                     className={
                       taskTab === "upcoming"
-                        ? styles.tabBtnActive
-                        : styles.tabBtn
+                        ? taskStyles.tabBtnActive
+                        : taskStyles.tabBtn
                     }
                     type="button"
                     onClick={() => setTaskTab("upcoming")}
@@ -1132,8 +1141,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   <button
                     className={
                       taskTab === "overdue"
-                        ? styles.tabBtnActive
-                        : styles.tabBtn
+                        ? taskStyles.tabBtnActive
+                        : taskStyles.tabBtn
                     }
                     type="button"
                     onClick={() => setTaskTab("overdue")}
@@ -1143,12 +1152,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 </div>
               )}
 
-              <div className={styles.taskPanelList}>
+              <div className={taskStyles.taskPanelList}>
                 {showCompleted ? (
                   completedTasks.length === 0 ? (
-                    <div className={styles.emptyState}>
+                    <div className={taskStyles.emptyState}>
                       <BeeIcon />
-                      <div className={styles.emptyTitle}>
+                      <div className={taskStyles.emptyTitle}>
                         No completed tasks
                       </div>
                     </div>

@@ -1,0 +1,161 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #4a3b17;
+}
+
+.primaryButton {
+  border: 2px solid #d7a73b;
+  background: #fff7d4;
+  color: #7a5a12;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.primaryButton:hover {
+  background: #ffe9a3;
+}
+
+.empty {
+  text-align: center;
+  color: #8a6a1e;
+  padding: 28px 0;
+}
+
+.taskList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.taskItem {
+  background: #fffdf0;
+  border: 1px solid #f2d17a;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.taskMeta {
+  color: #7b6a3a;
+  font-size: 13px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 32, 9, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  width: min(560px, 100%);
+  background: #fffdf3;
+  border: 1px solid #f0d48a;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(68, 52, 12, 0.18);
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #4a3b17;
+  margin-bottom: 12px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6c5220;
+  margin-top: 12px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #f0d48a;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-top: 6px;
+  background: #fff;
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.employeeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.employeeButton {
+  border: 1px solid #f0d48a;
+  background: #fff;
+  color: #6c5220;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.employeeButtonActive {
+  background: #ffe6a1;
+  border-color: #d7a73b;
+  color: #5b430f;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.secondaryButton {
+  border: 1px solid #d7a73b;
+  background: #fff;
+  color: #7a5a12;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.primaryAction {
+  border: 2px solid #d7a73b;
+  background: #ffe6a1;
+  color: #5b430f;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}

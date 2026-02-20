@@ -251,7 +251,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
   const handleViewJob = () => {
     onClose();
-    navigate(`/jobs/${job.id}`);
+    navigate(`/dashboard/jobs/${job.id}`);
   };
 
   /* ================= RENDER ================= */

@@ -98,8 +98,10 @@ const PhaseCard: React.FC<Props> = ({
             {phases.map((p) => (
               <span
                 key={p}
-                className={`${styles.phaseTab}
-                ${status === p ? styles.activePhase : ""}`}
+                data-phase={p}
+                className={`${styles.phaseTab} ${
+                  status === p ? styles.activePhase : ""
+                }`}
               >
                 {p}
               </span>

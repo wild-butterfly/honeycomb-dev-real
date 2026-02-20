@@ -314,6 +314,33 @@ export const updateAssignment = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid assignment id" });
     }
 
+    const existing = await db.query(
+      `
+      SELECT
+        a.start_time,
+        a.end_time,
+        a.employee_id,
+        a.job_id
+      FROM assignments a
+      JOIN jobs j ON j.id = a.job_id
+      WHERE a.id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
+      `,
+      [assignmentId]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    const previous = existing.rows[0];
+    const previousEmployeeId = Number(previous.employee_id);
+    const previousStart = previous.start_time;
+    const previousEnd = previous.end_time;
+    const jobId = Number(previous.job_id);
+
     const result = await db.query(
       `
       UPDATE assignments
@@ -343,6 +370,56 @@ export const updateAssignment = async (req: Request, res: Response) => {
 
     if (assignment.completed === true) {
       await generateLabourForAssignment(db, assignment.id);
+    }
+
+    const actorName = await resolveActorName(
+      db,
+      req as AuthRequest
+    );
+
+    const newEmployeeId = Number(assignment.employee_id);
+    const employeeChanged =
+      Number.isInteger(newEmployeeId) && newEmployeeId !== previousEmployeeId;
+
+    if (employeeChanged) {
+      const fromName = await resolveEmployeeName(db, previousEmployeeId);
+      const toName = await resolveEmployeeName(db, newEmployeeId);
+
+      await logJobActivity(
+        db,
+        jobId,
+        "assignment_reassigned",
+        `Reassigned from ${fromName} to ${toName}`,
+        actorName
+      );
+    }
+
+    const startProvided =
+      Object.prototype.hasOwnProperty.call(req.body, "start_time");
+    const endProvided =
+      Object.prototype.hasOwnProperty.call(req.body, "end_time");
+
+    if (startProvided || endProvided) {
+      const newStart = startProvided ? start_time : previousStart;
+      const newEnd = endProvided ? end_time : previousEnd;
+
+      const oldRange = formatRange(previousStart, previousEnd);
+      const newRange = formatRange(newStart, newEnd);
+
+      if (oldRange && newRange && oldRange !== newRange) {
+        const employeeName = await resolveEmployeeName(
+          db,
+          newEmployeeId
+        );
+
+        await logJobActivity(
+          db,
+          jobId,
+          "assignment_rescheduled",
+          `Rescheduled ${employeeName} (${oldRange} → ${newRange})`,
+          actorName
+        );
+      }
     }
 
     res.json(assignment);

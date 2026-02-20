@@ -4,8 +4,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import LeftSidebar from "../components/LeftSidebar";
+import DashboardNavbar from "../components/DashboardNavbar";
+import Footer from "../components/Footer";
 import styles from "./JobSummaryPage.module.css";
-import { apiGet } from "../services/api";
+import { apiGet, logout } from "../services/api";
 
 import PhaseCard from "../components/PhaseCard";
 import CustomerCard from "../components/CustomerCard";
@@ -141,52 +143,58 @@ const JobSummaryPage: React.FC = () => {
     );
   }, [labourEntries]);
 
-  /* ================= LOADING ================= */
-
-  if (loading) {
-    return <div className={styles.pageWrapper}>Loading…</div>;
-  }
-
-  if (!job) {
-    return <div className={styles.pageWrapper}>Job not found</div>;
-  }
-
   /* ================= RENDER ================= */
 
-  return (
-    <div className={styles.pageWrapper}>
-      <LeftSidebar />
+  let content = <div className={styles.pageWrapper}>Loading…</div>;
 
-      <div className={styles.main}>
-        <div className={styles.pageContainer}>
-          {/* HERO */}
-          <PhaseCard
-            job={job}
-            assignments={assignments}
-            employees={employees}
-            labourEntries={labourEntries}
-          />
+  if (!loading && !job) {
+    content = <div className={styles.pageWrapper}>Job not found</div>;
+  }
 
-          {/* CUSTOMER + TEAM */}
-          <div className={styles.twoColumnRow}>
-            <CustomerCard job={job} />
+  if (!loading && job) {
+    content = (
+      <div className={styles.pageWrapper}>
+        <LeftSidebar />
 
-            <TeamScheduleCard
-              job={{
-                ...job,
-                assigned_staff: assignees.length,
-                scheduled_hours: scheduledHours,
-                logged_hours: loggedHours,
-              }}
+        <div className={styles.main}>
+          <div className={styles.pageContainer}>
+            {/* HERO */}
+            <PhaseCard
+              job={job}
+              assignments={assignments}
+              employees={employees}
+              labourEntries={labourEntries}
             />
+
+            {/* CUSTOMER + TEAM */}
+            <div className={styles.twoColumnRow}>
+              <CustomerCard job={job} />
+
+              <TeamScheduleCard
+                job={{
+                  ...job,
+                  assigned_staff: assignees.length,
+                  scheduled_hours: scheduledHours,
+                  logged_hours: loggedHours,
+                }}
+              />
+            </div>
+
+            <FinancialOverviewCard job={job} />
+
+            <ActivitySection jobId={Number(job.id)} />
           </div>
-
-          <FinancialOverviewCard job={job} />
-
-          <ActivitySection jobId={Number(job.id)} />
         </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <>
+      <DashboardNavbar onLogout={logout} />
+      {content}
+      <Footer />
+    </>
   );
 };
 

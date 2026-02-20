@@ -21,12 +21,16 @@ const LeftSidebar: React.FC = () => {
 
   if (!id) return null;
 
+  const basePath = location.pathname.startsWith("/dashboard")
+    ? `/dashboard/jobs/${id}`
+    : `/jobs/${id}`;
+
   const go = (path: string) => {
-    navigate(`/jobs/${id}/${path}`);
+    navigate(`${basePath}/${path}`);
   };
 
   const isActive = (path: string) =>
-    location.pathname === `/jobs/${id}/${path}`;
+    location.pathname === `${basePath}/${path}`;
 
   return (
     <div className={styles.sidebar}>

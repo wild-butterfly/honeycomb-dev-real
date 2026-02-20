@@ -69,8 +69,6 @@ const App: React.FC = () => {
           <Route path="/help" element={<HelpPage />} />
 
           <Route path="/tasks" element={<TaskPage />} />
-          <Route path="/jobs/:id" element={<JobPage />} />
-          <Route path="/jobs/:id/summary" element={<JobSummaryPage />} />
 
           {/* DASHBOARD */}
           <Route

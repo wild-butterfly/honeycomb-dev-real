@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createTask, getTasks, Task } from "../services/tasks";
 import { useTaskEmployees } from "../services/taskEmployees";
 import { useCompany } from "../context/CompanyContext";
+import styles from "./TaskPage.module.css";
 
 // ---------- AddTaskModal ----------
 type AddTaskModalProps = {
@@ -37,42 +38,57 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ employees, onClose }) => {
   };
 
   return (
-    <div className="modal">
-      <h2>Add Task</h2>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modal}>
+        <h2 className={styles.modalTitle}>Add Task</h2>
 
-      <label>
-        Description
-        <textarea value={desc} onChange={(e) => setDesc(e.target.value)} />
-      </label>
+        <label className={styles.label}>
+          Description
+          <textarea
+            className={styles.textarea}
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+          />
+        </label>
 
-      <label>
-        Assign to
-        <div>
-          {employees.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              onClick={() => toggleEmployee(e.id)}
-              className={assigned.includes(e.id) ? "active" : ""}
-            >
-              {e.name}
-            </button>
-          ))}
+        <label className={styles.label}>
+          Assign to
+          <div className={styles.employeeList}>
+            {employees.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => toggleEmployee(e.id)}
+                className={
+                  assigned.includes(e.id)
+                    ? `${styles.employeeButton} ${styles.employeeButtonActive}`
+                    : styles.employeeButton
+                }
+              >
+                {e.name}
+              </button>
+            ))}
+          </div>
+        </label>
+
+        <label className={styles.label}>
+          Due date
+          <input
+            className={styles.input}
+            type="date"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+          />
+        </label>
+
+        <div className={styles.modalActions}>
+          <button className={styles.secondaryButton} onClick={onClose}>
+            Cancel
+          </button>
+          <button className={styles.primaryAction} onClick={handleSave}>
+            Add Task
+          </button>
         </div>
-      </label>
-
-      <label>
-        Due date
-        <input
-          type="date"
-          value={due}
-          onChange={(e) => setDue(e.target.value)}
-        />
-      </label>
-
-      <div>
-        <button onClick={onClose}>Cancel</button>
-        <button onClick={handleSave}>Add Task</button>
       </div>
     </div>
   );
@@ -97,8 +113,16 @@ const TaskPage: React.FC = () => {
   if (loading) return <p>Loading…</p>;
 
   return (
-    <div>
-      <button onClick={() => setShowAddTask(true)}>+ Add Task</button>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.title}>Tasks</div>
+        <button
+          className={styles.primaryButton}
+          onClick={() => setShowAddTask(true)}
+        >
+          + Add Task
+        </button>
+      </div>
 
       {showAddTask && (
         <AddTaskModal
@@ -108,12 +132,17 @@ const TaskPage: React.FC = () => {
       )}
 
       {tasks.length === 0 ? (
-        <p>No tasks</p>
+        <div className={styles.empty}>No tasks</div>
       ) : (
-        <ul>
+        <ul className={styles.taskList}>
           {tasks.map((t) => (
-            <li key={t.id}>
-              <b>{t.description}</b> — due {t.due}
+            <li key={t.id} className={styles.taskItem}>
+              <div>
+                <div>
+                  <b>{t.description}</b>
+                </div>
+                <div className={styles.taskMeta}>Due {t.due}</div>
+              </div>
             </li>
           ))}
         </ul>

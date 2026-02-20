@@ -827,40 +827,51 @@ export const getActivity = async (req: Request, res: Response) => {
     const db = (req as any).db;
     const { id } = req.params;
 
+    const limitRaw = Number(req.query.limit ?? 100);
+    const offsetRaw = Number(req.query.offset ?? 0);
+    const limit = Number.isFinite(limitRaw)
+      ? Math.min(Math.max(limitRaw, 1), 100)
+      : 100;
+    const offset = Number.isFinite(offsetRaw)
+      ? Math.max(offsetRaw, 0)
+      : 0;
+
     const result = await db.query(
       `
-      SELECT
-        type,
-        title,
-        user_name,
-        created_at AS date
-      FROM job_activity
-      WHERE job_id = $1 AND (
-        current_setting('app.god_mode') = 'true'
-        OR company_id = current_setting('app.current_company_id')::bigint
-      )
+      SELECT * FROM (
+        SELECT
+          type,
+          title,
+          user_name,
+          created_at AS date
+        FROM job_activity
+        WHERE job_id = $1 AND (
+          current_setting('app.god_mode') = 'true'
+          OR company_id = current_setting('app.current_company_id')::bigint
+        )
 
-      UNION ALL
+        UNION ALL
 
-      SELECT
-        'job_created' AS type,
-        'Job created' AS title,
-        'System' AS user_name,
-        j.created_at AS date
-      FROM jobs j
-      WHERE j.id = $1 AND (
-        current_setting('app.god_mode') = 'true'
-        OR j.company_id = current_setting('app.current_company_id')::bigint
-      )
-      AND NOT EXISTS (
-        SELECT 1 FROM job_activity a
-        WHERE a.job_id = j.id AND a.type = 'job_created'
-      )
-
+        SELECT
+          'job_created' AS type,
+          'Job created' AS title,
+          'System' AS user_name,
+          j.created_at AS date
+        FROM jobs j
+        WHERE j.id = $1 AND (
+          current_setting('app.god_mode') = 'true'
+          OR j.company_id = current_setting('app.current_company_id')::bigint
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM job_activity a
+          WHERE a.job_id = j.id AND a.type = 'job_created'
+        )
+      ) activity
       ORDER BY date DESC
-      LIMIT 100
+      LIMIT $2
+      OFFSET $3
       `,
-      [id]
+      [id, limit, offset]
     );
 
     res.json(result.rows);
