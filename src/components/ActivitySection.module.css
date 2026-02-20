@@ -64,102 +64,143 @@
 .timeline {
   display: flex;
   flex-direction: column;
-
-  gap: 26px;
+  gap: 32px;
 }
 
-/* ================= ITEM ================= */
+/* ================= DATE GROUP ================= */
 
-.item {
-  display: flex;
-
-  gap: 16px;
-
-  position: relative;
-}
-
-/* ================= ICON COLUMN ================= */
-
-.iconWrapper {
+.dateGroup {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 14px;
 }
 
-.icon {
-  width: 18px;
+.dateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 4px;
+}
 
-  color: var(--hc-gold-strong);
+.dateLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.75);
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
 
-  background: linear-gradient(145deg, white, rgba(255, 255, 255, 0.85));
+.dateItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  padding: 7px;
+/* ================= ACTIVITY CARD (MODERN FERGUS STYLE) ================= */
 
+.activityCard {
+  background: white;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+
+  transition: all 0.2s ease;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.activityCard:hover {
+  border-color: rgba(244, 180, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateX(2px);
+}
+
+.activityRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+/* TIME */
+.activityTime {
+  flex-shrink: 0;
+  width: 55px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.5);
+  padding-top: 2px;
+}
+
+/* AVATAR */
+.avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
 
-  border: 1px solid var(--hc-border-soft);
-
-  box-shadow:
-    0 4px 10px rgba(0, 0, 0, 0.08),
-    0 0 0 2px rgba(255, 255, 255, 0.6);
-}
-
-/* timeline vertical line */
-
-.line {
-  width: 2px;
-
-  flex: 1;
-
   background: linear-gradient(
-    to bottom,
-    rgba(244, 180, 0, 0.35),
-    rgba(229, 231, 235, 0.5)
+    135deg,
+    var(--hc-gold-strong),
+    rgba(244, 180, 0, 0.8)
   );
 
-  margin-top: 6px;
-}
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-/* ================= CONTENT ================= */
-
-.content {
-  flex: 1;
-
-  padding-bottom: 4px;
-}
-
-.itemTitle {
-  font-weight: 600;
-
-  font-size: 15px;
-
-  margin-bottom: 2px;
-}
-
-.subtitle {
-  font-size: 13px;
-
-  color: #6b7280;
-}
-
-.time {
   font-size: 12px;
+  font-weight: 700;
+  color: white;
 
-  color: #9ca3af;
-
-  margin-top: 4px;
+  box-shadow:
+    0 3px 10px rgba(244, 180, 0, 0.2),
+    0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
-/* ================= ENTRY HOVER ================= */
-
-.item:hover .icon {
-  transform: scale(1.08);
-
-  box-shadow: 0 6px 14px rgba(244, 180, 0, 0.25);
+/* CONTENT */
+.activityContent {
+  flex: 1;
+  min-width: 0;
 }
 
-.item:hover .itemTitle {
-  color: var(--hc-gold-dark);
+.activityTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.85);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.activityMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.activityUser {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.activityDot {
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.3);
+}
+
+.activitySchedule {
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty {
+  padding: 64px 24px;
+  text-align: center;
+  color: rgba(15, 23, 42, 0.5);
+  font-size: 14px;
 }
 
 /* ================= PAGINATION ================= */

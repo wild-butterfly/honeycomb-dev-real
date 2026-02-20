@@ -5,7 +5,7 @@ import styles from "./LeftSidebar.module.css";
 // HEROICONS
 import {
   DocumentTextIcon,
-  ClockIcon,
+  ChatBubbleLeftRightIcon,
   PhotoIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
@@ -47,11 +47,11 @@ const LeftSidebar: React.FC = () => {
         </button>
 
         <button
-          className={`${styles.menuItem} ${isActive("history") ? styles.active : ""}`}
-          onClick={() => go("history")}
+          className={`${styles.menuItem} ${isActive("employee-notes") ? styles.active : ""}`}
+          onClick={() => go("employee-notes")}
         >
-          <ClockIcon className={styles.icon} />
-          History
+          <ChatBubbleLeftRightIcon className={styles.icon} />
+          Employee Notes
         </button>
 
         <button

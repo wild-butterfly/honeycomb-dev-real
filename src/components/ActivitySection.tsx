@@ -10,6 +10,11 @@ interface ActivityItem {
   date: string;
 }
 
+interface GroupedActivity {
+  dateLabel: string;
+  items: ActivityItem[];
+}
+
 interface Props {
   jobId: number;
 }
@@ -58,6 +63,62 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
     return matches[matches.length - 1].replace(/\s*-\s*/, " - ");
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatTimeOnly = (dateStr: string) => {
+    try {
+      const match = dateStr.match(/(\d{2}):(\d{2})/);
+      if (!match) return dateStr;
+
+      const [, hour, minute] = match;
+      const hourNum = parseInt(hour);
+      const ampm = hourNum >= 12 ? "pm" : "am";
+      const displayHour =
+        hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
+
+      return `${displayHour}:${minute}${ampm}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const groupByDate = (items: ActivityItem[]): GroupedActivity[] => {
+    const groups: { [key: string]: ActivityItem[] } = {};
+
+    items.forEach((item) => {
+      const match = item.date.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (!match) return;
+
+      const [, year, month, day] = match;
+      const dateKey = `${year}-${month}-${day}`;
+
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(item);
+    });
+
+    return Object.entries(groups).map(([key, items]) => {
+      const [year, month, day] = key.split("-");
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const dateLabel = date.toLocaleDateString("en-AU", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      return { dateLabel, items };
+    });
+  };
+
   return (
     <div className={styles.card}>
       {/* HEADER */}
@@ -77,34 +138,60 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
           <div className={styles.empty}>No activity yet</div>
         )}
 
-        {activity.map((item, index) => {
-          const scheduleRange = extractScheduleRange(item.title);
-          const displayTime = scheduleRange ?? formatTime(item.date);
-
-          return (
-            <div key={index} className={styles.item}>
-              {/* ICON COLUMN */}
-
-              <div className={styles.iconWrapper}>
-                <div className={styles.iconDot} />
-
-                {index !== activity.length - 1 && (
-                  <div className={styles.line} />
-                )}
+        {!loading &&
+          activity.length > 0 &&
+          groupByDate(activity).map((group, groupIndex) => (
+            <div key={groupIndex} className={styles.dateGroup}>
+              {/* DATE HEADER */}
+              <div className={styles.dateHeader}>
+                <div className={styles.dateLabel}>{group.dateLabel}</div>
               </div>
 
-              {/* CONTENT */}
+              {/* ITEMS FOR THIS DATE */}
+              <div className={styles.dateItems}>
+                {group.items.map((item, index) => {
+                  const scheduleRange = extractScheduleRange(item.title);
 
-              <div className={styles.content}>
-                <div className={styles.itemTitle}>{item.title}</div>
+                  return (
+                    <div key={index} className={styles.activityCard}>
+                      <div className={styles.activityRow}>
+                        {/* TIME */}
+                        <div className={styles.activityTime}>
+                          {formatTimeOnly(item.date)}
+                        </div>
 
-                <div className={styles.subtitle}>{item.user_name}</div>
+                        {/* AVATAR */}
+                        <div className={styles.avatar}>
+                          {getInitials(item.user_name)}
+                        </div>
 
-                <div className={styles.time}>{displayTime}</div>
+                        {/* CONTENT */}
+                        <div className={styles.activityContent}>
+                          <div className={styles.activityTitle}>
+                            {item.title}
+                          </div>
+
+                          <div className={styles.activityMeta}>
+                            <span className={styles.activityUser}>
+                              {item.user_name}
+                            </span>
+                            {scheduleRange && (
+                              <>
+                                <span className={styles.activityDot}>•</span>
+                                <span className={styles.activitySchedule}>
+                                  {scheduleRange}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
+          ))}
       </div>
 
       <div className={styles.pagination}>

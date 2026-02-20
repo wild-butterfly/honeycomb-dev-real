@@ -12,6 +12,7 @@ import DashboardPage from "./pages/DashboardPage";
 import CalendarPage from "./pages/CalendarPage";
 import JobPage from "./pages/JobPage";
 import TaskPage from "./pages/TaskPage";
+import EmployeeNotesPage from "./pages/EmployeeNotesPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import PricingPage from "./pages/PricingPage";
 import AboutUsPage from "./pages/AboutUsPage";
@@ -105,6 +106,10 @@ const App: React.FC = () => {
           <Route
             path="/dashboard/jobs/:id/summary"
             element={<JobSummaryPage />}
+          />
+          <Route
+            path="/dashboard/jobs/:id/employee-notes"
+            element={<EmployeeNotesPage />}
           />
         </Routes>
       </main>

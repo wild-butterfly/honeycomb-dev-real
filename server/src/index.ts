@@ -14,6 +14,7 @@ import jobRoutes from "./routes/jobs";
 import assignmentRoutes from "./routes/assignments";
 import tasksRoutes from "./routes/tasks";
 import authRoutes from "./routes/auth";
+import employeeNotesRoutes from "./routes/employeeNotes";
 
 dotenv.config();
 
@@ -50,6 +51,8 @@ app.use("/api/jobs", requireAuth, withDbContext, jobRoutes);
 app.use("/api/assignments", requireAuth, withDbContext, assignmentRoutes);
 
 app.use("/api/tasks", requireAuth, withDbContext, tasksRoutes);
+
+app.use("/api", employeeNotesRoutes);
 
 /* 404 */
 

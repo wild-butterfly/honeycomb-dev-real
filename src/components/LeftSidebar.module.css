@@ -3,20 +3,20 @@
 ============================== */
 .sidebar {
   align-self: flex-start !important;
-  width: 240px;
-  padding: 16px 12px;
+  width: 260px;
+  padding: 20px 14px;
 
   /* ✅ enterprise glass */
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
 
   box-shadow:
-    0 12px 36px rgba(15, 23, 42, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 16px 48px rgba(15, 23, 42, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
     0 0 0 2px rgba(244, 180, 0, 0.08) inset;
 
   position: sticky;
@@ -40,12 +40,13 @@
    SECTION TITLES
 ============================== */
 .sectionTitle {
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(15, 23, 42, 0.65);
-  margin: 15px 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.52);
+  margin: 20px 0 10px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 1px;
+  padding-left: 2px;
 }
 
 /* ==============================
@@ -53,16 +54,16 @@
 ============================== */
 .menuItem,
 .quickAction {
-  padding: 8px 10px;
-  margin: 4px 0;
+  padding: 11px 14px;
+  margin: 3px 0;
 
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 
   font-size: 14px;
   font-weight: 600;
-  color: rgba(15, 23, 42, 0.82);
+  color: rgba(15, 23, 42, 0.85);
 
   background: transparent;
   border: none;
@@ -70,7 +71,9 @@
   outline: none;
 
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  width: 100%;
 }
 
 /* ==============================
@@ -78,11 +81,12 @@
 ============================== */
 .menuItem:hover,
 .quickAction:hover {
-  color: rgba(15, 23, 42, 0.92);
-  background: rgba(255, 255, 255, 0.38);
+  color: rgba(15, 23, 42, 0.95);
+  background: rgba(255, 255, 255, 0.5);
   box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.06),
-    inset 0 0 0 1px rgba(244, 180, 0, 0.1);
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    inset 0 0 0 1px rgba(244, 180, 0, 0.12);
+  transform: translateX(2px);
 }
 
 /* ==============================
