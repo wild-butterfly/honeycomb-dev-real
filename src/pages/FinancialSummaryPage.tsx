@@ -1,6 +1,7 @@
 // src/pages/FinancialSummaryPage.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { ChartBarIcon, ArrowDownTrayIcon } from "@heroicons/react/24/solid";
 import DashboardNavbar from "../components/DashboardNavbar";
 import LeftSidebar from "../components/LeftSidebar";
 import Footer from "../components/Footer";
@@ -55,182 +56,221 @@ const FinancialSummaryPage: React.FC = () => {
             {/* Header */}
             <div className={styles.pageHeader}>
               <div>
-                <h1 className={styles.pageTitle}>💰 Financial Summary</h1>
+                <h1 className={styles.pageTitle}>
+                  <ChartBarIcon className={styles.pageIcon} />
+                  Financial Status
+                </h1>
                 <p className={styles.pageSubtitle}>
-                  Track costs, profit margins, and financial health
+                  Quick overview of this job's financial health
                 </p>
               </div>
-              <button className={styles.downloadBtn}>Download CSV</button>
+              <button className={styles.downloadBtn}>
+                <ArrowDownTrayIcon className={styles.downloadIcon} />
+                Download Report
+              </button>
             </div>
 
-            {/* Overall Position */}
+            {/* Overall Position - Simple Status */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Overall Position</h2>
 
-              <div className={styles.profitCard}>
-                <div className={styles.profitAmount}>
-                  <span className={styles.profitLabel}>
-                    Current Potential Profit
-                  </span>
-                  <span className={styles.profitValue}>
+              <div className={styles.statusContainer}>
+                <div className={styles.statusBox}>
+                  <div className={styles.statusLabel}>💵 Expected Profit</div>
+                  <div
+                    className={styles.statusValue}
+                    style={{ color: "#10b981" }}
+                  >
                     ${financialData.potentialProfit.toFixed(2)}
-                  </span>
-                  <span className={styles.profitPercent}>
-                    {profitPercentage.toFixed(1)}%
-                  </span>
+                  </div>
+                  <div className={styles.statusDetail}>
+                    {profitPercentage.toFixed(1)}% of what we're charging
+                  </div>
                 </div>
-                <div className={styles.costAmount}>
-                  <span className={styles.costLabel}>Costs Uninvoiced</span>
-                  <span className={styles.costValue}>
+
+                <div className={styles.statusBox}>
+                  <div className={styles.statusLabel}>💳 Costs Unpaid</div>
+                  <div
+                    className={styles.statusValue}
+                    style={{ color: "#ea580c" }}
+                  >
                     ${financialData.uninvoicedCosts.toFixed(2)}
-                  </span>
-                  <span className={styles.costPercent}>
-                    {costPercentage.toFixed(1)}%
-                  </span>
+                  </div>
+                  <div className={styles.statusDetail}>
+                    {costPercentage.toFixed(1)}% of what we're charging
+                  </div>
                 </div>
               </div>
 
-              {/* Progress Bars */}
-              <div className={styles.progressSection}>
-                <div className={styles.progressRow}>
-                  <span className={styles.progressLabel}>Cost</span>
-                  <div className={styles.progressBar}>
+              {/* Simple Progress Bars */}
+              <div className={styles.simpleProgressSection}>
+                <div className={styles.progressItem}>
+                  <div className={styles.progressItemLabel}>
+                    <span>Spending</span>
+                    <span>{costPercentage.toFixed(1)}%</span>
+                  </div>
+                  <div className={styles.simpleProgressBar}>
                     <div
-                      className={styles.progressFillCost}
-                      style={{ width: `${costPercentage}%` }}
+                      className={styles.progressBarFill}
+                      style={{
+                        width: `${Math.min(costPercentage, 100)}%`,
+                        backgroundColor: "#ea580c",
+                      }}
                     />
                   </div>
-                  <span className={styles.progressValue}>
-                    {costPercentage.toFixed(1)}%
-                  </span>
                 </div>
 
-                <div className={styles.progressRow}>
-                  <span className={styles.progressLabel}>Potential Profit</span>
-                  <div className={styles.progressBar}>
+                <div className={styles.progressItem}>
+                  <div className={styles.progressItemLabel}>
+                    <span>Profit Potential</span>
+                    <span>{profitPercentage.toFixed(1)}%</span>
+                  </div>
+                  <div className={styles.simpleProgressBar}>
                     <div
-                      className={styles.progressFillProfit}
-                      style={{ width: `${profitPercentage}%` }}
+                      className={styles.progressBarFill}
+                      style={{
+                        width: `${Math.min(profitPercentage, 100)}%`,
+                        backgroundColor: "#10b981",
+                      }}
                     />
                   </div>
-                  <span className={styles.progressValue}>
-                    {profitPercentage.toFixed(1)}%
-                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Financial Metrics */}
+            {/* Financial Overview */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Financial Overview</h2>
 
-              <div className={styles.metricsGrid}>
-                <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>
-                    Billable/Priced Amount
-                  </span>
-                  <span className={styles.metricValue}>
+              <div className={styles.metricsSimpleGrid}>
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>Total Price</div>
+                  <div className={styles.metricSimpleValue}>
                     ${financialData.billableAmount.toFixed(2)}
-                  </span>
+                  </div>
                 </div>
 
-                <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>Invoiced Costs</span>
-                  <span className={styles.metricValue}>
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>Labour Costs</div>
+                  <div className={styles.metricSimpleValue}>
+                    ${financialData.labourCosts.toFixed(2)}
+                  </div>
+                </div>
+
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>Material Costs</div>
+                  <div className={styles.metricSimpleValue}>
+                    ${financialData.materialCosts.toFixed(2)}
+                  </div>
+                </div>
+
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>Total Spent</div>
+                  <div className={styles.metricSimpleValue}>
+                    ${financialData.totalCosts.toFixed(2)}
+                  </div>
+                </div>
+
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>Invoiced</div>
+                  <div className={styles.metricSimpleValue}>
                     ${financialData.invoicedCosts.toFixed(2)}
-                  </span>
+                  </div>
                 </div>
 
-                <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>Uninvoiced Costs</span>
-                  <span className={styles.metricValue}>
+                <div className={styles.metricSimpleCard}>
+                  <div className={styles.metricSimpleLabel}>
+                    Still To Invoice
+                  </div>
+                  <div className={styles.metricSimpleValue}>
                     ${financialData.uninvoicedCosts.toFixed(2)}
-                  </span>
-                </div>
-
-                <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>Potential Profit</span>
-                  <span
-                    className={styles.metricValue + " " + styles.valueProfit}
-                  >
-                    ${financialData.potentialProfit.toFixed(2)}
-                  </span>
-                </div>
-
-                <div className={styles.metricCard}>
-                  <span className={styles.metricLabel}>Profit Margin</span>
-                  <span
-                    className={styles.metricValue + " " + styles.valueProfit}
-                  >
-                    {financialData.profitMargin.toFixed(2)}%
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Cost Breakdown */}
+            {/* Cost Breakdown - Horizontal Bar Chart */}
             <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Cost Breakdown</h2>
+              <h2 className={styles.sectionTitle}>
+                Where is the Budget Going?
+              </h2>
 
-              <div className={styles.breakdownGrid}>
-                <div className={styles.breakdownCard}>
-                  <div className={styles.breakdownHeader}>
-                    <span className={styles.breakdownTitle}>Labour Costs</span>
-                    <span className={styles.breakdownAmount}>
-                      ${financialData.labourCosts.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className={styles.breakdownBar}>
+              <div className={styles.costBreakdownSimple}>
+                <div className={styles.costBreakdownRow}>
+                  <div className={styles.costLabel}>Labour</div>
+                  <div className={styles.costBarContainer}>
                     <div
-                      className={styles.breakdownFillLabour}
-                      style={{ width: "100%" }}
+                      className={styles.costBar}
+                      style={{
+                        width: `${(financialData.labourCosts / financialData.totalCosts) * 100 || 0}%`,
+                        backgroundColor: "#3b82f6",
+                      }}
                     />
                   </div>
-                  <div className={styles.breakdownMeta}>
-                    <span>{financialData.labourHours} hours</span>
-                    <span>100%</span>
+                  <div className={styles.costValue}>
+                    ${financialData.labourCosts.toFixed(2)}
                   </div>
                 </div>
 
-                <div className={styles.breakdownCard}>
-                  <div className={styles.breakdownHeader}>
-                    <span className={styles.breakdownTitle}>
-                      Material Costs
-                    </span>
-                    <span className={styles.breakdownAmount}>
-                      ${financialData.materialCosts.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className={styles.breakdownBar}>
+                <div className={styles.costBreakdownRow}>
+                  <div className={styles.costLabel}>Materials</div>
+                  <div className={styles.costBarContainer}>
                     <div
-                      className={styles.breakdownFillMaterial}
-                      style={{ width: "0%" }}
+                      className={styles.costBar}
+                      style={{
+                        width: `${(financialData.materialCosts / financialData.totalCosts) * 100 || 0}%`,
+                        backgroundColor: "#10b981",
+                      }}
                     />
                   </div>
-                  <div className={styles.breakdownMeta}>
-                    <span>No data</span>
-                    <span>0%</span>
+                  <div className={styles.costValue}>
+                    ${financialData.materialCosts.toFixed(2)}
                   </div>
                 </div>
 
-                <div className={styles.breakdownCard}>
-                  <div className={styles.breakdownHeader}>
-                    <span className={styles.breakdownTitle}>
-                      Total Current Costs
-                    </span>
-                    <span className={styles.breakdownAmount}>
-                      ${financialData.totalCosts.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className={styles.breakdownBar}>
+                <div className={styles.costBreakdownRow}>
+                  <div className={styles.costLabel}>Other Costs</div>
+                  <div className={styles.costBarContainer}>
                     <div
-                      className={styles.breakdownFillTotal}
-                      style={{ width: `${costPercentage}%` }}
+                      className={styles.costBar}
+                      style={{
+                        width: `${((financialData.totalCosts - financialData.labourCosts - financialData.materialCosts) / financialData.totalCosts) * 100 || 0}%`,
+                        backgroundColor: "#f59e0b",
+                      }}
                     />
                   </div>
-                  <div className={styles.breakdownMeta}>
-                    <span>Of billable amount</span>
-                    <span>{costPercentage.toFixed(1)}%</span>
+                  <div className={styles.costValue}>
+                    $
+                    {(
+                      financialData.totalCosts -
+                      financialData.labourCosts -
+                      financialData.materialCosts
+                    ).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Labour Hours */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Labour Info</h2>
+
+              <div className={styles.labourGrid}>
+                <div className={styles.labourCard}>
+                  <div className={styles.labourLabel}>Hours Spent</div>
+                  <div className={styles.labourValue}>
+                    {financialData.labourHours.toFixed(1)} hrs
+                  </div>
+                </div>
+
+                <div className={styles.labourCard}>
+                  <div className={styles.labourLabel}>Labour Cost per Hour</div>
+                  <div className={styles.labourValue}>
+                    $
+                    {(
+                      financialData.labourCosts / financialData.labourHours
+                    ).toFixed(2)}
+                    /hr
                   </div>
                 </div>
               </div>

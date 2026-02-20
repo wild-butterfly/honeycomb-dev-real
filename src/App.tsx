@@ -20,6 +20,7 @@ import AboutUsPage from "./pages/AboutUsPage";
 import HelpPage from "./pages/HelpPage";
 import JobSummaryPage from "./pages/JobSummaryPage";
 import FinancialSummaryPage from "./pages/FinancialSummaryPage";
+import CostReportPage from "./pages/CostReportPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
@@ -120,6 +121,10 @@ const App: React.FC = () => {
           <Route
             path="/dashboard/jobs/:id/financial-summary"
             element={<FinancialSummaryPage />}
+          />
+          <Route
+            path="/dashboard/jobs/:id/cost-report"
+            element={<CostReportPage />}
           />
         </Routes>
       </main>

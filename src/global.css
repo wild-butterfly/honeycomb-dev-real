@@ -7,16 +7,25 @@
   --header-h: 0px;
   --footer-h: 72px;
 
-  /* Brand */
+  /* Brand - Honeycomb Warm & Soft */
   --hc-gold-strong: #f4b400;
   --hc-gold-dark: #9c7c00;
   --hc-gold-deep: #6a5a1e;
 
-  /* UI */
-  --hc-bg-glass: rgba(255, 255, 255, 0.75);
-  --hc-border-soft: rgba(244, 180, 0, 0.18);
-  --hc-shadow-soft: rgba(0, 0, 0, 0.06);
-  --hc-shadow-gold: rgba(244, 180, 0, 0.08);
+  /* Honeycomb Modern Palette */
+  --hc-honey: #fbbf24; /* Modern golden */
+  --hc-honey-light: #fef3c7; /* Light yellow */
+  --hc-honey-dark: #eab308; /* Darker yellow */
+  --hc-warm-tan: #f59e0b; /* Warm accent */
+  --hc-cream: #ffffff; /* Clean white */
+  --hc-brown-light: #f97316; /* Soft accent */
+  --hc-brown-dark: #ea580c; /* Deep accent */
+
+  /* UI - Modern & Minimal */
+  --hc-bg-glass: #ffffff;
+  --hc-border-soft: #e5e7eb;
+  --hc-shadow-soft: rgba(0, 0, 0, 0.04);
+  --hc-shadow-gold: rgba(0, 0, 0, 0.04);
 
   /* Text */
   --hc-text-primary: #1f2937;
@@ -71,12 +80,12 @@ body {
   background:
     radial-gradient(
       circle at 10% 15%,
-      rgba(244, 180, 0, 0.06),
+      rgba(252, 211, 77, 0.04),
       transparent 40%
     ),
     radial-gradient(
       circle at 90% 85%,
-      rgba(244, 180, 0, 0.05),
+      rgba(252, 211, 77, 0.03),
       transparent 45%
     ),
     #ffffff;

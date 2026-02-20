@@ -71,8 +71,8 @@ const LeftSidebar: React.FC = () => {
         </button>
 
         <button
-          className={`${styles.menuItem} ${isActive("cost") ? styles.active : ""}`}
-          onClick={() => go("cost")}
+          className={`${styles.menuItem} ${isActive("cost-report") ? styles.active : ""}`}
+          onClick={() => go("cost-report")}
         >
           <ChartBarIcon className={styles.icon} />
           Cost Report

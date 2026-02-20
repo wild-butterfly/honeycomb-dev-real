@@ -1,0 +1,358 @@
+/* src/pages/CostReportPage.module.css */
+/* Created by Honeycomb © 2026 */
+/* Cost Report - Premium Glass Morphism Styling */
+
+/* ===== PAGE LAYOUT ===== */
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+
+  padding: 40px 24px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ===== PREMIUM CONTAINER ===== */
+.pageContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  border-radius: 16px;
+
+  border: 1.5px solid #ffe066;
+
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+
+  padding: 40px;
+}
+
+.pageContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
+
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.03), transparent);
+
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+
+.pageContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 90px;
+  border-radius: 32px 32px 0 0;
+
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+
+  pointer-events: none;
+}
+
+/* ===== HEADER ===== */
+.pageHeader {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(252, 211, 77, 0.12);
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #b99a2a;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageIcon {
+  width: 32px;
+  height: 32px;
+  color: #ffd600;
+  flex-shrink: 0;
+}
+
+.exportIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.exportBtn {
+  padding: 9px 20px;
+  font-weight: 600;
+  border-radius: 7px;
+  font-size: 1.03rem;
+  border: 2px solid #b99a2a;
+  background: #fffde4;
+  color: #b99a2a;
+  transition:
+    background 0.15s,
+    color 0.13s,
+    border 0.13s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 8px #ffd60009;
+}
+
+.exportBtn:hover,
+.exportBtn:focus {
+  background: #ffd600;
+  color: #232323;
+  border-color: #ffd600;
+}
+
+/* ===== SECTIONS ===== */
+.section {
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #b99a2a;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== SUMMARY GRID ===== */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.summaryCard {
+  background: #fffde4;
+  border: 1.5px solid #ffe066;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px #b99a2a11;
+}
+
+.summaryCard:hover {
+  background: #fffef7;
+  border-color: #ffd600;
+  box-shadow: 0 4px 16px #b99a2a18;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+/* ===== TABLE HEADER ===== */
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.tableHeader .sectionTitle {
+  margin: 0;
+}
+
+.filterInput {
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.75);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.filterInput:focus {
+  background: #ffffff;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.filterInput::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ===== PAGINATION ===== */
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(252, 211, 77, 0.1);
+}
+
+.paginationInfo {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.paginationBtn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(252, 211, 77, 0.12);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(252, 211, 77, 0.2);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 36px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .tableHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterInput {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageWrapper {
+    padding: 24px 12px;
+  }
+
+  .pageContainer {
+    padding: 24px;
+    border-radius: 24px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .exportBtn {
+    align-self: stretch;
+  }
+
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .tableHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterInput {
+    width: 100%;
+  }
+
+  .paginationContainer {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .paginationButtons {
+    width: 100%;
+  }
+
+  .paginationBtn {
+    flex: 1;
+  }
+}
