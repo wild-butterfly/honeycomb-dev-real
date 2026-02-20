@@ -46,7 +46,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.55) inset,
     0 0 0 2px rgba(244, 180, 0, 0.1) inset;
 
-  padding: 40px 40px 64px 40px;
+  padding: 40px;
 }
 
 /* ✅ üstteki turuncu bandı kaldırıyoruz → çok hafif koyu “shade” */

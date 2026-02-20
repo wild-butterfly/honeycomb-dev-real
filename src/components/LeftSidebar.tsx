@@ -63,8 +63,8 @@ const LeftSidebar: React.FC = () => {
         </button>
 
         <button
-          className={`${styles.menuItem} ${isActive("financial") ? styles.active : ""}`}
-          onClick={() => go("financial")}
+          className={`${styles.menuItem} ${isActive("financial-summary") ? styles.active : ""}`}
+          onClick={() => go("financial-summary")}
         >
           <CurrencyDollarIcon className={styles.icon} />
           Financial Summary

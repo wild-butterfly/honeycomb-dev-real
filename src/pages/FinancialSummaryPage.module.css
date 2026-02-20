@@ -1,0 +1,458 @@
+/* src/pages/FinancialSummaryPage.module.css */
+/* Created by Honeycomb © 2026 */
+/* Financial Summary - Premium glass morphism styling */
+
+/* ===== PAGE LAYOUT ===== */
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 10px,
+      #fffbe9 10px,
+      #fffbe9 22px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+
+  padding: 40px 24px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ===== PREMIUM CONTAINER ===== */
+.pageContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(255, 252, 235, 0.78);
+
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border-radius: 32px;
+
+  border: 1px solid rgba(15, 23, 42, 0.08);
+
+  box-shadow:
+    0 28px 70px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 0 2px rgba(244, 180, 0, 0.1) inset;
+
+  padding: 40px;
+}
+
+.pageContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
+
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.03), transparent);
+
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+
+.pageContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 90px;
+  border-radius: 32px 32px 0 0;
+
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+
+  pointer-events: none;
+}
+
+/* ===== HEADER ===== */
+.pageHeader {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(244, 180, 0, 0.12);
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.88);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0;
+  font-weight: 500;
+}
+
+.downloadBtn {
+  background: var(--hc-gold-strong);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 24px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(244, 180, 0, 0.2);
+}
+
+.downloadBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 180, 0, 0.3);
+  background: var(--hc-gold-dark);
+}
+
+/* ===== SECTIONS ===== */
+.section {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.88);
+  margin: 0 0 28px 0;
+  letter-spacing: -0.3px;
+}
+
+/* ===== PROFIT CARD ===== */
+.profitCard {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.profitAmount,
+.costAmount {
+  flex: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 252, 240, 0.7)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 180, 0, 0.12);
+  border-radius: 20px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.profitAmount:hover,
+.costAmount:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(244, 180, 0, 0.15);
+  border-color: rgba(244, 180, 0, 0.2);
+}
+
+.profitLabel,
+.costLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.profitValue {
+  font-size: 40px;
+  font-weight: 800;
+  color: #10b981;
+  letter-spacing: -1.5px;
+}
+
+.costValue {
+  font-size: 40px;
+  font-weight: 800;
+  color: #ea580c;
+  letter-spacing: -1.5px;
+}
+
+.profitPercent,
+.costPercent {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* ===== PROGRESS SECTION ===== */
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 8px 0;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.progressLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+  min-width: 120px;
+}
+
+.progressBar {
+  flex: 1;
+  height: 12px;
+  background: rgba(244, 180, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFillCost {
+  height: 100%;
+  background: linear-gradient(90deg, #fb923c, #ea580c);
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressFillProfit {
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.88);
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ===== METRICS GRID ===== */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.metricCard {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 252, 240, 0.5)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 180, 0, 0.08);
+  border-radius: 18px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 180, 0, 0.12);
+  border-color: rgba(244, 180, 0, 0.15);
+}
+
+.metricLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.metricValue {
+  font-size: 24px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.88);
+  letter-spacing: -0.5px;
+}
+
+.valueProfit {
+  color: #10b981;
+}
+
+/* ===== BREAKDOWN GRID ===== */
+.breakdownGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.breakdownCard {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 252, 240, 0.5)
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(244, 180, 0, 0.08);
+  border-radius: 18px;
+  padding: 28px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.breakdownCard:hover {
+  box-shadow: 0 6px 20px rgba(244, 180, 0, 0.12);
+  border-color: rgba(244, 180, 0, 0.15);
+}
+
+.breakdownHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.breakdownTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.breakdownAmount {
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.88);
+  letter-spacing: -0.5px;
+}
+
+.breakdownBar {
+  height: 8px;
+  background: rgba(244, 180, 0, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.breakdownFillLabour {
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breakdownFillMaterial {
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breakdownFillTotal {
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  border-radius: 6px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breakdownMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  font-weight: 500;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .pageContainer {
+    padding: 36px;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .pageWrapper {
+    padding: 24px 12px;
+  }
+
+  .pageContainer {
+    padding: 24px;
+    border-radius: 24px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .profitCard {
+    flex-direction: column;
+  }
+
+  .progressRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .progressLabel {
+    min-width: auto;
+  }
+
+  .progressValue {
+    min-width: auto;
+    text-align: left;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .downloadBtn {
+    align-self: stretch;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+}
