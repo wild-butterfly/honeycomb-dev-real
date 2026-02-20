@@ -55,8 +55,8 @@ const LeftSidebar: React.FC = () => {
         </button>
 
         <button
-          className={`${styles.menuItem} ${isActive("files") ? styles.active : ""}`}
-          onClick={() => go("files")}
+          className={`${styles.menuItem} ${isActive("files-photos") ? styles.active : ""}`}
+          onClick={() => go("files-photos")}
         >
           <PhotoIcon className={styles.icon} />
           Files & Photos

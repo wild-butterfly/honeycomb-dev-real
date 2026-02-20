@@ -13,6 +13,7 @@ import CalendarPage from "./pages/CalendarPage";
 import JobPage from "./pages/JobPage";
 import TaskPage from "./pages/TaskPage";
 import EmployeeNotesPage from "./pages/EmployeeNotesPage";
+import FilesPhotosPage from "./pages/FilesPhotosPage";
 import FeaturesPage from "./pages/FeaturesPage";
 import PricingPage from "./pages/PricingPage";
 import AboutUsPage from "./pages/AboutUsPage";
@@ -110,6 +111,10 @@ const App: React.FC = () => {
           <Route
             path="/dashboard/jobs/:id/employee-notes"
             element={<EmployeeNotesPage />}
+          />
+          <Route
+            path="/dashboard/jobs/:id/files-photos"
+            element={<FilesPhotosPage />}
           />
         </Routes>
       </main>
