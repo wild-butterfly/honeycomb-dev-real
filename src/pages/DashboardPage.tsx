@@ -30,7 +30,8 @@ import {
   Task,
 } from "../services/tasks";
 
-import { apiGet, apiPost } from "../services/api";
+import { apiGet, apiPost, logout } from "../services/api";
+import { useCompany } from "../context/CompanyContext";
 
 /* ───────── Types ───────── */
 
@@ -209,6 +210,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const navigate = useNavigate();
 
+  /* ───────── Multi-tenant: Get current company context ───────── */
+  const { companyId } = useCompany();
+
   /* ───────── Loaders ───────── */
   // ✅ Close dropdown when clicking outside
   useEffect(() => {
@@ -291,8 +295,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   useEffect(() => {
     loadAll().catch((e) => console.error("Dashboard loadAll error:", e));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // ✅ FIXED: Now refetches when company changes
+  }, [companyId]);
 
   /* ───────── Job create ───────── */
 
@@ -587,7 +591,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   return (
     <div className={styles.dashboardShell}>
       <div className={styles.dashboardBg}>
-        <DashboardNavbar onNewJob={() => setShowNewJobModal(true)} />
+        <DashboardNavbar
+          onNewJob={() => setShowNewJobModal(true)}
+          onLogout={logout}
+        />
 
         <div className={styles.chartsSection}>
           <AssigneeFilterBar

@@ -23,110 +23,125 @@ export const withDbContext = async (
 
 
     const {
-      company_id,
       role,
+      company_id,
       employee_id
     } = req.user;
 
 
     const headerCompanyId =
-      req.headers["x-company-id"] as string | undefined;
+      req.get("x-company-id");
+
 
 
     await client.query("BEGIN");
+
 
 
     /* =====================================================
        SUPERADMIN
     ===================================================== */
 
-   if (role === "superadmin")
-{
+    if (role === "superadmin")
+    {
 
-  await client.query(
-    `SELECT set_config('app.current_role', $1, true)`,
-    [role]
-  );
-
-
-  /* ============================================
-     ONLY HEADER COMPANY
-     DO NOT FALLBACK TO USER COMPANY
-  ============================================ */
-
-  if (
-    headerCompanyId &&
-    headerCompanyId !== "" &&
-    headerCompanyId !== "null"
-  )
-  {
-
-    await client.query(
-      `SELECT set_config(
-        'app.current_company_id',
-        $1,
-        true
-      )`,
-      [headerCompanyId]
-    );
+      await client.query(
+        `SELECT set_config('app.current_role', $1, true)`,
+        [role]
+      );
 
 
-    await client.query(
-      `SELECT set_config('app.god_mode', 'false', true)`
-    );
+      if (
+        headerCompanyId &&
+        headerCompanyId !== "" &&
+        headerCompanyId !== "null"
+      )
+      {
 
-  }
-  else
-  {
-
-    /* GOD MODE TRUE */
-
-    await client.query(
-      `SELECT set_config('app.god_mode', 'true', true)`
-    );
-
-    /* CLEAR company context */
-
-    await client.query(
-      `SELECT set_config(
-        'app.current_company_id',
-        '',
-        true
-      )`
-    );
-
-  }
+        console.log(
+          "SUPERADMIN IMPERSONATING:",
+          headerCompanyId
+        );
 
 
-  if (employee_id)
-  {
-
-    await client.query(
-      `SELECT set_config(
-        'app.current_employee_id',
-        $1,
-        true
-      )`,
-      [String(employee_id)]
-    );
-
-  }
+        await client.query(
+          `SELECT set_config(
+             'app.current_company_id',
+             $1,
+             true
+           )`,
+          [headerCompanyId]
+        );
 
 
-  (req as any).db = client;
+        await client.query(
+          `SELECT set_config(
+             'app.god_mode',
+             'false',
+             true
+           )`
+        );
+
+      }
+      else
+      {
+
+        console.log("SUPERADMIN GOD MODE");
 
 
-  res.on("finish", async () =>
-  {
-    try { await client.query("COMMIT"); }
-    catch { await client.query("ROLLBACK"); }
-    finally { client.release(); }
-  });
+        await client.query(
+          `SELECT set_config(
+             'app.god_mode',
+             'true',
+             true
+           )`
+        );
 
 
-  return next();
+        await client.query(
+          `SELECT set_config(
+             'app.current_company_id',
+             '',
+             true
+           )`
+        );
 
-}
+      }
+
+
+
+      if (employee_id)
+      {
+
+        await client.query(
+          `SELECT set_config(
+             'app.current_employee_id',
+             $1,
+             true
+           )`,
+          [String(employee_id)]
+        );
+
+      }
+
+
+
+      req.db = client;
+
+
+
+      res.on("finish", async () =>
+      {
+        try { await client.query("COMMIT"); }
+        catch { await client.query("ROLLBACK"); }
+        finally { client.release(); }
+      });
+
+
+      return next();
+
+    }
+
 
 
     /* =====================================================
@@ -134,59 +149,52 @@ export const withDbContext = async (
     ===================================================== */
 
 
-    if (!company_id)
-    {
-      client.release();
-
-      return res.status(401).json({
-        error: "Company required"
-      });
-    }
-
-
     await client.query(
       `SELECT set_config(
-        'app.current_company_id',
-        $1,
-        true
-      )`,
+         'app.current_company_id',
+         $1,
+         true
+       )`,
       [String(company_id)]
     );
 
 
     await client.query(
       `SELECT set_config(
-        'app.current_role',
-        $1,
-        true
-      )`,
+         'app.current_role',
+         $1,
+         true
+       )`,
       [role]
     );
 
 
     await client.query(
       `SELECT set_config(
-        'app.god_mode',
-        'false',
-        true
-      )`
+         'app.god_mode',
+         'false',
+         true
+       )`
     );
 
 
     if (employee_id)
     {
+
       await client.query(
         `SELECT set_config(
-          'app.current_employee_id',
-          $1,
-          true
-        )`,
+           'app.current_employee_id',
+           $1,
+           true
+         )`,
         [String(employee_id)]
       );
+
     }
 
 
-    (req as any).db = client;
+    req.db = client;
+
 
 
     res.on("finish", async () =>
@@ -204,8 +212,9 @@ export const withDbContext = async (
   catch (err)
   {
 
-    try { await client.query("ROLLBACK"); }
-    finally { client.release(); }
+    await client.query("ROLLBACK");
+
+    client.release();
 
     next(err);
 

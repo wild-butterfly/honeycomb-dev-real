@@ -14,7 +14,16 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const res = await apiPost<{ token: string }>("/auth/login", {
+      const res = await apiPost<{
+        token: string;
+        user: {
+          id: number;
+          email: string;
+          role: string;
+          company_id: number;
+          employee_id?: number;
+        };
+      }>("/auth/login", {
         email,
         password,
       });
@@ -25,6 +34,11 @@ const LoginPage: React.FC = () => {
 
       // ✅ JWT'yi kaydet
       localStorage.setItem("token", res.token);
+
+      // ✅ Store user data including role
+      if (res.user) {
+        localStorage.setItem("user", JSON.stringify(res.user));
+      }
 
       // ✅ Dashboard'a yönlendir
       navigate("/dashboard");

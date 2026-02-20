@@ -11,6 +11,10 @@ export const getAll = async (req: Request, res: Response) => {
     const result = await db.query(`
       SELECT *
       FROM tasks
+      WHERE CASE
+        WHEN current_setting('app.god_mode') = 'true' THEN TRUE
+        ELSE company_id = current_setting('app.current_company_id')::bigint
+      END
       ORDER BY created_at DESC
     `);
 
@@ -105,11 +109,18 @@ export const complete = async (req: Request, res: Response) => {
       `
       UPDATE tasks
       SET status = 'completed'
-      WHERE id = $1
+      WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
       RETURNING *
       `,
       [id]
     );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Task not found" });
+    }
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -125,7 +136,10 @@ export const deleteCompleted = async (req: Request, res: Response) => {
   try {
     await db.query(`
       DELETE FROM tasks
-      WHERE status = 'completed'
+      WHERE status = 'completed' AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
     `);
 
     res.json({ success: true });
@@ -140,13 +154,21 @@ export const remove = async (req: Request, res: Response) => {
   const db = (req as any).db;
 
   try {
-    await db.query(
+    const result = await db.query(
       `
       DELETE FROM tasks
-      WHERE id = $1
+      WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
+      RETURNING id
       `,
       [req.params.id]
     );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Task not found" });
+    }
 
     res.json({ success: true });
   } catch (err) {

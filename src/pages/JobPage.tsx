@@ -7,6 +7,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./JobPage.module.css";
 import Toast from "../components/Toast";
 import LeftSidebar from "../components/LeftSidebar";
+import DashboardNavbar from "../components/DashboardNavbar";
+import Footer from "../components/Footer";
 import ConfirmModal from "../components/ConfirmModal";
 
 import LabourTimeEntrySection from "../components/LabourTimeSection";
@@ -14,7 +16,7 @@ import JobAssignedEmployeesSection from "../components/JobAssignedEmployeesSecti
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
 
 import type { Assignment, Employee } from "../types/calendar";
-import { apiGet, apiPut, apiDelete } from "../services/api";
+import { apiGet, apiPut, apiDelete, logout } from "../services/api";
 
 /* ================= TYPES ================= */
 
@@ -283,195 +285,201 @@ const JobPage: React.FC = () => {
   /* ================= UI ================= */
 
   return (
-    <div className={styles.pageWrapper}>
-      {toast && <Toast message={toast} />}
+    <>
+      <DashboardNavbar onLogout={logout} />
 
-      {confirmUnassign && (
-        <ConfirmModal
-          title="Unassign employee"
-          description={
-            <>
-              Are you sure you want to unassign <b>{confirmUnassign.name}</b>?
-            </>
-          }
-          confirmText="Unassign"
-          cancelText="Cancel"
-          onCancel={() => setConfirmUnassign(null)}
-          onConfirm={async () => {
-            await handleUnassignEmployee(confirmUnassign.employeeId);
-            setConfirmUnassign(null);
-            setToast(`${confirmUnassign.name} unassigned`);
-            setTimeout(() => setToast(null), 2500);
-          }}
-        />
-      )}
+      <div className={styles.pageWrapper}>
+        {toast && <Toast message={toast} />}
 
-      {confirmDeleteAssignment && (
-        <ConfirmModal
-          title="Remove scheduled time"
-          description="Are you sure you want to remove this scheduled time? This action cannot be undone."
-          confirmText="Remove"
-          cancelText="Cancel"
-          onCancel={() => setConfirmDeleteAssignment(null)}
-          onConfirm={async () => {
-            await handleDeleteAssignment(confirmDeleteAssignment);
-            setConfirmDeleteAssignment(null);
-            setToast("Scheduled time removed");
-            setTimeout(() => setToast(null), 2500);
-          }}
-        />
-      )}
+        {confirmUnassign && (
+          <ConfirmModal
+            title="Unassign employee"
+            description={
+              <>
+                Are you sure you want to unassign <b>{confirmUnassign.name}</b>?
+              </>
+            }
+            confirmText="Unassign"
+            cancelText="Cancel"
+            onCancel={() => setConfirmUnassign(null)}
+            onConfirm={async () => {
+              await handleUnassignEmployee(confirmUnassign.employeeId);
+              setConfirmUnassign(null);
+              setToast(`${confirmUnassign.name} unassigned`);
+              setTimeout(() => setToast(null), 2500);
+            }}
+          />
+        )}
 
-      <LeftSidebar />
+        {confirmDeleteAssignment && (
+          <ConfirmModal
+            title="Remove scheduled time"
+            description="Are you sure you want to remove this scheduled time? This action cannot be undone."
+            confirmText="Remove"
+            cancelText="Cancel"
+            onCancel={() => setConfirmDeleteAssignment(null)}
+            onConfirm={async () => {
+              await handleDeleteAssignment(confirmDeleteAssignment);
+              setConfirmDeleteAssignment(null);
+              setToast("Scheduled time removed");
+              setTimeout(() => setToast(null), 2500);
+            }}
+          />
+        )}
 
-      <div className={styles.main}>
-        <div className={styles.pageContainer}>
-          {/* HEADER */}
-          <div className={styles.pageHeader}>
-            <h1>{job.title}</h1>
-          </div>
+        <LeftSidebar />
 
-          {/* NOTES */}
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Job Phase Description</h2>
+        <div className={styles.main}>
+          <div className={styles.pageContainer}>
+            {/* HEADER */}
+            <div className={styles.pageHeader}>
+              <h1>{job.title}</h1>
+            </div>
 
-            <div
-              className={`${styles.detailBox} ${
-                isEditingNotes ? styles.editing : ""
-              }`}
-            >
-              {!isEditingNotes ? (
-                <div
-                  className={styles.clickToEdit}
-                  onClick={() => {
-                    setNotesDraft(job.notes || "");
-                    setIsEditingNotes(true);
-                  }}
-                >
-                  {job.notes || (
-                    <span style={{ opacity: 0.5 }}>Add job phase notes…</span>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <textarea
-                    className={styles.textarea}
-                    value={notesDraft}
-                    onChange={(e) => setNotesDraft(e.target.value)}
-                    autoFocus
-                  />
+            {/* NOTES */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>Job Phase Description</h2>
 
-                  <div className={styles.editActionsInline}>
-                    <button
-                      className={styles.primaryBtn}
-                      disabled={savingNotes}
-                      onClick={handleSaveNotes}
-                    >
-                      Save
-                    </button>
-
-                    <button
-                      className={styles.secondaryBtn}
-                      onClick={() => setIsEditingNotes(false)}
-                    >
-                      Cancel
-                    </button>
+              <div
+                className={`${styles.detailBox} ${
+                  isEditingNotes ? styles.editing : ""
+                }`}
+              >
+                {!isEditingNotes ? (
+                  <div
+                    className={styles.clickToEdit}
+                    onClick={() => {
+                      setNotesDraft(job.notes || "");
+                      setIsEditingNotes(true);
+                    }}
+                  >
+                    {job.notes || (
+                      <span style={{ opacity: 0.5 }}>Add job phase notes…</span>
+                    )}
                   </div>
+                ) : (
+                  <>
+                    <textarea
+                      className={styles.textarea}
+                      value={notesDraft}
+                      onChange={(e) => setNotesDraft(e.target.value)}
+                      autoFocus
+                    />
+
+                    <div className={styles.editActionsInline}>
+                      <button
+                        className={styles.primaryBtn}
+                        disabled={savingNotes}
+                        onClick={handleSaveNotes}
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        className={styles.secondaryBtn}
+                        onClick={() => setIsEditingNotes(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* TABS */}
+            <div className={styles.hcTabs}>
+              <button
+                className={`${styles.hcTab} ${
+                  activeTab === "scheduling" ? styles.hcTabActive : ""
+                }`}
+                onClick={() => setActiveTab("scheduling")}
+              >
+                Scheduling
+              </button>
+
+              <button
+                className={`${styles.hcTab} ${
+                  activeTab === "labour" ? styles.hcTabActive : ""
+                }`}
+                onClick={() => setActiveTab("labour")}
+              >
+                Labour
+              </button>
+            </div>
+
+            {/* CONTENT */}
+            <div className={styles.sectionContent}>
+              {activeTab === "scheduling" && (
+                <>
+                  <div className={styles.filterActionRow}>
+                    <AssigneeFilterBar
+                      employees={employees.map((e) => ({
+                        id: e.id,
+                        name: e.name,
+                      }))}
+                      selectedAssignee={selectedAssignee}
+                      onChange={setSelectedAssignee}
+                    />
+
+                    <div className={styles.actionButtons}>
+                      <button
+                        className={styles.assignBtn}
+                        disabled={selectedAssignee === "all"}
+                        onClick={handleAssignEmployee}
+                      >
+                        Assign
+                      </button>
+
+                      <button
+                        className={styles.scheduleBtn}
+                        disabled={selectedAssignee === "all"}
+                        onClick={handleScheduleEmployee}
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                  </div>
+
+                  <JobAssignedEmployeesSection
+                    assignments={assignments}
+                    assignees={assignees}
+                    employees={employees}
+                    onSelectAssignment={(range) => {
+                      setActiveAssignment(range);
+                      setActiveTab("labour");
+                    }}
+                    onCompleteAssignments={handleCompleteAssignments}
+                    onReopenAssignments={handleReopenAssignments}
+                    onRequestDeleteAssignment={(id) =>
+                      setConfirmDeleteAssignment(id)
+                    }
+                    onRequestUnassignEmployee={(employeeId, name) =>
+                      setConfirmUnassign({ employeeId, name })
+                    }
+                  />
                 </>
+              )}
+
+              {activeTab === "labour" && activeAssignment && (
+                <LabourTimeEntrySection
+                  jobId={Number(job.id)}
+                  assignment={activeAssignment}
+                />
+              )}
+
+              {activeTab === "labour" && !activeAssignment && (
+                <div style={{ padding: 16, color: "#888" }}>
+                  Select a scheduled time block first
+                </div>
               )}
             </div>
           </div>
-
-          {/* TABS */}
-          <div className={styles.hcTabs}>
-            <button
-              className={`${styles.hcTab} ${
-                activeTab === "scheduling" ? styles.hcTabActive : ""
-              }`}
-              onClick={() => setActiveTab("scheduling")}
-            >
-              Scheduling
-            </button>
-
-            <button
-              className={`${styles.hcTab} ${
-                activeTab === "labour" ? styles.hcTabActive : ""
-              }`}
-              onClick={() => setActiveTab("labour")}
-            >
-              Labour
-            </button>
-          </div>
-
-          {/* CONTENT */}
-          <div className={styles.sectionContent}>
-            {activeTab === "scheduling" && (
-              <>
-                <div className={styles.filterActionRow}>
-                  <AssigneeFilterBar
-                    employees={employees.map((e) => ({
-                      id: e.id,
-                      name: e.name,
-                    }))}
-                    selectedAssignee={selectedAssignee}
-                    onChange={setSelectedAssignee}
-                  />
-
-                  <div className={styles.actionButtons}>
-                    <button
-                      className={styles.assignBtn}
-                      disabled={selectedAssignee === "all"}
-                      onClick={handleAssignEmployee}
-                    >
-                      Assign
-                    </button>
-
-                    <button
-                      className={styles.scheduleBtn}
-                      disabled={selectedAssignee === "all"}
-                      onClick={handleScheduleEmployee}
-                    >
-                      Schedule
-                    </button>
-                  </div>
-                </div>
-
-                <JobAssignedEmployeesSection
-                  assignments={assignments}
-                  assignees={assignees}
-                  employees={employees}
-                  onSelectAssignment={(range) => {
-                    setActiveAssignment(range);
-                    setActiveTab("labour");
-                  }}
-                  onCompleteAssignments={handleCompleteAssignments}
-                  onReopenAssignments={handleReopenAssignments}
-                  onRequestDeleteAssignment={(id) =>
-                    setConfirmDeleteAssignment(id)
-                  }
-                  onRequestUnassignEmployee={(employeeId, name) =>
-                    setConfirmUnassign({ employeeId, name })
-                  }
-                />
-              </>
-            )}
-
-            {activeTab === "labour" && activeAssignment && (
-              <LabourTimeEntrySection
-                jobId={Number(job.id)}
-                assignment={activeAssignment}
-              />
-            )}
-
-            {activeTab === "labour" && !activeAssignment && (
-              <div style={{ padding: 16, color: "#888" }}>
-                Select a scheduled time block first
-              </div>
-            )}
-          </div>
         </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 };
 export default JobPage;

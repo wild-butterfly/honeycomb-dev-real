@@ -38,7 +38,11 @@ SELECT
  le.source
 FROM labour_entries le
 JOIN employees e ON e.id = le.employee_id
-WHERE le.job_id = $1
+JOIN jobs j ON j.id = le.job_id
+WHERE le.job_id = $1 AND (
+  current_setting('app.god_mode') = 'true'
+  OR j.company_id = current_setting('app.current_company_id')::bigint
+)
 ORDER BY le.created_at DESC
 `,
       [jobId]
@@ -186,13 +190,23 @@ export const deleteLabourEntry = async (req: Request, res: Response) => {
 
     const id = Number(req.params.id);
 
-    await db.query(
+    const result = await db.query(
 `
 DELETE FROM labour_entries
-WHERE id = $1
+WHERE id = $1 AND job_id IN (
+  SELECT id FROM jobs WHERE (
+    current_setting('app.god_mode') = 'true'
+    OR company_id = current_setting('app.current_company_id')::bigint
+  )
+)
+RETURNING id
 `,
       [id]
     );
+
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Labour entry not found" });
+    }
 
     res.json({
       success: true

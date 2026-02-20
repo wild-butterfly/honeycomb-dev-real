@@ -1,39 +1,67 @@
-import styles from "./CompanySwitcher.module.css";
+import React from "react";
 
 import { useCompany } from "../context/CompanyContext";
 
+function getCurrentUserRole(): string | null {
+  const userStr = localStorage.getItem("user");
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      return user?.role ?? null;
+    } catch {
+      // ignore malformed user data
+    }
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload));
+    return decoded?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function CompanySwitcher() {
   const {
+    companies,
+
     companyId,
 
     setCompanyId,
-
-    companies,
   } = useCompany();
 
-  const handleSwitch = (val: string) => {
-    const id = val === "" ? null : Number(val);
+  const role = getCurrentUserRole();
+  const isSuperAdmin = role === "superadmin";
 
-    setCompanyId(id);
+  const uniqueCompanies = Array.from(
+    new Map(companies.map((company) => [company.name, company])).values(),
+  );
 
-    if (id === null) localStorage.removeItem("impersonateCompany");
-    else localStorage.setItem("impersonateCompany", String(id));
-  };
+  if (!isSuperAdmin) {
+    return null;
+  }
 
   return (
-    <div className={styles.wrapper}>
-      <select
-        value={companyId ?? ""}
-        onChange={(e) => handleSwitch(e.target.value)}
-      >
-        <option value="">🌍 God Mode</option>
+    <select
+      value={companyId ?? ""}
+      onChange={(e) =>
+        setCompanyId(e.target.value ? Number(e.target.value) : null)
+      }
+    >
+      {/* GOD MODE - Only for superadmins */}
+      {isSuperAdmin && <option value="">🌍 God Mode</option>}
 
-        {companies.map((c: any) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-    </div>
+      {/* COMPANIES */}
+
+      {uniqueCompanies.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+    </select>
   );
 }

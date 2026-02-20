@@ -3,6 +3,26 @@
 // 🔐 RLS SAFE VERSION
 
 import { Request, Response } from "express";
+import type { AuthRequest } from "../middleware/authMiddleware";
+import {
+  logJobActivity,
+  resolveActorName,
+  resolveEmployeeName,
+} from "../lib/activity";
+
+const formatRange = (startValue: unknown, endValue: unknown) => {
+  const startDate = new Date(String(startValue ?? ""));
+  const endDate = new Date(String(endValue ?? ""));
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return "";
+  }
+
+  const toLabel = (date: Date) =>
+    date.toISOString().replace("T", " ").slice(0, 16);
+
+  return `${toLabel(startDate)} - ${toLabel(endDate)}`;
+};
 
 /* ===============================
    INTERNAL: Recalculate job status
@@ -138,15 +158,19 @@ export const getAllAssignments = async (req: Request, res: Response) => {
       const result = await db.query(
         `
         SELECT
-          id,
-          job_id,
-          employee_id,
-          start_time,
-          end_time,
-          completed
-        FROM assignments
-        WHERE job_id = $1
-        ORDER BY start_time ASC
+          a.id,
+          a.job_id,
+          a.employee_id,
+          a.start_time,
+          a.end_time,
+          a.completed
+        FROM assignments a
+        JOIN jobs j ON j.id = a.job_id
+        WHERE a.job_id = $1 AND (
+          current_setting('app.god_mode') = 'true'
+          OR j.company_id = current_setting('app.current_company_id')::bigint
+        )
+        ORDER BY a.start_time ASC
         `,
         [jobId]
       );
@@ -157,14 +181,19 @@ export const getAllAssignments = async (req: Request, res: Response) => {
     const result = await db.query(
       `
       SELECT
-        id,
-        job_id,
-        employee_id,
-        start_time,
-        end_time,
-        completed
-      FROM assignments
-      ORDER BY start_time ASC
+        a.id,
+        a.job_id,
+        a.employee_id,
+        a.start_time,
+        a.end_time,
+        a.completed
+      FROM assignments a
+      JOIN jobs j ON j.id = a.job_id
+      WHERE CASE
+        WHEN current_setting('app.god_mode') = 'true' THEN TRUE
+        ELSE j.company_id = current_setting('app.current_company_id')::bigint
+      END
+      ORDER BY a.start_time ASC
       `
     );
 
@@ -212,7 +241,10 @@ SELECT
   $4::timestamp,
   company_id
 FROM jobs
-WHERE id = $1
+WHERE id = $1 AND (
+  current_setting('app.god_mode') = 'true'
+  OR company_id = current_setting('app.current_company_id')::bigint
+)
 RETURNING *
 `,
 
@@ -224,6 +256,32 @@ RETURNING *
 ]
 
 );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const actorName = await resolveActorName(
+      db,
+      req as AuthRequest
+    );
+    const employeeName = await resolveEmployeeName(
+      db,
+      Number(employee_id)
+    );
+
+    const rangeLabel = formatRange(start_time, end_time);
+    const title = rangeLabel
+      ? `Scheduled ${employeeName} (${rangeLabel})`
+      : `Scheduled ${employeeName}`;
+
+    await logJobActivity(
+      db,
+      Number(job_id),
+      "assignment_scheduled",
+      title,
+      actorName
+    );
 
     res.status(201).json(result.rows[0]);
 
@@ -264,7 +322,12 @@ export const updateAssignment = async (req: Request, res: Response) => {
         start_time  = COALESCE($2, start_time),
         end_time    = COALESCE($3, end_time),
         completed   = COALESCE($4, completed)
-      WHERE id = $5
+      WHERE id = $5 AND job_id IN (
+        SELECT id FROM jobs WHERE (
+          current_setting('app.god_mode') = 'true'
+          OR company_id = current_setting('app.current_company_id')::bigint
+        )
+      )
       RETURNING *
       `,
       [employee_id, start_time, end_time, completed, assignmentId]
@@ -312,6 +375,12 @@ export const completeAssignments = async (req: Request, res: Response) => {
       UPDATE assignments
       SET completed = TRUE
       WHERE id = ANY($1::int[])
+      AND job_id IN (
+        SELECT id FROM jobs WHERE (
+          current_setting('app.god_mode') = 'true'
+          OR company_id = current_setting('app.current_company_id')::bigint
+        )
+      )
       RETURNING job_id, id
       `,
       [assignmentIds]
@@ -366,6 +435,12 @@ export const reopenAssignments = async (req: Request, res: Response) => {
       UPDATE assignments
       SET completed = FALSE
       WHERE id = ANY($1::int[])
+      AND job_id IN (
+        SELECT id FROM jobs WHERE (
+          current_setting('app.god_mode') = 'true'
+          OR company_id = current_setting('app.current_company_id')::bigint
+        )
+      )
       RETURNING job_id
       `,
       [assignmentIds]
@@ -408,7 +483,15 @@ export const deleteAssignment = async (req: Request, res: Response) => {
     const assignmentId = Number(req.params.id);
 
     const result = await db.query(
-      `DELETE FROM assignments WHERE id = $1 RETURNING job_id`,
+      `DELETE FROM assignments 
+       WHERE id = $1 
+       AND job_id IN (
+         SELECT id FROM jobs WHERE (
+           current_setting('app.god_mode') = 'true'
+           OR company_id = current_setting('app.current_company_id')::bigint
+         )
+       )
+       RETURNING job_id`,
       [assignmentId]
     );
 

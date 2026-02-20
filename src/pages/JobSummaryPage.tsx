@@ -22,12 +22,25 @@ interface JobDoc {
   title?: string;
   client?: string;
   address?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
   phone?: string;
   email?: string;
   notes?: string;
   status?: string;
   priority?: string;
+  quoted?: number;
+  invoiced?: number;
+  paid?: number;
 }
+
+type JobLabourEntryResponse = {
+  id?: number | string;
+  employee_id?: number | string;
+  worked_hours?: number | null;
+  rate?: number | null;
+};
 
 /* ================= COMPONENT ================= */
 
@@ -37,10 +50,8 @@ const JobSummaryPage: React.FC = () => {
   const [job, setJob] = useState<JobDoc | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [labourEntries, setLabourEntries] = useState<LabourEntry[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Backend'e dokunmuyoruz → labour boş geliyor
-  const labourEntries: LabourEntry[] = [];
 
   /* ================= LOAD ================= */
 
@@ -49,10 +60,11 @@ const JobSummaryPage: React.FC = () => {
 
     const load = async () => {
       try {
-        const [jobRes, aRes, eRes] = await Promise.all([
+        const [jobRes, aRes, eRes, lRes] = await Promise.all([
           apiGet<any>(`/jobs/${id}`),
           apiGet<any[]>(`/assignments?job_id=${id}`),
           apiGet<Employee[]>(`/employees`),
+          apiGet<JobLabourEntryResponse[]>(`/jobs/${id}/labour`),
         ]);
 
         const resolvedJob: JobDoc = jobRes?.job ?? jobRes;
@@ -71,6 +83,17 @@ const JobSummaryPage: React.FC = () => {
 
         /* === EMPLOYEES === */
         setEmployees(eRes ?? []);
+
+        /* === LABOUR === */
+        const mappedLabour: LabourEntry[] = (lRes ?? []).map((entry) => ({
+          id: Number(entry.id ?? 0),
+          job_id: Number(id),
+          employee_id: Number(entry.employee_id ?? 0),
+          hours: Number(entry.worked_hours ?? 0),
+          rate: Number(entry.rate ?? 0),
+        }));
+
+        setLabourEntries(mappedLabour);
       } catch (err) {
         console.error("Failed loading summary page:", err);
       } finally {
@@ -108,6 +131,16 @@ const JobSummaryPage: React.FC = () => {
     );
   }, [assignments]);
 
+  const loggedHours = useMemo(() => {
+    return (
+      Math.round(
+        labourEntries.reduce((sum, entry) => {
+          return sum + (entry.hours ?? 0);
+        }, 0) * 10,
+      ) / 10
+    );
+  }, [labourEntries]);
+
   /* ================= LOADING ================= */
 
   if (loading) {
@@ -143,6 +176,7 @@ const JobSummaryPage: React.FC = () => {
                 ...job,
                 assigned_staff: assignees.length,
                 scheduled_hours: scheduledHours,
+                logged_hours: loggedHours,
               }}
             />
           </div>

@@ -1,11 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
-
-/* =====================================================
-   GET ALL COMPANIES
-   superadmin → all
-   admin → own company
-===================================================== */
+import { pool } from "../db";
 
 export const getAll = async (
   req: AuthRequest,
@@ -14,86 +9,45 @@ export const getAll = async (
 
   try {
 
-    const db = (req as any).db;
+    if (req.user?.role === "superadmin")
+    {
 
-    if (!db) {
-      return res.status(500).json({
-        error: "DB not initialized"
-      });
+      const result = await pool.query(
+        `
+        SELECT id, name
+        FROM companies
+        ORDER BY name
+        `
+      );
+
+      return res.json(result.rows);
+
     }
 
-    const result = await db.query(`
+    if (!req.user?.company_id)
+    {
+      return res.json([]);
+    }
+
+    const result = await pool.query(
+      `
       SELECT id, name
       FROM companies
-      ORDER BY name
-    `);
+      WHERE id = $1
+      `,
+      [req.user.company_id]
+    );
 
     res.json(result.rows);
 
   }
-  catch (err) {
+  catch (err)
+  {
 
-    console.error("getAll companies error:", err);
+    console.error(err);
 
     res.status(500).json({
       error: "Failed to load companies"
-    });
-
-  }
-
-};
-
-
-/* =====================================================
-   CREATE COMPANY
-   admin / superadmin
-===================================================== */
-
-export const create = async (
-  req: AuthRequest,
-  res: Response
-) => {
-
-  try {
-
-    const db = (req as any).db;
-
-    if (!db) {
-      return res.status(500).json({
-        error: "DB not initialized"
-      });
-    }
-
-    const { name } = req.body;
-
-    if (!name) {
-
-      return res.status(400).json({
-        error: "Company name required"
-      });
-
-    }
-
-    const result = await db.query(
-      `
-      INSERT INTO companies (name)
-      VALUES ($1)
-      RETURNING id, name
-      `,
-      [name]
-    );
-
-    res.status(201).json(
-      result.rows[0]
-    );
-
-  }
-  catch (err) {
-
-    console.error("create company error:", err);
-
-    res.status(500).json({
-      error: "Failed to create company"
     });
 
   }

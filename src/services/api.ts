@@ -1,189 +1,197 @@
-// src/services/api.ts
-// Honeycomb API Service (FULLY FIXED)
-
 const API_BASE =
-  process.env.REACT_APP_API_BASE || "http://localhost:3001/api";
+  process.env.REACT_APP_API_BASE ||
+  "http://localhost:3001/api";
+
+
+let impersonateCompanyMemory: number | null =
+  Number(localStorage.getItem("impersonateCompany")) || null;
+
+
 
 /* =========================================================
-   CORE REQUEST FUNCTION
+CORE REQUEST (GENERIC)
 ========================================================= */
 
 async function request<T = any>(
   path: string,
-  options?: RequestInit,
-): Promise<T | null> {
+  options?: RequestInit
+): Promise<T | null>
+{
 
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token");
 
-  // ✅ correct key (FIXED)
-const impersonateCompanyRaw =
-  localStorage.getItem("impersonateCompany");
 
-const impersonateCompany =
-  impersonateCompanyRaw &&
-  impersonateCompanyRaw !== ""
-    ? impersonateCompanyRaw
-    : null;
+  const res =
+    await fetch(
+      `${API_BASE}${path}`,
+      {
+        ...options,
 
-  const url = `${API_BASE}${path}`;
+        headers: {
 
-  try {
+          "Content-Type":
+            "application/json",
 
-    const res = await fetch(url, {
+          ...(token && {
+            Authorization:
+              `Bearer ${token}`
+          }),
 
-      ...options,
+          ...(impersonateCompanyMemory && {
+            "X-Company-Id":
+              impersonateCompanyMemory.toString()
+          }),
 
-      headers: {
-
-        "Content-Type": "application/json",
-
-        // ✅ AUTH TOKEN
-        ...(token
-          ? { Authorization: `Bearer ${token}` }
-          : {}),
-
-        // ✅ COMPANY IMPERSONATION
-        ...(impersonateCompany
-          ? { "X-Company-Id": impersonateCompany }
-          : {}),
-
-        ...(options?.headers || {}),
-
-      },
-
-    });
-
-    /* ================= HANDLE HTTP ERROR ================= */
-
-    if (!res.ok) {
-
-      let body: any = null;
-
-      try {
-
-        const text = await res.text();
-
-        body = text
-          ? JSON.parse(text)
-          : text;
-
-      } catch {
-
-        body = null;
-
+          ...(options?.headers || {})
+        }
       }
+    );
 
-      console.error("API ERROR:", {
-        url,
-        status: res.status,
-        body,
-      });
 
-      throw new Error(
-        JSON.stringify(
-          {
-            url,
-            status: res.status,
-            body,
-          },
-          null,
-          2
-        )
-      );
+  if (!res.ok)
+  {
 
-    }
+    const text =
+      await res.text();
 
-    /* ================= SAFE RESPONSE PARSE ================= */
-
-    const text = await res.text();
-
-    if (!text)
-      return null;
-
-    try {
-
-      return JSON.parse(text) as T;
-
-    } catch {
-
-      return text as unknown as T;
-
-    }
+    throw new Error(text);
 
   }
-  catch (error: any) {
 
-    console.error("NETWORK ERROR:", error);
 
-    throw error;
+  const text =
+    await res.text();
 
-  }
+  if (!text)
+    return null;
+
+  return JSON.parse(text);
 
 }
 
+
+
 /* =========================================================
-   API HELPERS
+GENERIC EXPORTS
 ========================================================= */
 
-export const apiGet = <T>(path: string) =>
-  request<T>(path);
+export const apiGet =
+<T = any>(path: string) =>
+request<T>(path);
 
-export const apiPost = <T>(path: string, body: any) =>
-  request<T>(path, {
+
+export const apiPost =
+<T = any>(path: string, body: any) =>
+request<T>(
+  path,
+  {
     method: "POST",
-    body: JSON.stringify(body),
-  });
+    body: JSON.stringify(body)
+  }
+);
 
-export const apiPut = <T>(path: string, body: any) =>
-  request<T>(path, {
+
+export const apiPut =
+<T = any>(path: string, body: any) =>
+request<T>(
+  path,
+  {
     method: "PUT",
-    body: JSON.stringify(body),
-  });
+    body: JSON.stringify(body)
+  }
+);
 
-export const apiDelete = (path: string) =>
-  request<null>(path, {
-    method: "DELETE",
-  });
+
+export const apiDelete =
+<T = any>(path: string) =>
+request<T>(
+  path,
+  {
+    method: "DELETE"
+  }
+);
+
+
 
 /* =========================================================
-   IMPERSONATION
+IMPERSONATION
 ========================================================= */
 
-export const setImpersonationCompany = (companyId: number | null) => {
+export function setImpersonationCompany(
+  id: number | null
+)
+{
 
-  if (!companyId)
+  impersonateCompanyMemory = id;
+
+  if (id === null)
     localStorage.removeItem("impersonateCompany");
-
   else
-    localStorage.setItem(
-      "impersonateCompany",
-      String(companyId)
-    );
+    localStorage.setItem("impersonateCompany", String(id));
 
-  window.location.reload();
-
-};
+}
 
 
-export const getImpersonationCompany =
-  () =>
-    localStorage.getItem(
-      "impersonateCompany"
-    );
 
 /* =========================================================
-   AUTH HELPERS
+LOGOUT
 ========================================================= */
 
-export const logout = () => {
+export function logout()
+{
 
-  localStorage.removeItem("token");
-
-  localStorage.removeItem(
-    "impersonateCompany"
-  );
+  localStorage.clear();
 
   window.location.href =
     "/login";
+
+}
+
+
+/* =========================================================
+REGISTER
+========================================================= */
+
+export async function register(data: {
+  email: string;
+  password: string;
+  company_name?: string;
+}) {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error || "Registration failed");
+  }
+
+  const result = await res.json();
+  
+  // Save token to localStorage
+  if (result.token) {
+    localStorage.setItem("token", result.token);
+  }
+  
+  // Save user data to localStorage
+  if (result.user) {
+    localStorage.setItem("user", JSON.stringify(result.user));
+  }
+
+  return result;
+}
+
+
+export default {
+
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  delete: apiDelete
 
 };

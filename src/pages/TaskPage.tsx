@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createTask, getTasks, Task } from "../services/tasks";
 import { useTaskEmployees } from "../services/taskEmployees";
+import { useCompany } from "../context/CompanyContext";
 
 // ---------- AddTaskModal ----------
 type AddTaskModalProps = {
@@ -82,10 +83,11 @@ const TaskPage: React.FC = () => {
   const [showAddTask, setShowAddTask] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const { employees, loading } = useTaskEmployees();
+  const { companyId } = useCompany();
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [companyId]);
 
   const loadTasks = async () => {
     const data = await getTasks();

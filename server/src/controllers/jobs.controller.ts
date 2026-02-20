@@ -1,5 +1,11 @@
 //jobs.controller.ts
 import { Request, Response } from "express";
+import type { AuthRequest } from "../middleware/authMiddleware";
+import {
+  logJobActivity,
+  resolveActorName,
+  resolveEmployeeName,
+} from "../lib/activity";
 
 /* ===============================
    GET ALL JOBS + ASSIGNMENTS + ASSIGNEES
@@ -51,6 +57,10 @@ export const getAll = async (req: Request, res: Response) => {
       LEFT JOIN assignments a ON a.job_id = j.id
       LEFT JOIN job_assignees ja ON ja.job_id = j.id
       LEFT JOIN employees e ON e.id = ja.employee_id
+      WHERE CASE 
+        WHEN current_setting('app.god_mode') = 'true' THEN TRUE
+        ELSE j.company_id = current_setting('app.current_company_id')::bigint
+      END
       GROUP BY j.id
       ORDER BY j.created_at DESC
     `);
@@ -100,7 +110,10 @@ export const getOne = async (req: Request, res: Response) => {
       LEFT JOIN assignments a ON a.job_id = j.id
       LEFT JOIN job_assignees ja ON ja.job_id = j.id
       LEFT JOIN employees e ON e.id = ja.employee_id
-      WHERE j.id = $1
+      WHERE j.id = $1 AND (
+        current_setting('app.god_mode') = 'true' 
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
       GROUP BY j.id
       `,
       [id]
@@ -196,6 +209,19 @@ export const create = async (
         ]
       );
 
+    const actorName = await resolveActorName(
+      db,
+      req as AuthRequest
+    );
+
+    await logJobActivity(
+      db,
+      Number(result.rows[0].id),
+      "job_created",
+      "Job created",
+      actorName
+    );
+
 
     res.json(
       result.rows[0]
@@ -236,6 +262,32 @@ export const update = async (req: Request, res: Response) => {
       contact_phone,
     } = req.body;
 
+    const existing = await db.query(
+      `
+      SELECT notes, status
+      FROM jobs
+      WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
+      `,
+      [id]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    const notesProvided =
+      Object.prototype.hasOwnProperty.call(req.body, "notes");
+    const statusProvided =
+      Object.prototype.hasOwnProperty.call(req.body, "status");
+
+    const previousNotes = existing.rows[0]?.notes ?? null;
+    const notesChanged = notesProvided && notes !== previousNotes;
+    const previousStatus = existing.rows[0]?.status ?? null;
+    const statusChanged = statusProvided && status !== previousStatus;
+
     const result = await db.query(
       `
       UPDATE jobs
@@ -248,8 +300,12 @@ export const update = async (req: Request, res: Response) => {
         color = COALESCE($6, color),
         contact_name = COALESCE($7, contact_name),
         contact_email = COALESCE($8, contact_email),
-        contact_phone = COALESCE($9, contact_phone)
-      WHERE id = $10
+        contact_phone = COALESCE($9, contact_phone),
+        updated_at = NOW()
+      WHERE id = $10 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
       RETURNING *;
       `,
       [
@@ -268,6 +324,47 @@ export const update = async (req: Request, res: Response) => {
 
     if (!result.rows.length) {
       return res.status(404).json({ error: "Job not found" });
+    }
+
+    const actorName = await resolveActorName(
+      db,
+      req as AuthRequest
+    );
+
+    const formatNotes = (value: unknown) => {
+      const text = String(value ?? "").replace(/\s+/g, " ").trim();
+      if (!text) return "empty";
+      return text.length > 60 ? `${text.slice(0, 57)}...` : text;
+    };
+
+    if (notesChanged) {
+      await logJobActivity(
+        db,
+        Number(id),
+        "notes_updated",
+        `Notes changed from "${formatNotes(previousNotes)}" to "${formatNotes(notes)}"`,
+        actorName
+      );
+    }
+
+    if (statusChanged) {
+      await logJobActivity(
+        db,
+        Number(id),
+        "status_changed",
+        `Status changed from "${previousStatus ?? "none"}" to "${status ?? "none"}"`,
+        actorName
+      );
+    }
+
+    if (!notesChanged && !statusChanged) {
+      await logJobActivity(
+        db,
+        Number(id),
+        "job_updated",
+        "Job updated",
+        actorName
+      );
     }
 
     res.json(result.rows[0]);
@@ -294,12 +391,32 @@ export const remove = async (req: Request, res: Response) => {
     // ✅ Transaction = no half-deletes
     await db.query("BEGIN");
 
+    // ✅ Verify job belongs to current company FIRST
+    const jobCheck = await db.query(
+      `SELECT id FROM jobs WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )`,
+      [jobId]
+    );
+    
+    if (!jobCheck.rowCount) {
+      await db.query("ROLLBACK");
+      return res.status(404).json({ error: "Job not found" });
+    }
+
     // ✅ Delete dependent rows first (prevents FK errors + orphan rows)
     await db.query(`DELETE FROM labour_entries WHERE job_id = $1`, [jobId]);
     await db.query(`DELETE FROM job_assignees  WHERE job_id = $1`, [jobId]);
     await db.query(`DELETE FROM assignments    WHERE job_id = $1`, [jobId]);
 
-    const result = await db.query(`DELETE FROM jobs WHERE id = $1`, [jobId]);
+    const result = await db.query(
+      `DELETE FROM jobs WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )`,
+      [jobId]
+    );
 
     if (!result.rowCount) {
       await db.query("ROLLBACK");
@@ -338,13 +455,33 @@ export const unassignEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid payload" });
     }
 
-    await db.query(
+    const result = await db.query(
       `
       DELETE FROM job_assignees
       WHERE job_id = $1 AND employee_id = $2
+      RETURNING employee_id
       `,
       [jobId, employee_id]
     );
+
+    if (result.rows.length) {
+      const actorName = await resolveActorName(
+        db,
+        req as AuthRequest
+      );
+      const employeeName = await resolveEmployeeName(
+        db,
+        Number(employee_id)
+      );
+
+      await logJobActivity(
+        db,
+        jobId,
+        "staff_unassigned",
+        `Unassigned ${employeeName}`,
+        actorName
+      );
+    }
 
     res.status(204).send();
   } catch (err) {
@@ -384,7 +521,11 @@ export const getLabour = async (req: Request, res: Response) => {
         l.notes
       FROM labour_entries l
       JOIN employees e ON e.id = l.employee_id
-      WHERE l.job_id = $1
+      JOIN jobs j ON j.id = l.job_id
+      WHERE l.job_id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
     `;
 
     const values: any[] = [id];
@@ -433,9 +574,12 @@ export const addLabour = async (req: Request, res: Response) => {
 
  
 
-    // 1️⃣ Job exists? (RLS filtered)
+    // 1️⃣ Job exists? (company-scoped)
     const jobCheck = await db.query(
-      `SELECT id FROM jobs WHERE id = $1`,
+      `SELECT id FROM jobs WHERE id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )`,
       [jobId]
     );
 
@@ -503,6 +647,19 @@ export const addLabour = async (req: Request, res: Response) => {
       ]
     );
 
+    const actorName = await resolveEmployeeName(
+      db,
+      Number(employee_id)
+    );
+
+    await logJobActivity(
+      db,
+      jobId,
+      "labour_added",
+      "Labour added",
+      actorName
+    );
+
     res.status(201).json(result.rows[0]);
 
   } catch (err) {
@@ -529,9 +686,9 @@ export const assignEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid payload" });
     }
 
-    // 1️⃣ Job exists? (RLS filtered)
+    // 1️⃣ Job exists? (company-scoped)
     const jobCheck = await db.query(
-      `SELECT id FROM jobs WHERE id = $1`,
+      `SELECT id FROM jobs WHERE id = $1 AND company_id = current_setting('app.current_company_id')::bigint`,
       [jobId]
     );
 
@@ -539,15 +696,35 @@ export const assignEmployee = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Job not found" });
     }
 
-    // 2️⃣ Insert — company_id DB context'ten gelir
-    await db.query(
+    // 2️⃣ Insert — company_id from DB context
+    const result = await db.query(
       `
       INSERT INTO job_assignees (job_id, employee_id, company_id)
       VALUES ($1, $2, current_setting('app.current_company_id')::int)
       ON CONFLICT DO NOTHING
+      RETURNING employee_id
       `,
       [jobId, employee_id]
     );
+
+    if (result.rows.length) {
+      const actorName = await resolveActorName(
+        db,
+        req as AuthRequest
+      );
+      const employeeName = await resolveEmployeeName(
+        db,
+        Number(employee_id)
+      );
+
+      await logJobActivity(
+        db,
+        jobId,
+        "staff_assigned",
+        `Assigned ${employeeName}`,
+        actorName
+      );
+    }
 
     res.json({ ok: true });
 
@@ -650,73 +827,41 @@ export const getActivity = async (req: Request, res: Response) => {
     const db = (req as any).db;
     const { id } = req.params;
 
-    const result = await db.query(`
+    const result = await db.query(
+      `
+      SELECT
+        type,
+        title,
+        user_name,
+        created_at AS date
+      FROM job_activity
+      WHERE job_id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR company_id = current_setting('app.current_company_id')::bigint
+      )
 
-      SELECT * FROM (
+      UNION ALL
 
-        /* LABOUR ADDED */
-
-        SELECT
-          'labour_added' AS type,
-          'Labour added' AS title,
-          e.name AS user_name,
-          l.created_at AS date
-        FROM labour_entries l
-        JOIN employees e ON e.id = l.employee_id
-        WHERE l.job_id = $1
-
-
-        UNION ALL
-
-
-        /* STAFF ASSIGNED */
-
-        SELECT
-          'assigned' AS type,
-          'Staff assigned' AS title,
-          e.name AS user_name,
-          ja.created_at AS date
-        FROM job_assignees ja
-        JOIN employees e ON e.id = ja.employee_id
-        WHERE ja.job_id = $1
-
-
-        UNION ALL
-
-
-        /* JOB CREATED */
-
-        SELECT
-          'job_created' AS type,
-          'Job created' AS title,
-          'System' AS user_name,
-          j.created_at AS date
-        FROM jobs j
-        WHERE j.id = $1
-
-
-        UNION ALL
-
-
-        /* JOB UPDATED */
-
-        SELECT
-          'job_updated' AS type,
-          'Job updated' AS title,
-          'System' AS user_name,
-          j.updated_at AS date
-        FROM jobs j
-        WHERE j.id = $1
-        AND j.updated_at IS NOT NULL
-
-
-      ) activity
+      SELECT
+        'job_created' AS type,
+        'Job created' AS title,
+        'System' AS user_name,
+        j.created_at AS date
+      FROM jobs j
+      WHERE j.id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM job_activity a
+        WHERE a.job_id = j.id AND a.type = 'job_created'
+      )
 
       ORDER BY date DESC
-
       LIMIT 100
-
-    `, [id]);
+      `,
+      [id]
+    );
 
     res.json(result.rows);
 

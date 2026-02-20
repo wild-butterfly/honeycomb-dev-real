@@ -24,6 +24,10 @@ SELECT
  rate,
  active
 FROM employees
+WHERE CASE
+  WHEN current_setting('app.god_mode') = 'true' THEN TRUE
+  ELSE company_id = current_setting('app.current_company_id')::bigint
+END
 ORDER BY name ASC
 `
     );
@@ -65,7 +69,10 @@ SELECT
  rate,
  active
 FROM employees
-WHERE id = $1
+WHERE id = $1 AND (
+  current_setting('app.god_mode') = 'true'
+  OR company_id = current_setting('app.current_company_id')::bigint
+)
 `,
       [id]
     );
@@ -189,7 +196,10 @@ SET
  name = COALESCE($1, name),
  rate = COALESCE($2, rate),
  active = COALESCE($3, active)
-WHERE id = $4
+WHERE id = $4 AND (
+  current_setting('app.god_mode') = 'true'
+  OR company_id = current_setting('app.current_company_id')::bigint
+)
 RETURNING
  id,
  name,
@@ -240,8 +250,12 @@ export const remove = async (req: Request, res: Response) => {
     const check = await db.query(
 `
 SELECT 1
-FROM assignments
-WHERE employee_id = $1
+FROM assignments a
+JOIN jobs j ON j.id = a.job_id
+WHERE a.employee_id = $1 AND (
+  current_setting('app.god_mode') = 'true'
+  OR j.company_id = current_setting('app.current_company_id')::bigint
+)
 LIMIT 1
 `,
       [id]
@@ -263,7 +277,10 @@ LIMIT 1
     const result = await db.query(
 `
 DELETE FROM employees
-WHERE id = $1
+WHERE id = $1 AND (
+  current_setting('app.god_mode') = 'true'
+  OR company_id = current_setting('app.current_company_id')::bigint
+)
 RETURNING id
 `,
       [id]

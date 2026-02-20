@@ -1,96 +1,91 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { PoolClient } from "pg";
+
+const JWT_SECRET =
+  process.env.JWT_SECRET || "supersecret";
+
 
 /* =====================================================
-   CONFIG
-===================================================== */
-
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-
-/* =====================================================
-   TYPES
+TYPES
 ===================================================== */
 
 export interface AuthUser {
+
   id: number;
   role: string;
-  company_id?: number;     // optional for superadmin
+
+  company_id?: number;
+
   employee_id?: number;
+
 }
+
 
 export interface AuthRequest extends Request {
+
   user?: AuthUser;
+
+  db?: PoolClient;
+
 }
 
+
+
 /* =====================================================
-   REQUIRE AUTH
+REQUIRE AUTH
 ===================================================== */
 
-export function requireAuth(
+export async function requireAuth(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) {
+)
+{
 
-  const authHeader = req.headers.authorization;
+  try
+  {
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const authHeader =
+      req.headers.authorization;
 
-    return res.status(401).json({
-      error: "No token provided"
-    });
 
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-
-    const decoded = jwt.verify(
-      token,
-      JWT_SECRET
-    ) as any;
-
-    /* ===== BASIC VALIDATION ===== */
-
-    if (
-      typeof decoded.id !== "number" ||
-      typeof decoded.role !== "string"
-    ) {
+    if (!authHeader ||
+        !authHeader.startsWith("Bearer "))
+    {
 
       return res.status(401).json({
-        error: "Invalid token payload"
+        error: "No token provided"
       });
 
     }
 
-    /* ===== COMPANY RULE ===== */
 
-    // superadmin company optional
-    if (
-      decoded.role !== "superadmin" &&
-      typeof decoded.company_id !== "number"
-    ) {
+    const token =
+      authHeader.split(" ")[1];
 
-      return res.status(401).json({
-        error: "Invalid token payload"
-      });
 
-    }
+    const decoded =
+      jwt.verify(
+        token,
+        JWT_SECRET
+      ) as AuthUser;
 
-    /* ===== SET USER ===== */
 
-    req.user = {
-      id: decoded.id,
-      role: decoded.role,
-      company_id: decoded.company_id,
-      employee_id: decoded.employee_id
-    };
+    req.user = decoded;
+
 
     next();
 
   }
-  catch (err) {
+  catch (err)
+  {
+
+    console.error(
+      "AUTH ERROR:",
+      err
+    );
+
 
     return res.status(401).json({
       error: "Invalid token"
@@ -100,19 +95,26 @@ export function requireAuth(
 
 }
 
+
+
 /* =====================================================
-   REQUIRE ROLE
+REQUIRE ROLE
 ===================================================== */
 
-export function requireRole(roles: string[]) {
+export function requireRole(
+  roles: string[]
+)
+{
 
   return (
     req: AuthRequest,
     res: Response,
     next: NextFunction
-  ) => {
+  ) =>
+  {
 
-    if (!req.user) {
+    if (!req.user)
+    {
 
       return res.status(401).json({
         error: "Unauthorized"
@@ -120,13 +122,23 @@ export function requireRole(roles: string[]) {
 
     }
 
-    /* superadmin bypass */
 
-    if (req.user.role === "superadmin") {
+    if (
+      req.user.role === "superadmin"
+    )
+    {
+
       return next();
+
     }
 
-    if (!roles.includes(req.user.role)) {
+
+    if (
+      !roles.includes(
+        req.user.role
+      )
+    )
+    {
 
       return res.status(403).json({
         error: "Forbidden"
@@ -134,47 +146,9 @@ export function requireRole(roles: string[]) {
 
     }
 
+
     next();
 
   };
-
-}
-
-/* =====================================================
-   REQUIRE EMPLOYEE LINK
-===================================================== */
-
-export function requireEmployeeLink(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) {
-
-  if (!req.user) {
-
-    return res.status(401).json({
-      error: "Unauthorized"
-    });
-
-  }
-
-  /* superadmin bypass */
-
-  if (req.user.role === "superadmin") {
-    return next();
-  }
-
-  if (
-    req.user.role === "employee" &&
-    !req.user.employee_id
-  ) {
-
-    return res.status(403).json({
-      error: "Employee not linked"
-    });
-
-  }
-
-  next();
 
 }

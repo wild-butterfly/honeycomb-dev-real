@@ -21,7 +21,7 @@ import type {
 } from "../types/calendar";
 
 import { fetchEmployees } from "../services/employees";
-import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
+import { apiGet, apiPost, apiPut, apiDelete, logout } from "../services/api";
 import { useCompany } from "../context/CompanyContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -123,7 +123,7 @@ const CalendarPage: React.FC = () => {
     fetchEmployees().then((list) => {
       setEmployees(Array.isArray(list) ? list : []);
     });
-  }, []);
+  }, [companyId]);
 
   /* ================= LOAD JOBS + ASSIGNMENTS ================= */
 
@@ -305,7 +305,7 @@ const CalendarPage: React.FC = () => {
 
   return (
     <div className={styles.dashboardBg}>
-      <DashboardNavbar onNewJob={() => {}} />
+      <DashboardNavbar onNewJob={() => {}} onLogout={logout} />
 
       <CalendarControlsBar
         date={selectedDate}

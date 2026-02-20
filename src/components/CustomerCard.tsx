@@ -17,6 +17,10 @@ interface Props {
 }
 
 const CustomerCard: React.FC<Props> = ({ job }) => {
+  const clientName = job?.client || job?.contact_name || "—";
+  const contactPhone = job?.contact_phone || job?.phone || "";
+  const contactEmail = job?.contact_email || job?.email || "";
+
   return (
     <div className={styles.card}>
       <div className={styles.header}>
@@ -34,7 +38,7 @@ const CustomerCard: React.FC<Props> = ({ job }) => {
           <div>
             <div className={styles.label}>Client</div>
 
-            <div className={styles.value}>{job?.client || "—"}</div>
+            <div className={styles.value}>{clientName}</div>
           </div>
         </div>
 
@@ -58,9 +62,9 @@ const CustomerCard: React.FC<Props> = ({ job }) => {
           <div>
             <div className={styles.label}>Phone</div>
 
-            {job?.phone ? (
-              <a href={`tel:${job.phone}`} className={styles.link}>
-                {job.phone}
+            {contactPhone ? (
+              <a href={`tel:${contactPhone}`} className={styles.link}>
+                {contactPhone}
               </a>
             ) : (
               <div className={styles.muted}>—</div>
@@ -76,9 +80,9 @@ const CustomerCard: React.FC<Props> = ({ job }) => {
           <div>
             <div className={styles.label}>Email</div>
 
-            {job?.email ? (
-              <a href={`mailto:${job.email}`} className={styles.link}>
-                {job.email}
+            {contactEmail ? (
+              <a href={`mailto:${contactEmail}`} className={styles.link}>
+                {contactEmail}
               </a>
             ) : (
               <div className={styles.muted}>—</div>
