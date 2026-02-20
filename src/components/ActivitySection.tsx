@@ -46,15 +46,16 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
   }, [jobId, page]);
 
   const formatTime = (date: string) => {
-    const d = new Date(date);
+    return date;
+  };
 
-    return d.toLocaleString("en-AU", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const extractScheduleRange = (title: string) => {
+    const matches = title.match(
+      /\d{4}-\d{2}-\d{2} \d{2}:\d{2}\s*-\s*\d{4}-\d{2}-\d{2} \d{2}:\d{2}/g,
+    );
+
+    if (!matches || matches.length === 0) return null;
+    return matches[matches.length - 1].replace(/\s*-\s*/, " - ");
   };
 
   return (
@@ -76,27 +77,34 @@ const ActivitySection: React.FC<Props> = ({ jobId }) => {
           <div className={styles.empty}>No activity yet</div>
         )}
 
-        {activity.map((item, index) => (
-          <div key={index} className={styles.item}>
-            {/* ICON COLUMN */}
+        {activity.map((item, index) => {
+          const scheduleRange = extractScheduleRange(item.title);
+          const displayTime = scheduleRange ?? formatTime(item.date);
 
-            <div className={styles.iconWrapper}>
-              <div className={styles.iconDot} />
+          return (
+            <div key={index} className={styles.item}>
+              {/* ICON COLUMN */}
 
-              {index !== activity.length - 1 && <div className={styles.line} />}
+              <div className={styles.iconWrapper}>
+                <div className={styles.iconDot} />
+
+                {index !== activity.length - 1 && (
+                  <div className={styles.line} />
+                )}
+              </div>
+
+              {/* CONTENT */}
+
+              <div className={styles.content}>
+                <div className={styles.itemTitle}>{item.title}</div>
+
+                <div className={styles.subtitle}>{item.user_name}</div>
+
+                <div className={styles.time}>{displayTime}</div>
+              </div>
             </div>
-
-            {/* CONTENT */}
-
-            <div className={styles.content}>
-              <div className={styles.itemTitle}>{item.title}</div>
-
-              <div className={styles.subtitle}>{item.user_name}</div>
-
-              <div className={styles.time}>{formatTime(item.date)}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className={styles.pagination}>

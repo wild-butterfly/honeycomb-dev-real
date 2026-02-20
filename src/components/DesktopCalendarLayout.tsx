@@ -94,7 +94,7 @@ const clampToDay = (start: Date, end: Date, day: Date) => {
 ========================================================= */
 
 type ActiveDrag = {
-  mode: "move" | "resize";
+  mode: "move" | "resize-start" | "resize-end";
   item: CalendarItem;
 
   fromEmployeeId: number;
@@ -221,7 +221,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
        RESIZE MODE (FIXED)
     ========================= */
 
-      if (ctx.mode === "resize") {
+      if (ctx.mode === "resize-start" || ctx.mode === "resize-end") {
         const deltaPx = x - ctx.pointerStartX;
 
         // tiny jitter guard
@@ -229,13 +229,24 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
         const deltaMinutes = snap15(pxToMinutes(deltaPx));
 
+        const originalStartMinutes =
+          ctx.originalStart.getHours() * 60 + ctx.originalStart.getMinutes();
         const originalEndMinutes =
           ctx.originalEnd.getHours() * 60 + ctx.originalEnd.getMinutes();
 
-        const newEndMinutes = originalEndMinutes + deltaMinutes;
-        const newEnd = buildDateFromMinutes(date, newEndMinutes);
+        const nextStartMinutes =
+          ctx.mode === "resize-start"
+            ? originalStartMinutes + deltaMinutes
+            : originalStartMinutes;
+        const nextEndMinutes =
+          ctx.mode === "resize-end"
+            ? originalEndMinutes + deltaMinutes
+            : originalEndMinutes;
 
-        const clamped = clampToDay(ctx.originalStart, newEnd, date);
+        const newStart = buildDateFromMinutes(date, nextStartMinutes);
+        const newEnd = buildDateFromMinutes(date, nextEndMinutes);
+
+        const clamped = clampToDay(newStart, newEnd, date);
         if (clamped.end <= clamped.start) return;
 
         ctx.liveStart = clamped.start;
@@ -253,7 +264,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
         if (!g) return;
 
         g.style.display = "block";
-        g.style.transform = `translate(${left}px, ${ctx.rowTopPx + 6}px)`;
+        g.style.transform = `translate3d(${left}px, ${ctx.rowTopPx + 6}px, 0)`;
         g.style.width = `${Math.max(width, 60)}px`;
         g.style.background = ctx.item.color ?? "#fffdf0";
         return;
@@ -284,7 +295,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
       if (!g) return;
 
       g.style.display = "block";
-      g.style.transform = `translate(${left}px, ${ctx.rowTopPx + 6}px)`;
+      g.style.transform = `translate3d(${left}px, ${ctx.rowTopPx + 6}px, 0)`;
       g.style.width = `${Math.max(width, 60)}px`;
       g.style.background = ctx.item.color ?? "#fffdf0";
     });
@@ -552,6 +563,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     rawStart: Date,
     rawEnd: Date,
     leftPx: number,
+    side: "start" | "end",
   ) => {
     const body = bodyScrollRef.current;
     if (!body) return;
@@ -572,7 +584,7 @@ const DesktopCalendarLayout: React.FC<Props> = ({
     const clamped = clampToDay(rawStart, rawEnd, date);
 
     activeDragRef.current = {
-      mode: "resize",
+      mode: side === "start" ? "resize-start" : "resize-end",
       item,
       fromEmployeeId: rowEmployeeId,
       currentTargetEmployeeId: rowEmployeeId,
@@ -604,8 +616,12 @@ const DesktopCalendarLayout: React.FC<Props> = ({
      RENDER
   ========================================================== */
 
+  const isDragging = Boolean(draggingKey);
+
   return (
-    <div className={styles.calendarOuter}>
+    <div
+      className={`${styles.calendarOuter} ${isDragging ? styles.dragging : ""}`}
+    >
       <div className={styles.stickyHeader}>
         <div className={styles.staffHeaderCell} />
         <div className={styles.headerScroll} ref={headerScrollRef}>
@@ -731,9 +747,15 @@ const DesktopCalendarLayout: React.FC<Props> = ({
 
                       {/* ✅ RESIZE HANDLE */}
                       <div
-                        className={styles.resizeHandle}
+                        className={`${styles.resizeHandle} ${styles.resizeHandleLeft}`}
                         onPointerDown={(ev) =>
-                          startResizeDrag(ev, item, emp.id, s, e, left)
+                          startResizeDrag(ev, item, emp.id, s, e, left, "start")
+                        }
+                      />
+                      <div
+                        className={`${styles.resizeHandle} ${styles.resizeHandleRight}`}
+                        onPointerDown={(ev) =>
+                          startResizeDrag(ev, item, emp.id, s, e, left, "end")
                         }
                       />
                     </div>

@@ -843,7 +843,7 @@ export const getActivity = async (req: Request, res: Response) => {
           type,
           title,
           user_name,
-          created_at AS date
+          to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') AS date
         FROM job_activity
         WHERE job_id = $1 AND (
           current_setting('app.god_mode') = 'true'
@@ -856,7 +856,7 @@ export const getActivity = async (req: Request, res: Response) => {
           'job_created' AS type,
           'Job created' AS title,
           'System' AS user_name,
-          j.created_at AS date
+          to_char(j.created_at, 'YYYY-MM-DD HH24:MI:SS') AS date
         FROM jobs j
         WHERE j.id = $1 AND (
           current_setting('app.god_mode') = 'true'

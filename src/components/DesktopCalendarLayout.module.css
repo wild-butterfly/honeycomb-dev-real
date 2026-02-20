@@ -13,6 +13,10 @@
   overflow-x: hidden;
 }
 
+.dragging {
+  cursor: grabbing;
+}
+
 /* ==========================================
    STICKY HEADER (TIME LABELS)
 ========================================== */
@@ -212,6 +216,15 @@
   filter: brightness(1.03);
 }
 
+.dragging .jobBlock {
+  transition: none;
+  box-shadow: none;
+}
+
+.dragging .jobBlock:hover {
+  filter: none;
+}
+
 .jobBlockTitle {
   font-weight: 700;
   pointer-events: auto;
@@ -273,11 +286,18 @@
 .resizeHandle {
   position: absolute;
   top: 0;
-  right: 0;
   width: 10px;
   height: 100%;
   cursor: ew-resize;
   background: transparent;
+}
+
+.resizeHandleLeft {
+  left: 0;
+}
+
+.resizeHandleRight {
+  right: 0;
 }
 
 /* ==========================================
@@ -299,8 +319,13 @@
   border: 1.5px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
   opacity: 0.92;
+  contain: layout paint;
 
   /* 🚀 GPU acceleration */
   will-change: transform, width;
   transform: translate3d(0, 0, 0);
+}
+
+.dragging .dragGhost {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }

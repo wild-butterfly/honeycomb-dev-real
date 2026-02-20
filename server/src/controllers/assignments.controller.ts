@@ -11,17 +11,18 @@ import {
 } from "../lib/activity";
 
 const formatRange = (startValue: unknown, endValue: unknown) => {
-  const startDate = new Date(String(startValue ?? ""));
-  const endDate = new Date(String(endValue ?? ""));
+  const toLabel = (value: unknown) => {
+    const raw = String(value ?? "");
+    const match = raw.match(/(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+    if (!match) return "";
+    return `${match[1]} ${match[2]}`;
+  };
 
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    return "";
-  }
+  const startLabel = toLabel(startValue);
+  const endLabel = toLabel(endValue);
 
-  const toLabel = (date: Date) =>
-    date.toISOString().replace("T", " ").slice(0, 16);
-
-  return `${toLabel(startDate)} - ${toLabel(endDate)}`;
+  if (!startLabel || !endLabel) return "";
+  return `${startLabel} - ${endLabel}`;
 };
 
 /* ===============================
@@ -223,6 +224,21 @@ export const createAssignment = async (req: Request, res: Response) => {
 
     console.log("CREATE ASSIGNMENT:", req.body);
 
+    const existingAssignments = await db.query(
+      `
+      SELECT COUNT(*)::int AS count
+      FROM assignments a
+      JOIN jobs j ON j.id = a.job_id
+      WHERE a.job_id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
+      `,
+      [job_id]
+    );
+
+    const hadAssignments = Number(existingAssignments.rows[0]?.count ?? 0) > 0;
+
     const result = await db.query(
 
 `
@@ -261,27 +277,29 @@ RETURNING *
       return res.status(404).json({ error: "Job not found" });
     }
 
-    const actorName = await resolveActorName(
-      db,
-      req as AuthRequest
-    );
-    const employeeName = await resolveEmployeeName(
-      db,
-      Number(employee_id)
-    );
+    if (hadAssignments) {
+      const actorName = await resolveActorName(
+        db,
+        req as AuthRequest
+      );
+      const employeeName = await resolveEmployeeName(
+        db,
+        Number(employee_id)
+      );
 
-    const rangeLabel = formatRange(start_time, end_time);
-    const title = rangeLabel
-      ? `Scheduled ${employeeName} (${rangeLabel})`
-      : `Scheduled ${employeeName}`;
+      const rangeLabel = formatRange(start_time, end_time);
+      const title = rangeLabel
+        ? `Scheduled ${employeeName} (${rangeLabel})`
+        : `Scheduled ${employeeName}`;
 
-    await logJobActivity(
-      db,
-      Number(job_id),
-      "assignment_scheduled",
-      title,
-      actorName
-    );
+      await logJobActivity(
+        db,
+        Number(job_id),
+        "assignment_scheduled",
+        title,
+        actorName
+      );
+    }
 
     res.status(201).json(result.rows[0]);
 
@@ -317,8 +335,8 @@ export const updateAssignment = async (req: Request, res: Response) => {
     const existing = await db.query(
       `
       SELECT
-        a.start_time,
-        a.end_time,
+        to_char(a.start_time, 'YYYY-MM-DD HH24:MI:SS') AS start_time,
+        to_char(a.end_time, 'YYYY-MM-DD HH24:MI:SS') AS end_time,
         a.employee_id,
         a.job_id
       FROM assignments a
@@ -407,18 +425,44 @@ export const updateAssignment = async (req: Request, res: Response) => {
       const newRange = formatRange(newStart, newEnd);
 
       if (oldRange && newRange && oldRange !== newRange) {
+        const scheduleHistory = await db.query(
+          `
+          SELECT 1
+          FROM job_activity
+          WHERE job_id = $1
+            AND type IN ('assignment_scheduled', 'assignment_rescheduled')
+            AND (
+              current_setting('app.god_mode') = 'true'
+              OR company_id = current_setting('app.current_company_id')::bigint
+            )
+          LIMIT 1
+          `,
+          [jobId]
+        );
+
+        const hasScheduleHistory = scheduleHistory.rowCount > 0;
         const employeeName = await resolveEmployeeName(
           db,
           newEmployeeId
         );
 
-        await logJobActivity(
-          db,
-          jobId,
-          "assignment_rescheduled",
-          `Rescheduled ${employeeName} (${oldRange} → ${newRange})`,
-          actorName
-        );
+        if (!hasScheduleHistory) {
+          await logJobActivity(
+            db,
+            jobId,
+            "assignment_scheduled",
+            `Scheduled ${employeeName} (${newRange})`,
+            actorName
+          );
+        } else {
+          await logJobActivity(
+            db,
+            jobId,
+            "assignment_rescheduled",
+            `Rescheduled ${employeeName} (${oldRange} → ${newRange})`,
+            actorName
+          );
+        }
       }
     }
 
