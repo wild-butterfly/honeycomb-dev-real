@@ -131,6 +131,8 @@
   background: #ffd600;
   color: #232323;
   border-color: #ffd600;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 214, 0, 0.35);
 }
 
 .pageIcon {
