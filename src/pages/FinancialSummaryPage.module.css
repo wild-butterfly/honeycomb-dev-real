@@ -118,7 +118,8 @@
   transition:
     background 0.15s,
     color 0.13s,
-    border 0.13s;
+    border 0.13s,
+    transform 0.13s;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -128,9 +129,10 @@
 
 .downloadBtn:hover,
 .downloadBtn:focus {
-  background: #ffd600;
+  background: #fffde4;
   color: #232323;
   border-color: #ffd600;
+  transform: translateY(-2px) scale(1.04);
 }
 
 .pageIcon {
