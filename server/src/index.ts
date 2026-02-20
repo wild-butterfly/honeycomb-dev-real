@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import { pool } from "./db";
+import { ensureUploadDir, logStorageConfig, storageConfig } from "./config/storage";
 
 import { requireAuth } from "./middleware/authMiddleware";
 import { withDbContext } from "./middleware/dbContext";
@@ -15,6 +17,7 @@ import assignmentRoutes from "./routes/assignments";
 import tasksRoutes from "./routes/tasks";
 import authRoutes from "./routes/auth";
 import employeeNotesRoutes from "./routes/employeeNotes";
+import filesRoutes from "./routes/files";
 
 dotenv.config();
 
@@ -28,6 +31,11 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+/* STATIC FILES - Serve uploaded files */
+if (storageConfig.type === "local" && storageConfig.local) {
+  app.use("/uploads", express.static(storageConfig.local.uploadDir));
+}
 
 /* HEALTH */
 
@@ -54,6 +62,8 @@ app.use("/api/tasks", requireAuth, withDbContext, tasksRoutes);
 
 app.use("/api", employeeNotesRoutes);
 
+app.use("/api", filesRoutes);
+
 /* 404 */
 
 app.use((_req, res) => {
@@ -71,16 +81,26 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 
 const PORT = Number(process.env.PORT || 3001);
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Honeycomb API running on http://localhost:${PORT}`);
-});
+// Initialize storage before starting server
+(async () => {
+  try {
+    logStorageConfig();
+    await ensureUploadDir();
+    
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Honeycomb API running on http://localhost:${PORT}`);
+    });
 
-/* SHUTDOWN */
-
-process.on("SIGTERM", async () => {
-  console.log("Shutting down gracefully...");
-  await pool.end();
-  server.close(() => {
-    process.exit(0);
-  });
-});
+    /* SHUTDOWN */
+    process.on("SIGTERM", async () => {
+      console.log("Shutting down gracefully...");
+      await pool.end();
+      server.close(() => {
+        process.exit(0);
+      });
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+})();

@@ -21,12 +21,14 @@ interface FileItem {
   id: number;
   job_id: number;
   filename: string;
+  original_filename: string;
   file_type: string;
   file_size: number;
   folder: string;
-  uploaded_by: string;
+  uploaded_by: number | null;
+  uploaded_by_name: string | null;
   uploaded_at: string;
-  url: string;
+  file_url: string;
 }
 
 const FilesPhotosPage: React.FC = () => {
@@ -59,10 +61,10 @@ const FilesPhotosPage: React.FC = () => {
   const loadFiles = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API endpoint
-      // const data = await apiGet<FileItem[]>(`/jobs/${jobId}/files`);
-      // setFiles(data || []);
-      setFiles([]);
+      const folder = selectedFolder === "all" ? "" : selectedFolder;
+      const query = folder ? `?folder=${folder}` : "";
+      const data = await apiGet<FileItem[]>(`/jobs/${jobId}/files${query}`);
+      setFiles(data || []);
     } catch (err) {
       console.error("Failed to load files", err);
     } finally {
@@ -111,16 +113,19 @@ const FilesPhotosPage: React.FC = () => {
         return;
       }
 
-      // TODO: Upload files to backend
-      // const formData = new FormData();
-      // fileList.forEach((file) => {
-      //   formData.append("files", file);
-      // });
-      // formData.append("folder", selectedFolder === "all" ? "documents" : selectedFolder);
-      // await apiPost(`/jobs/${jobId}/files`, formData);
+      // Upload files to backend
+      const formData = new FormData();
+      fileList.forEach((file) => {
+        formData.append("files", file);
+      });
+      formData.append(
+        "folder",
+        selectedFolder === "all" ? "documents" : selectedFolder,
+      );
 
-      console.log("Files to upload:", fileList);
-      alert(`Ready to upload ${fileList.length} file(s)`);
+      await apiPost(`/jobs/${jobId}/files`, formData);
+
+      alert(`Successfully uploaded ${fileList.length} file(s)`);
 
       // Reload files
       await loadFiles();
@@ -148,10 +153,9 @@ const FilesPhotosPage: React.FC = () => {
     if (!window.confirm(`Delete ${selectedFiles.length} file(s)?`)) return;
 
     try {
-      // TODO: Delete files from backend
-      // await apiDelete(`/jobs/${jobId}/files`, { ids: selectedFiles });
-      console.log("Files to delete:", selectedFiles);
+      await apiDelete(`/jobs/${jobId}/files/batch`, { ids: selectedFiles });
 
+      alert(`Successfully deleted ${selectedFiles.length} file(s)`);
       setSelectedFiles([]);
       await loadFiles();
     } catch (err) {
@@ -341,8 +345,8 @@ const FilesPhotosPage: React.FC = () => {
                       <div className={styles.filePreview}>
                         {file.file_type.startsWith("image/") ? (
                           <img
-                            src={file.url}
-                            alt={file.filename}
+                            src={file.file_url}
+                            alt={file.original_filename}
                             className={styles.fileImage}
                           />
                         ) : (
@@ -353,9 +357,12 @@ const FilesPhotosPage: React.FC = () => {
                       </div>
 
                       <div className={styles.fileInfo}>
-                        <div className={styles.fileName}>{file.filename}</div>
+                        <div className={styles.fileName}>
+                          {file.original_filename}
+                        </div>
                         <div className={styles.fileMeta}>
-                          {formatFileSize(file.file_size)} • {file.uploaded_by}
+                          {formatFileSize(file.file_size)} •{" "}
+                          {file.uploaded_by_name || "System"}
                         </div>
                       </div>
 

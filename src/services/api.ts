@@ -21,6 +21,8 @@ async function request<T = any>(
   const token =
     localStorage.getItem("token");
 
+  // Don't set Content-Type for FormData (browser will set it with boundary)
+  const isFormData = options?.body instanceof FormData;
 
   const res =
     await fetch(
@@ -30,8 +32,10 @@ async function request<T = any>(
 
         headers: {
 
-          "Content-Type":
-            "application/json",
+          ...(!isFormData && {
+            "Content-Type":
+              "application/json"
+          }),
 
           ...(token && {
             Authorization:
@@ -87,7 +91,7 @@ request<T>(
   path,
   {
     method: "POST",
-    body: JSON.stringify(body)
+    body: body instanceof FormData ? body : JSON.stringify(body)
   }
 );
 
@@ -104,11 +108,12 @@ request<T>(
 
 
 export const apiDelete =
-<T = any>(path: string) =>
+<T = any>(path: string, body?: any) =>
 request<T>(
   path,
   {
-    method: "DELETE"
+    method: "DELETE",
+    ...(body && { body: JSON.stringify(body) })
   }
 );
 

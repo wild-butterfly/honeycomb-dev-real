@@ -4,6 +4,21 @@
 // 🔐 RLS SAFE VERSION
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAssignment = exports.reopenAssignments = exports.completeAssignments = exports.updateAssignment = exports.createAssignment = exports.getAllAssignments = void 0;
+const activity_1 = require("../lib/activity");
+const formatRange = (startValue, endValue) => {
+    const toLabel = (value) => {
+        const raw = String(value ?? "");
+        const match = raw.match(/(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+        if (!match)
+            return "";
+        return `${match[1]} ${match[2]}`;
+    };
+    const startLabel = toLabel(startValue);
+    const endLabel = toLabel(endValue);
+    if (!startLabel || !endLabel)
+        return "";
+    return `${startLabel} - ${endLabel}`;
+};
 /* ===============================
    INTERNAL: Recalculate job status
 ================================ */
@@ -153,6 +168,16 @@ const createAssignment = async (req, res) => {
     try {
         const { job_id, employee_id, start_time, end_time } = req.body;
         console.log("CREATE ASSIGNMENT:", req.body);
+        const existingAssignments = await db.query(`
+      SELECT COUNT(*)::int AS count
+      FROM assignments a
+      JOIN jobs j ON j.id = a.job_id
+      WHERE a.job_id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
+      `, [job_id]);
+        const hadAssignments = Number(existingAssignments.rows[0]?.count ?? 0) > 0;
         const result = await db.query(`
 INSERT INTO assignments
 (
@@ -180,6 +205,18 @@ RETURNING *
             start_time,
             end_time
         ]);
+        if (!result.rows.length) {
+            return res.status(404).json({ error: "Job not found" });
+        }
+        if (hadAssignments) {
+            const actorName = await (0, activity_1.resolveActorName)(db, req);
+            const employeeName = await (0, activity_1.resolveEmployeeName)(db, Number(employee_id));
+            const rangeLabel = formatRange(start_time, end_time);
+            const title = rangeLabel
+                ? `Scheduled ${employeeName} (${rangeLabel})`
+                : `Scheduled ${employeeName}`;
+            await (0, activity_1.logJobActivity)(db, Number(job_id), "assignment_scheduled", title, actorName);
+        }
         res.status(201).json(result.rows[0]);
     }
     catch (err) {
@@ -201,6 +238,27 @@ const updateAssignment = async (req, res) => {
         if (!Number.isInteger(assignmentId)) {
             return res.status(400).json({ error: "Invalid assignment id" });
         }
+        const existing = await db.query(`
+      SELECT
+        to_char(a.start_time, 'YYYY-MM-DD HH24:MI:SS') AS start_time,
+        to_char(a.end_time, 'YYYY-MM-DD HH24:MI:SS') AS end_time,
+        a.employee_id,
+        a.job_id
+      FROM assignments a
+      JOIN jobs j ON j.id = a.job_id
+      WHERE a.id = $1 AND (
+        current_setting('app.god_mode') = 'true'
+        OR j.company_id = current_setting('app.current_company_id')::bigint
+      )
+      `, [assignmentId]);
+        if (!existing.rows.length) {
+            return res.status(404).json({ error: "Assignment not found" });
+        }
+        const previous = existing.rows[0];
+        const previousEmployeeId = Number(previous.employee_id);
+        const previousStart = previous.start_time;
+        const previousEnd = previous.end_time;
+        const jobId = Number(previous.job_id);
         const result = await db.query(`
       UPDATE assignments
       SET
@@ -223,6 +281,43 @@ const updateAssignment = async (req, res) => {
         await recalcJobStatus(db, assignment.job_id);
         if (assignment.completed === true) {
             await generateLabourForAssignment(db, assignment.id);
+        }
+        const actorName = await (0, activity_1.resolveActorName)(db, req);
+        const newEmployeeId = Number(assignment.employee_id);
+        const employeeChanged = Number.isInteger(newEmployeeId) && newEmployeeId !== previousEmployeeId;
+        if (employeeChanged) {
+            const fromName = await (0, activity_1.resolveEmployeeName)(db, previousEmployeeId);
+            const toName = await (0, activity_1.resolveEmployeeName)(db, newEmployeeId);
+            await (0, activity_1.logJobActivity)(db, jobId, "assignment_reassigned", `Reassigned from ${fromName} to ${toName}`, actorName);
+        }
+        const startProvided = Object.prototype.hasOwnProperty.call(req.body, "start_time");
+        const endProvided = Object.prototype.hasOwnProperty.call(req.body, "end_time");
+        if (startProvided || endProvided) {
+            const newStart = startProvided ? start_time : previousStart;
+            const newEnd = endProvided ? end_time : previousEnd;
+            const oldRange = formatRange(previousStart, previousEnd);
+            const newRange = formatRange(newStart, newEnd);
+            if (oldRange && newRange && oldRange !== newRange) {
+                const scheduleHistory = await db.query(`
+          SELECT 1
+          FROM job_activity
+          WHERE job_id = $1
+            AND type IN ('assignment_scheduled', 'assignment_rescheduled')
+            AND (
+              current_setting('app.god_mode') = 'true'
+              OR company_id = current_setting('app.current_company_id')::bigint
+            )
+          LIMIT 1
+          `, [jobId]);
+                const hasScheduleHistory = scheduleHistory.rowCount > 0;
+                const employeeName = await (0, activity_1.resolveEmployeeName)(db, newEmployeeId);
+                if (!hasScheduleHistory) {
+                    await (0, activity_1.logJobActivity)(db, jobId, "assignment_scheduled", `Scheduled ${employeeName} (${newRange})`, actorName);
+                }
+                else {
+                    await (0, activity_1.logJobActivity)(db, jobId, "assignment_rescheduled", `Rescheduled ${employeeName} (${oldRange} → ${newRange})`, actorName);
+                }
+            }
         }
         res.json(assignment);
     }
