@@ -1,0 +1,80 @@
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+  background:
+    repeating-radial-gradient(
+      circle at 10% 10%,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+  padding: 40px 24px;
+  gap: 24px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  background: transparent;
+}
+
+.settingsContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  display: flex;
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 16px;
+  border: 1.5px solid #ffe066;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.settingsContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.03), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  overflow-y: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.contentInner {
+  flex: 1;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .pageWrapper {
+    flex-direction: column;
+    padding: 20px 16px;
+  }
+
+  .settingsContainer {
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .contentInner {
+    padding: 20px;
+  }
+}

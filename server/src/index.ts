@@ -19,6 +19,8 @@ import authRoutes from "./routes/auth";
 import employeeNotesRoutes from "./routes/employeeNotes";
 import filesRoutes from "./routes/files";
 import invoiceRoutes from "./routes/invoices";
+import invoiceSettingsRoutes from "./routes/invoiceSettings";
+import pdfRoutes from "./routes/pdf";
 import serviceCatalogsRoutes from "./routes/serviceCatalogs";
 
 dotenv.config();
@@ -67,6 +69,10 @@ app.use("/api", employeeNotesRoutes);
 app.use("/api", filesRoutes);
 
 app.use("/api", invoiceRoutes);
+
+app.use("/api", invoiceSettingsRoutes);
+
+app.use("/api", pdfRoutes);
 
 app.use("/api", serviceCatalogsRoutes);
 

@@ -22,10 +22,12 @@ import JobSummaryPage from "./pages/JobSummaryPage";
 import FinancialSummaryPage from "./pages/FinancialSummaryPage";
 import CostReportPage from "./pages/CostReportPage";
 import InvoicingPage from "./pages/InvoicingPage";
+import SettingsPage from "./pages/SettingsPage";
 import AdminServiceCatalogsPage from "./pages/AdminServiceCatalogsPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
+import { AuthProvider } from "./context/AuthContext";
 
 /* ======================================================
    TYPES
@@ -137,6 +139,7 @@ const App: React.FC = () => {
 
           {/* INVOICING */}
           <Route path="/dashboard/invoices" element={<InvoicingPage />} />
+          <Route path="/dashboard/settings" element={<SettingsPage />} />
 
           {/* ADMIN */}
           <Route path="/admin" element={<AdminServiceCatalogsPage />} />
@@ -158,10 +161,11 @@ const App: React.FC = () => {
 
 const RootApp: React.FC = () => (
   <BrowserRouter>
-    {/* ✅ CRITICAL FIX — GLOBAL COMPANY CONTEXT */}
-    <CompanyProvider>
-      <App />
-    </CompanyProvider>
+    <AuthProvider>
+      <CompanyProvider>
+        <App />
+      </CompanyProvider>
+    </AuthProvider>
   </BrowserRouter>
 );
 

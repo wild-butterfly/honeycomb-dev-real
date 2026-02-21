@@ -28,6 +28,7 @@
   flex-direction: column;
   transition: right 0.3s ease-out;
   border-left: 3px solid #ffe066;
+  padding-top: 70px;
 }
 
 .panel.open {
@@ -35,13 +36,17 @@
 }
 
 .header {
-  padding: 24px;
-  border-bottom: 2px solid #ffe066;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 20px 24px;
+  border-bottom: 3px solid #ffe066;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   background: linear-gradient(135deg, #fffdf4 0%, #fffbf0 100%);
+  box-shadow: 0 4px 12px rgba(185, 154, 42, 0.1);
 }
 
 .titleGroup {
@@ -63,21 +68,26 @@
 
 .closeBtn {
   background: none;
-  border: none;
-  font-size: 1.5rem;
+  border: 2px solid #ffe066;
+  font-size: 1.25rem;
   color: #b99a2a;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.2s;
+  min-width: 40px;
+  min-height: 40px;
+  flex-shrink: 0;
 }
 
 .closeBtn:hover {
-  background: #fffde4;
-  transform: scale(1.1);
+  background: #ffe066;
+  color: #232323;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(185, 154, 42, 0.2);
 }
 
 .content {
@@ -220,6 +230,130 @@
   text-align: center;
 }
 
+.marginSection {
+  margin-bottom: 24px;
+}
+
+.marginBreakdown {
+  background: #f8f7f0;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #ffe066;
+}
+
+.marginRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.95rem;
+}
+
+.marginLabel {
+  color: #8b7b4a;
+  font-weight: 500;
+}
+
+.marginValue {
+  color: #232323;
+  font-weight: 600;
+}
+
+.marginValueHighlight {
+  color: #b99a2a;
+  font-weight: 700;
+  background: #fffde4;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.profitSection {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fffde4 0%, #fffbf0 100%);
+  border-radius: 8px;
+  border: 2px solid #ffe066;
+}
+
+.profitGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.profitCard {
+  text-align: center;
+  padding: 12px;
+}
+
+.profitValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #b99a2a;
+  margin-bottom: 4px;
+}
+
+.profitLabel {
+  font-size: 0.85rem;
+  color: #8b7b4a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.markupSection {
+  margin-bottom: 24px;
+}
+
+.markupTable {
+  background: #f8f7f0;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.markupRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 12px 0;
+  align-items: center;
+}
+
+.markupCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.markupLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8b7b4a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.markupInput {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #232323;
+}
+
+.markupInput small {
+  font-size: 0.75rem;
+  color: #8b7b4a;
+  font-weight: 500;
+}
+
+.markupValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #232323;
+}
+
 .actions {
   padding: 20px 24px;
   border-top: 2px solid #ffe066;
@@ -241,10 +375,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   transition: all 0.2s;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .btnPrimary {

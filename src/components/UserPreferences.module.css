@@ -1,0 +1,135 @@
+.container {
+  max-width: 100%;
+  padding: 0;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.header p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 30px;
+}
+
+.section {
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.legend {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 20px;
+  padding: 0;
+  border: none;
+}
+
+.switchGroup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background: white;
+  border: 1.5px solid #ffe066;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.switchGroup label {
+  font-size: 0.95rem;
+  color: #7d6836;
+  font-weight: 500;
+}
+
+.switchGroup input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ad8c11;
+  margin-bottom: 8px;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  background: #fffbe4;
+  color: #7d6836;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #e7ce8b;
+  background: #fffad1;
+  box-shadow: 0 0 0 3px rgba(255, 224, 102, 0.1);
+}
+
+.actions {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.saveButton {
+  padding: 12px 28px;
+  background: #ffd600;
+  border: none;
+  border-radius: 8px;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
+}
+
+.saveButton:hover {
+  background: #ffb800;
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
+  transform: translateY(-2px);
+}

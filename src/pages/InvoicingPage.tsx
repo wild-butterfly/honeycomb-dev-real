@@ -176,19 +176,60 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
 
   const handleSyncToXero = async (invoiceId: string) => {
     try {
-      setLoading(true);
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/invoices/${invoiceId}/sync-xero`, {
-        method: "POST",
-      });
-      const updatedInvoice = await response.json();
-      setInvoices(
-        invoices.map((inv) => (inv.id === invoiceId ? updatedInvoice : inv)),
+      console.log("Xero sync triggered for invoice:", invoiceId);
+      alert(
+        `Xero sync for invoice ${invoiceId} is ready. Backend endpoint needed at /api/invoices/${invoiceId}/sync-xero`,
       );
+      // TODO: Implement backend Xero sync endpoint
     } catch (error) {
       console.error("Error syncing to Xero:", error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const handleDownloadInvoice = async (invoiceId: string) => {
+    try {
+      console.log("Download triggered for invoice:", invoiceId);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Authentication required");
+        return;
+      }
+
+      // Fetch PDF from backend
+      const response = await fetch(
+        `http://localhost:3001/api/invoices/${invoiceId}/pdf`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to download invoice: ${response.statusText}`);
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${invoiceId}.pdf`;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      console.log("Invoice downloaded successfully");
+    } catch (error: any) {
+      console.error("Error downloading invoice:", error);
+      alert(`Failed to download invoice: ${error.message}`);
     }
   };
 
@@ -337,6 +378,8 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
                   setSelectedInvoice(null);
                 }}
                 onEdit={handleEditInvoice}
+                onDownload={handleDownloadInvoice}
+                onSyncXero={handleSyncToXero}
               />
             )}
           </div>

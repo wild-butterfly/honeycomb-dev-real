@@ -1,0 +1,146 @@
+.sidebar {
+  width: 250px;
+  background: white;
+  border: 1.5px solid #ffe066;
+  height: fit-content;
+  overflow-y: auto;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+.sidebarContent {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #b99a2a;
+  padding: 24px 20px 16px 20px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+}
+
+.nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+}
+
+.categoryTitle {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #ad8c11;
+  padding: 16px 20px 12px 20px;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid #ffe066;
+}
+
+.category:first-child .categoryTitle {
+  padding-top: 0;
+}
+
+.categoryItems {
+  display: flex;
+  flex-direction: column;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #7d6836;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.navItem:hover {
+  background: #fffde4;
+  color: #7d6836;
+  border-left-color: #ffd600;
+}
+
+.navItem.active {
+  background: #fffbe4;
+  color: #ad8c11;
+  border-left-color: #ffe066;
+  font-weight: 600;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: inherit;
+}
+
+.label {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1.5px solid #ffe066;
+  }
+
+  .sidebarContent {
+    flex-direction: row;
+  }
+
+  .nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .navItem {
+    flex: 1;
+    min-width: 50%;
+    border-left: none;
+    border-bottom: 1px solid #ffe06633;
+    padding: 12px 16px;
+  }
+
+  .navItem.active {
+    border-left: none;
+    border-bottom-color: #ffe066;
+    border-bottom-width: 3px;
+  }
+
+  .title {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 0;
+  }
+
+  .title {
+    width: 100%;
+  }
+}

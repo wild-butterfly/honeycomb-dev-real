@@ -1,0 +1,91 @@
+.container {
+  max-width: 100%;
+  padding: 0;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.header p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.content {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 30px;
+}
+
+.section {
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 8px;
+  border: 1.5px solid #ffe066;
+}
+
+.section:last-of-type {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 10px 0;
+}
+
+.description {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 15px 0;
+}
+
+.button {
+  padding: 12px 20px;
+  background: #ffd600;
+  border: none;
+  border-radius: 8px;
+  color: #1a1a1a;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
+}
+
+.button:hover {
+  background: #ffb800;
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.dangerButton {
+  padding: 12px 20px;
+  background: #ef4444;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.dangerButton:hover {
+  background: #dc2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}

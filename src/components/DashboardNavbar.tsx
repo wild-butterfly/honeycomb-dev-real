@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import styles from "./DashboardNavbar.module.css";
 import CompanySwitcher from "./CompanySwitcher";
+import { useAuth } from "../context/AuthContext";
 
 type Props = {
   onLogout?: () => void;
@@ -9,13 +11,35 @@ type Props = {
 };
 
 const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const closeMenu = () => setMenuOpen(false);
+  const closeProfileMenu = () => setProfileMenuOpen(false);
 
   const handleNewJobClick = () => {
     onNewJob?.();
     setMenuOpen(false);
+  };
+
+  const handleProfile = () => {
+    navigate("/dashboard/settings");
+    closeProfileMenu();
+  };
+
+  const handleSettings = () => {
+    navigate("/dashboard/settings?tab=preferences");
+    closeProfileMenu();
+  };
+
+  const handleLogout = () => {
+    logout();
+    onLogout?.();
+    closeMenu();
+    closeProfileMenu();
+    navigate("/login");
   };
 
   return (
@@ -107,16 +131,86 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
             New Job
           </button>
 
-          <button
-            type="button"
-            className={`${styles.btn} ${styles.btnSecondary}`}
-            onClick={() => {
-              onLogout?.();
-              closeMenu();
-            }}
-          >
-            Log Out
-          </button>
+          {/* Profile Dropdown Menu */}
+          <div className={styles.profileMenu}>
+            <button
+              type="button"
+              className={styles.profileButton}
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              aria-expanded={profileMenuOpen}
+            >
+              {user?.avatar && (
+                <img
+                  src={user.avatar}
+                  alt="User avatar"
+                  className={styles.profileAvatar}
+                />
+              )}
+              {FiChevronDown({ size: 16 })}
+            </button>
+
+            {profileMenuOpen && (
+              <>
+                <div
+                  className={styles.profileMenuOverlay}
+                  onClick={closeProfileMenu}
+                  aria-hidden
+                />
+                <div className={styles.profileDropdown}>
+                  <div className={styles.profileHeader}>
+                    {user?.avatar && (
+                      <img
+                        src={user.avatar}
+                        alt="User avatar"
+                        className={styles.profileHeaderAvatar}
+                      />
+                    )}
+                    <div className={styles.profileInfo}>
+                      <div className={styles.profileName}>
+                        {user?.name || "User"}
+                      </div>
+                      <div className={styles.profileEmail}>{user?.email}</div>
+                    </div>
+                  </div>
+                  <div className={styles.profileMenuDivider} />
+                  <button
+                    type="button"
+                    className={styles.profileMenuItem}
+                    onClick={handleProfile}
+                  >
+                    Profile
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.profileMenuItem}
+                    onClick={handleSettings}
+                  >
+                    {FiSettings({ size: 18 })}
+                    Settings
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.profileMenuItem}
+                    onClick={() => {
+                      navigate("/dashboard/settings?tab=preferences");
+                      closeProfileMenu();
+                    }}
+                  >
+                    Preferences
+                  </button>
+                  <div className={styles.profileMenuDivider} />
+                  <button
+                    type="button"
+                    className={styles.profileMenuItem}
+                    onClick={handleLogout}
+                  >
+                    {FiLogOut({ size: 18 })}
+                    Log Out
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
