@@ -21,6 +21,8 @@ import HelpPage from "./pages/HelpPage";
 import JobSummaryPage from "./pages/JobSummaryPage";
 import FinancialSummaryPage from "./pages/FinancialSummaryPage";
 import CostReportPage from "./pages/CostReportPage";
+import InvoicingPage from "./pages/InvoicingPage";
+import AdminServiceCatalogsPage from "./pages/AdminServiceCatalogsPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
@@ -45,7 +47,9 @@ const App: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerType[]>([]);
 
   // Dashboard sayfalarında navbar/footer gizli
-  const isDashboard = location.pathname.startsWith("/dashboard");
+  const isDashboard =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/admin");
 
   const handleAddCustomer = (customer: Omit<CustomerType, "id">) => {
     const newCustomer: CustomerType = {
@@ -125,6 +129,20 @@ const App: React.FC = () => {
           <Route
             path="/dashboard/jobs/:id/cost-report"
             element={<CostReportPage />}
+          />
+          <Route
+            path="/dashboard/jobs/:id/invoicing"
+            element={<InvoicingPage />}
+          />
+
+          {/* INVOICING */}
+          <Route path="/dashboard/invoices" element={<InvoicingPage />} />
+
+          {/* ADMIN */}
+          <Route path="/admin" element={<AdminServiceCatalogsPage />} />
+          <Route
+            path="/admin/service-catalogs"
+            element={<AdminServiceCatalogsPage />}
           />
         </Routes>
       </main>

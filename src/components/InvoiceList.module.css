@@ -1,0 +1,242 @@
+.invoiceList {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: #fafafa;
+}
+
+.table tbody td {
+  padding: 16px;
+  color: #333;
+}
+
+.noData {
+  text-align: center;
+  padding: 48px 16px !important;
+  color: #999;
+  font-style: italic;
+}
+
+.invoiceNumber {
+  font-weight: 600;
+  color: #0052cc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.xeroTag {
+  display: inline-block;
+  background: #13b5ea;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Type badges */
+.typeDraft {
+  background: #ffeaa7;
+  color: #d63031;
+}
+
+.typeApproved {
+  background: #55efc4;
+  color: #00b894;
+}
+
+/* Delivery badges */
+.deliveryNotSent {
+  background: #fab1a0;
+  color: #d63031;
+}
+
+.deliverySent {
+  background: #fdcb6e;
+  color: #e17055;
+}
+
+.deliveryViewed {
+  background: #74b9ff;
+  color: #0984e3;
+}
+
+/* Status badges */
+.statusDraft {
+  background: #dfe6e9;
+  color: #636e72;
+}
+
+.statusUnpaid {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.statusPaid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusOverdue {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.statusPartiallyPaid {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.totalColumn {
+  font-weight: 700;
+  color: #232323;
+  font-size: 1rem;
+}
+
+.menuContainer {
+  position: relative;
+  z-index: 1000;
+}
+
+.menuBtn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #b99a2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-size: 1.3rem;
+}
+
+.menuBtn:hover {
+  background: #fffde4;
+  transform: scale(1.1);
+}
+
+.dropdown {
+  position: fixed;
+  background: white;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(185, 154, 42, 0.2);
+  min-width: 180px;
+  z-index: 10000;
+  overflow: visible;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menuItem {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.menuItem:hover {
+  background: #fffde4;
+  color: #b99a2a;
+}
+
+.menuItemDanger {
+  color: #d32f2f;
+}
+
+.menuItemDanger:hover {
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .table {
+    font-size: 0.9rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 12px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 800px;
+  }
+}

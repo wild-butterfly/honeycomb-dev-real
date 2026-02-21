@@ -18,6 +18,8 @@ import tasksRoutes from "./routes/tasks";
 import authRoutes from "./routes/auth";
 import employeeNotesRoutes from "./routes/employeeNotes";
 import filesRoutes from "./routes/files";
+import invoiceRoutes from "./routes/invoices";
+import serviceCatalogsRoutes from "./routes/serviceCatalogs";
 
 dotenv.config();
 
@@ -63,6 +65,10 @@ app.use("/api/tasks", requireAuth, withDbContext, tasksRoutes);
 app.use("/api", employeeNotesRoutes);
 
 app.use("/api", filesRoutes);
+
+app.use("/api", invoiceRoutes);
+
+app.use("/api", serviceCatalogsRoutes);
 
 /* 404 */
 

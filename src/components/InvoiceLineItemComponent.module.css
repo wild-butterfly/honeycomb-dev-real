@@ -1,0 +1,114 @@
+.lineItem {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 0.8fr 1fr 0.8fr 0.8fr 0.8fr 1fr 50px;
+  gap: 8px;
+  padding: 12px 8px;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.lineItem:hover {
+  background: #fafafa;
+}
+
+.inputName,
+.inputNum,
+.inputPercent {
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.inputName {
+  width: 100%;
+}
+
+.inputNum {
+  width: 100%;
+  text-align: center;
+}
+
+.inputPercent {
+  width: 100%;
+  text-align: center;
+}
+
+.inputName:focus,
+.inputNum:focus,
+.inputPercent:focus {
+  outline: none;
+  border-color: #b99a2a;
+}
+
+.percentageCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.percentSymbol {
+  color: #666;
+  font-weight: 600;
+}
+
+.totalDisplay {
+  text-align: right;
+  font-weight: 700;
+  color: #232323;
+  font-size: 1rem;
+  padding-right: 8px;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.removeBtn:hover {
+  background: #ffebee;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lineItem {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .inputName,
+  .inputNum {
+    width: 100%;
+  }
+
+  .percentageCell {
+    justify-content: flex-start;
+  }
+
+  .totalDisplay {
+    text-align: left;
+    font-size: 1.1rem;
+  }
+
+  .removeBtn {
+    justify-self: start;
+  }
+}

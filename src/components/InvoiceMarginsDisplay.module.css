@@ -1,0 +1,306 @@
+.marginsSection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #232323;
+  margin: 0 0 20px 0;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #232323;
+  margin: 24px 0 16px 0;
+}
+
+.chartContainer {
+  margin-bottom: 24px;
+}
+
+.marginsChart {
+  margin-bottom: 16px;
+}
+
+.chartRow {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.chartLabel {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.chartBars {
+  position: relative;
+}
+
+.barContainer {
+  height: 40px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.barJob,
+.barInvoice {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: white;
+  transition: width 0.3s ease;
+}
+
+.barJob {
+  background: #2d3561;
+}
+
+.barInvoice {
+  background: #74b9ff;
+}
+
+.legend {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.legendColor {
+  width: 20px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legendJob {
+  background: #2d3561;
+}
+
+.legendInvoice {
+  background: #74b9ff;
+}
+
+.grossProfitSection {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.profitCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.profitCard {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.profitAmount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #232323;
+  margin-bottom: 8px;
+}
+
+.profitLabel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #00b894;
+  margin-bottom: 4px;
+}
+
+.profitSubtext {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.progressBar {
+  margin-top: 16px;
+}
+
+.progressLabel {
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.progressTrack {
+  height: 24px;
+  background: #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00b894, #55efc4);
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  text-align: center;
+  font-weight: 700;
+  color: #00b894;
+}
+
+.discountsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.discountRow {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.discountLabel {
+  font-weight: 600;
+  color: #666;
+}
+
+.discountControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.discountInput {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.discountInput:focus {
+  outline: none;
+  border-color: #b99a2a;
+}
+
+.percentSymbol {
+  font-weight: 600;
+  color: #666;
+}
+
+.applyBtn {
+  background: #0052cc;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.applyBtn:hover {
+  background: #0747a6;
+}
+
+.costBreakdown {
+  overflow-x: auto;
+}
+
+.breakdownTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.breakdownTable thead {
+  background: #f8f9fa;
+}
+
+.breakdownTable th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.breakdownTable td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.categoryLabel {
+  font-weight: 700;
+  color: #232323;
+}
+
+.totalRow {
+  background: #f9f9f9;
+  font-weight: 700;
+}
+
+.totalRow td {
+  border-top: 2px solid #e0e0e0;
+  border-bottom: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chartRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .profitCards {
+    grid-template-columns: 1fr;
+  }
+
+  .discountRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .discountControl {
+    justify-content: flex-start;
+  }
+
+  .breakdownTable {
+    font-size: 0.85rem;
+  }
+
+  .breakdownTable th,
+  .breakdownTable td {
+    padding: 8px 6px;
+  }
+}

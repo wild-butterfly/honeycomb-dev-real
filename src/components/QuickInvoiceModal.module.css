@@ -1,0 +1,438 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modalCard {
+  background: white;
+  border-radius: 16px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  position: relative;
+  border: 2px solid #ffe066;
+  box-shadow: 0 8px 32px rgba(255, 214, 0, 0.2);
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.error {
+  background: #fff4f4;
+  border: 1px solid #f5c2c2;
+  color: #b42318;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.emptyState {
+  padding: 12px 8px;
+  color: #8b7b4a;
+  font-weight: 600;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #b99a2a;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.closeBtn:hover {
+  background: #fffde4;
+  color: #232323;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #b99a2a;
+  margin: 0 0 24px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: #b99a2a;
+  font-weight: 600;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #b99a2a;
+  margin: 0 0 12px 0;
+}
+
+.lineItemsTable {
+  background: #fffef7;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 1fr 40px;
+  gap: 8px;
+  padding: 8px 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #b99a2a;
+  border-bottom: 2px solid #ffe066;
+  margin-bottom: 8px;
+}
+
+.colName {
+  text-align: left;
+}
+.colQuantity {
+  text-align: center;
+}
+.colPrice {
+  text-align: right;
+}
+.colTax {
+  text-align: center;
+}
+.colTotal {
+  text-align: right;
+}
+.colActions {
+  text-align: center;
+}
+
+.lineItemRow {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 1fr 40px;
+  gap: 8px;
+  padding: 8px 4px;
+  align-items: center;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.lineItemRow:last-child {
+  border-bottom: none;
+}
+
+.inputName,
+.inputQuantity,
+.inputPrice,
+.inputTax {
+  padding: 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: white;
+}
+
+.inputName {
+  width: 100%;
+}
+
+.inputQuantity,
+.inputTax {
+  text-align: center;
+  width: 100%;
+}
+
+.inputPrice {
+  text-align: right;
+  width: 100%;
+}
+
+.inputName:focus,
+.inputQuantity:focus,
+.inputPrice:focus,
+.inputTax:focus {
+  outline: none;
+  border-color: #b99a2a;
+}
+
+.totalDisplay {
+  text-align: right;
+  font-weight: 600;
+  color: #232323;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.removeBtn:hover {
+  background: #ffe066;
+}
+
+.addLineItemBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 2px dashed #b99a2a;
+  border-radius: 6px;
+  padding: 10px 16px;
+  color: #b99a2a;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.addLineItemBtn:hover {
+  background: #fffde4;
+  border-color: #ffd600;
+}
+
+.priceBookRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 16px;
+  padding: 12px;
+  border: 2px dashed #ffe066;
+  border-radius: 10px;
+  background: #fffef7;
+}
+
+.priceBookGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.priceBookLabel {
+  font-weight: 600;
+  color: #8b7b4a;
+}
+
+.addFromBookBtn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid #b99a2a;
+  background: #ffd600;
+  color: #232323;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.1s,
+    box-shadow 0.2s;
+}
+
+.addFromBookBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.25);
+}
+
+.select,
+.textarea {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ffe066;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #ffd600;
+  box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.summary {
+  background: #fffde4;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.summaryTotal {
+  border-top: 2px solid #ffe066;
+  margin-top: 8px;
+  padding-top: 12px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #b99a2a;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancelBtn {
+  background: white;
+  border: 2px solid #b99a2a;
+  border-radius: 7px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #b99a2a;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.1s;
+}
+
+.cancelBtn:hover {
+  background: #fffde4;
+  border-color: #ffd600;
+  transform: translateY(-1px);
+}
+
+.createBtn {
+  background: #ffd600;
+  border: 2px solid #b99a2a;
+  border-radius: 7px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #232323;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
+  transition:
+    background 0.2s,
+    transform 0.1s,
+    box-shadow 0.2s;
+}
+
+.createBtn:hover {
+  background: #ffdd33;
+  border-color: #ffd600;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
+}
+
+.createBtn:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalCard {
+    padding: 20px;
+    max-height: 95vh;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .tableHeader {
+    display: none;
+  }
+
+  .lineItemRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border: 2px solid #ffe066;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  .inputName,
+  .inputQuantity,
+  .inputPrice,
+  .inputTax {
+    width: 100%;
+  }
+
+  .totalDisplay {
+    text-align: left;
+    font-size: 1.1rem;
+  }
+
+  .removeBtn {
+    justify-self: start;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelBtn,
+  .createBtn {
+    width: 100%;
+  }
+}

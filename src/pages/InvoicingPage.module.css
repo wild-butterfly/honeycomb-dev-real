@@ -1,0 +1,493 @@
+/* src/pages/InvoicingPage.module.css */
+/* Created by Honeycomb © 2026 */
+/* Invoicing Page - Premium Glass Morphism Styling */
+
+/* ===== PAGE LAYOUT ===== */
+.pageWrapper {
+  display: flex;
+  min-height: 100vh;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #fff8d6,
+      #fff8d6 8px,
+      #fffbe9 9px,
+      #fffbe9 20px
+    ),
+    linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
+
+  padding: 40px 24px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* ===== PREMIUM CONTAINER ===== */
+.pageContainer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  border-radius: 16px;
+
+  border: 1.5px solid #ffe066;
+
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+
+  padding: 40px;
+}
+
+.pageContainer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 76px;
+
+  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.03), transparent);
+
+  border-radius: 32px 32px 0 0;
+  pointer-events: none;
+}
+
+.pageContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 90px;
+  border-radius: 32px 32px 0 0;
+
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+
+  pointer-events: none;
+}
+
+/* ===== HEADER ===== */
+.pageHeader {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(252, 211, 77, 0.12);
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #b99a2a;
+  margin: 0 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageIcon {
+  width: 32px;
+  height: 32px;
+  color: #ffd600;
+  flex-shrink: 0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.quickInvoiceBtn {
+  padding: 9px 20px;
+  font-weight: 600;
+  border-radius: 7px;
+  font-size: 1.03rem;
+  border: 2px solid #b99a2a;
+  background: #fffde4;
+  color: #b99a2a;
+  transition:
+    background 0.15s,
+    color 0.13s,
+    border 0.13s,
+    transform 0.13s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 8px #ffd60009;
+}
+
+.quickInvoiceBtn:hover,
+.quickInvoiceBtn:focus {
+  background: #fffde4;
+  color: #232323;
+  border-color: #ffd600;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.quickInvoiceBtn:disabled {
+  background: #f5f5f5;
+  color: #999;
+  border-color: #ddd;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ===== SECTIONS ===== */
+.section {
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #b99a2a;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #ffe066;
+}
+
+.loading {
+  text-align: center;
+  padding: 48px;
+  font-size: 1.1rem;
+  color: #b99a2a;
+  font-weight: 600;
+}
+
+/* ===== PREMIUM EMPTY STATE ===== */
+.emptyState {
+  text-align: center;
+  padding: 64px 32px;
+  background: linear-gradient(135deg, #fffef7 0%, #fffbe9 100%);
+  border-radius: 16px;
+  border: 2px solid #ffe066;
+  box-shadow:
+    0 4px 16px rgba(255, 214, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.emptyState::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 230, 102, 0.1),
+    transparent
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.emptyStateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #ffd600 0%, #ffed4e 100%);
+  border-radius: 20px;
+  margin: 0 auto 24px;
+  box-shadow:
+    0 8px 24px rgba(255, 214, 0, 0.3),
+    inset 0 -2px 8px rgba(185, 154, 42, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.emptyStateIcon svg {
+  width: 44px;
+  height: 44px;
+  color: #232323;
+  stroke-width: 2;
+}
+
+.emptyStateTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #b99a2a;
+  margin: 0 0 12px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.emptyStateDescription {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 auto 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.emptyStateFeatures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin: 0 auto 40px;
+  max-width: 700px;
+  position: relative;
+  z-index: 1;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1.5px solid #ffe066;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.08);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.feature:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 214, 0, 0.15);
+}
+
+.featureIcon {
+  width: 28px;
+  height: 28px;
+  color: #ffd600;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.featureTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #b99a2a;
+  margin: 0 0 4px 0;
+}
+
+.featureText {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.emptyStateCTA {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ffd600 0%, #ffed4e 100%);
+  color: #232323;
+  border: 2px solid #b99a2a;
+  border-radius: 10px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  box-shadow:
+    0 4px 16px rgba(255, 214, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.emptyStateCTA:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 6px 24px rgba(255, 214, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.emptyStateCTA:active {
+  transform: translateY(0) scale(1);
+}
+
+/* ===== SIMPLE EMPTY STATE (For existing users) ===== */
+.emptyStateSimple {
+  text-align: center;
+  padding: 48px 32px;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #ffe066;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.08);
+}
+
+.emptyStateSimpleIcon {
+  width: 64px;
+  height: 64px;
+  color: #b99a2a;
+  margin: 0 auto 16px;
+  opacity: 0.6;
+  stroke-width: 1.5;
+}
+
+.emptyStateSimpleText {
+  font-size: 16px;
+  color: #666;
+  margin: 0 0 24px 0;
+}
+
+.emptyStateSimpleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffd600;
+  color: #232323;
+  border: 2px solid #b99a2a;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
+}
+
+.emptyStateSimpleBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .pageWrapper {
+    padding: 24px 16px;
+  }
+
+  .pageContainer {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageWrapper {
+    padding: 20px 12px;
+  }
+
+  .pageContainer {
+    padding: 24px 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .pageIcon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .quickInvoiceBtn {
+    justify-content: center;
+  }
+
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+  }
+
+  /* Empty State Mobile */
+  .emptyState {
+    padding: 48px 20px;
+  }
+
+  .emptyStateIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  .emptyStateIcon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .emptyStateTitle {
+    font-size: 20px;
+  }
+
+  .emptyStateDescription {
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  .emptyStateFeatures {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .feature {
+    padding: 16px;
+  }
+
+  .emptyStateCTA {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 24px;
+    font-size: 15px;
+  }
+
+  /* Simple Empty State Mobile */
+  .emptyStateSimple {
+    padding: 40px 20px;
+  }
+
+  .emptyStateSimpleIcon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .emptyStateSimpleBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

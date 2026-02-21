@@ -84,8 +84,8 @@ const LeftSidebar: React.FC = () => {
         <div className={styles.sectionTitle}>Quick Actions</div>
 
         <button
-          className={`${styles.menuItem} ${isActive("invoice") ? styles.active : ""}`}
-          onClick={() => go("invoice")}
+          className={`${styles.menuItem} ${isActive("invoicing") ? styles.active : ""}`}
+          onClick={() => go("invoicing")}
         >
           <DocumentDuplicateIcon className={styles.icon} />
           Invoicing
