@@ -22,6 +22,7 @@ import invoiceRoutes from "./routes/invoices";
 import invoiceSettingsRoutes from "./routes/invoiceSettings";
 import pdfRoutes from "./routes/pdf";
 import serviceCatalogsRoutes from "./routes/serviceCatalogs";
+import generalSettingsRoutes from "./routes/generalSettings";
 
 dotenv.config();
 
@@ -29,10 +30,34 @@ const app = express();
 
 /* GLOBAL */
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
-  credentials: true,
-}));
+// Enable CORS with proper configuration
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        process.env.FRONTEND_URL || "http://localhost:3000",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+      ];
+
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-Company-Id",
+      "x-Employee-Id",
+    ],
+    optionsSuccessStatus: 200,
+  })
+);
 
 app.use(express.json());
 
@@ -75,6 +100,8 @@ app.use("/api", invoiceSettingsRoutes);
 app.use("/api", pdfRoutes);
 
 app.use("/api", serviceCatalogsRoutes);
+
+app.use("/api/general-settings", requireAuth, withDbContext, generalSettingsRoutes);
 
 /* 404 */
 

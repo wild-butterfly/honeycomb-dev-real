@@ -9,6 +9,7 @@ import {
   FiWifi,
   FiCreditCard,
   FiBell,
+  FiSliders,
 } from "react-icons/fi";
 import styles from "./SettingsSidebar.module.css";
 
@@ -45,6 +46,12 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
   {
     title: "BUSINESS SETUP",
     items: [
+      {
+        id: "general",
+        label: "General",
+        icon: FiSliders({ size: 18 }),
+        path: "/dashboard/settings?tab=general",
+      },
       {
         id: "invoice-settings",
         label: "Invoice Settings",

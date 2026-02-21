@@ -42,6 +42,10 @@ export async function requireAuth(
   next: NextFunction
 )
 {
+  // Allow OPTIONS preflight requests to pass through
+  if (req.method === "OPTIONS") {
+    return next();
+  }
 
   try
   {
