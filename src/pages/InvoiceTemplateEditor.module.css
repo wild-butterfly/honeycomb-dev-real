@@ -1,32 +1,40 @@
 .container {
   min-height: 100vh;
-  background: #f5f5f5;
-  padding: 20px;
+  background: linear-gradient(135deg, #fffef7 0%, #fefbf0 50%, #fffef7 100%);
+  padding: 0;
 }
 
 .header {
+  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
+  border-bottom: 2px solid #fbbf24;
+  box-shadow: 0 2px 16px rgba(255, 214, 0, 0.08);
+  padding: 20px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
 }
 
 .backButton {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
   font-size: 0.95rem;
-  color: #0066ff;
+  font-weight: 600;
+  color: #b99a2a;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
 }
 
 .backButton:hover {
-  background: #f9f9f9;
+  background: #fffbe4;
+  border-color: #f4b400;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .headerActions {
@@ -35,23 +43,35 @@
 }
 
 .helpButton {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
   font-size: 0.95rem;
+  font-weight: 600;
+  color: #b99a2a;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
+}
+
+.helpButton:hover {
+  background: #fffbe4;
+  border-color: #f4b400;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .titleBar {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px 24px;
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 30px 40px 20px;
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.08);
 }
 
 .titleGroup {
@@ -62,19 +82,20 @@
 
 .templateName {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   border: none;
   outline: none;
-  color: #1a1a1a;
+  color: #1f2937;
   background: transparent;
   padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .templateName:hover,
 .templateName:focus {
-  background: #f9f9f9;
+  background: #fef3c7;
+  color: #b99a2a;
 }
 
 .editNameButton {
@@ -82,12 +103,15 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  color: #b99a2a;
+  transition: all 0.2s;
+  opacity: 0.7;
 }
 
 .editNameButton:hover {
   opacity: 1;
+  color: #f4b400;
+  transform: scale(1.1);
 }
 
 .titleActions {
@@ -96,40 +120,48 @@
 }
 
 .primaryButton {
-  padding: 10px 24px;
-  background: #0066ff;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: #0052cc;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
 }
 
 .primaryButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .secondaryButton {
   padding: 10px 20px;
   background: white;
-  color: #0066ff;
-  border: 1px solid #0066ff;
-  border-radius: 6px;
+  color: #b99a2a;
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
 }
 
 .secondaryButton:hover {
-  background: #f0f7ff;
+  background: #fffbe4;
+  border-color: #f4b400;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .message {
@@ -149,32 +181,36 @@
 
 .tabs {
   display: flex;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px 8px 0 0;
+  background: linear-gradient(to bottom, #fffef7 0%, white 100%);
+  border: 2px solid #fbbf24;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
   overflow: hidden;
+  margin: 0 40px;
 }
 
 .tab {
   flex: 1;
-  padding: 14px 20px;
+  padding: 16px 24px;
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
   font-size: 1rem;
-  font-weight: 600;
-  color: #666;
+  font-weight: 700;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab:hover {
-  background: #f9f9f9;
+  background: #fef3c7;
+  color: #b99a2a;
 }
 
 .tab.active {
-  color: #0066ff;
-  border-bottom-color: #0066ff;
+  color: #f59e0b;
+  background: white;
+  border-bottom-color: #fbbf24;
 }
 
 .editorLayout {
@@ -182,20 +218,23 @@
   grid-template-columns: 500px 1fr;
   gap: 0;
   background: white;
-  border: 1px solid #ddd;
+  border: 2px solid #fbbf24;
   border-top: none;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 12px 12px;
   min-height: 600px;
+  margin: 0 40px 40px;
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.12);
 }
 
 .settingsPanel {
-  border-right: 1px solid #ddd;
+  border-right: 2px solid #fef3c7;
   overflow-y: auto;
   max-height: calc(100vh - 300px);
+  background: linear-gradient(to bottom, #fffef9 0%, white 100%);
 }
 
 .tabContent {
-  padding: 24px;
+  padding: 28px;
 }
 
 .section {
@@ -204,14 +243,14 @@
 
 .sectionTitle {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: #1f2937;
   margin: 0 0 8px 0;
 }
 
 .sectionSubtitle {
   font-size: 0.9rem;
-  color: #666;
+  color: #6b7280;
   margin: 0 0 24px 0;
   line-height: 1.5;
 }
@@ -223,8 +262,8 @@
 .formGroup label {
   display: block;
   font-size: 0.95rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #1f2937;
   margin-bottom: 8px;
 }
 
@@ -232,19 +271,21 @@
 .formGroup select,
 .formGroup textarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  background: white;
 }
 
 .formGroup input:focus,
 .formGroup select:focus,
 .formGroup textarea:focus {
   outline: none;
-  border-color: #0066ff;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
 .colorInput {
@@ -254,11 +295,17 @@
 }
 
 .colorInput input[type="color"] {
-  width: 50px;
-  height: 40px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  width: 56px;
+  height: 44px;
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.colorInput input[type="color"]:hover {
+  border-color: #f4b400;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
 .colorInput input[type="text"] {
@@ -268,7 +315,7 @@
 .helpText {
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #666;
+  color: #6b7280;
   line-height: 1.4;
 }
 
@@ -277,21 +324,24 @@
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  padding: 8px 0;
 }
 
 .toggle {
-  width: 50px;
-  height: 26px;
+  width: 54px;
+  height: 28px;
   appearance: none;
-  background: #ddd;
-  border-radius: 13px;
+  background: #e5e7eb;
+  border-radius: 14px;
   position: relative;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s;
+  border: 2px solid #d1d5db;
 }
 
 .toggle:checked {
-  background: #0066ff;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-color: #fbbf24;
 }
 
 .toggle::before {
@@ -301,13 +351,14 @@
   height: 22px;
   border-radius: 50%;
   background: white;
-  top: 2px;
-  left: 2px;
-  transition: left 0.2s;
+  top: 1px;
+  left: 1px;
+  transition: left 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle:checked::before {
-  left: 26px;
+  left: 27px;
 }
 
 .radioGroup {
@@ -322,12 +373,21 @@
   gap: 10px;
   cursor: pointer;
   font-size: 0.95rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.radioLabel:hover {
+  background: #fef3c7;
 }
 
 .radioLabel input[type="radio"] {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
+  accent-color: #fbbf24;
 }
 
 .checkboxList {
@@ -342,68 +402,90 @@
   gap: 10px;
   cursor: pointer;
   font-size: 0.95rem;
-  font-weight: 400;
+  font-weight: 500;
+  padding: 8px 0;
+  color: #1f2937;
+  transition: color 0.2s;
+}
+
+.checkboxList label:hover {
+  color: #b99a2a;
 }
 
 .checkboxList input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
+  accent-color: #fbbf24;
 }
 
 .infoBox {
-  background: #e6f2ff;
-  border: 1px solid #0066ff;
-  border-radius: 6px;
-  padding: 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e6 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
+  padding: 14px;
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   font-size: 0.9rem;
-  color: #004499;
+  color: #b99a2a;
+  font-weight: 600;
 }
 
 .infoIcon {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  color: #f59e0b;
 }
 
 .richTextarea {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
   font-size: 0.9rem;
   font-family: inherit;
   line-height: 1.6;
   resize: vertical;
+  transition: all 0.2s;
+}
+
+.richTextarea:focus {
+  outline: none;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
 .emptyState {
   padding: 60px 20px;
   text-align: center;
+  background: linear-gradient(135deg, #fffef9 0%, white 100%);
+  border-radius: 8px;
 }
 
 .addSectionButton {
-  padding: 12px 24px;
-  background: #0066ff;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
 .addSectionButton:hover {
-  background: #0052cc;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
 }
 
 .previewPanel {
   overflow-y: auto;
   max-height: calc(100vh - 300px);
-  background: #f9f9f9;
-  padding: 20px;
+  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+  padding: 30px 24px;
 }
 
 .previewContainer {
@@ -413,9 +495,12 @@
 
 .invoicePreview {
   background: white;
-  padding: 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  padding: 50px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(251, 191, 36, 0.08);
+  border-radius: 12px;
+  border: 1px solid #fef3c7;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica",
     "Arial", sans-serif;
@@ -425,9 +510,9 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #eee;
+  margin-bottom: 35px;
+  padding-bottom: 25px;
+  border-bottom: 3px solid #fef3c7;
 }
 
 .companyLogo {
@@ -477,20 +562,23 @@
 }
 
 .invoiceTitle {
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 30px 0 20px 0;
-  color: #1a1a1a;
+  font-size: 1.9rem;
+  font-weight: 800;
+  margin: 35px 0 25px 0;
+  color: #1f2937;
+  letter-spacing: -0.02em;
 }
 
 .invoiceDescription {
-  background: #f9f9f9;
-  padding: 16px;
-  border-left: 4px solid #0066ff;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e6 100%);
+  padding: 18px 20px;
+  border-left: 4px solid #fbbf24;
   margin-bottom: 30px;
   font-size: 0.9rem;
   line-height: 1.6;
   white-space: pre-line;
+  border-radius: 6px;
+  color: #1f2937;
 }
 
 .invoiceSection {
@@ -499,36 +587,46 @@
 
 .invoiceSection h3 {
   font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #1a1a1a;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: #1f2937;
 }
 
 .sectionDescription {
   font-size: 0.9rem;
-  color: #666;
+  color: #6b7280;
   margin: 0 0 16px 0;
 }
 
 .invoiceTable {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .invoiceTable thead th {
-  background: #f5f5f5;
-  padding: 10px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  padding: 14px 12px;
   text-align: left;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
-  border-bottom: 2px solid #ddd;
+  color: white;
+  border-bottom: 3px solid #f59e0b;
 }
 
 .invoiceTable tbody td {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  padding: 12px;
+  border-bottom: 1px solid #fef3c7;
   font-size: 0.9rem;
+  background: white;
+  color: #1f2937;
+}
+
+.invoiceTable tbody tr:hover {
+  background: #fffef7;
 }
 
 .invoiceTable thead th:last-child,
@@ -537,39 +635,47 @@
 }
 
 .invoiceTotals {
-  max-width: 300px;
+  max-width: 320px;
   margin-left: auto;
-  margin-bottom: 30px;
+  margin-bottom: 35px;
+  background: linear-gradient(135deg, #fffef7 0%, white 100%);
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px solid #fef3c7;
 }
 
 .totalRow {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 10px 0;
   font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .totalRow:last-child {
-  border-top: 2px solid #333;
-  padding-top: 12px;
-  margin-top: 8px;
-  font-size: 1.1rem;
+  border-top: 3px solid #fbbf24;
+  padding-top: 14px;
+  margin-top: 10px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #b99a2a;
 }
 
 .invoiceFooter {
-  border-top: 2px solid #eee;
-  padding-top: 20px;
+  border-top: 2px solid #fef3c7;
+  padding-top: 24px;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #666;
+  color: #6b7280;
   white-space: pre-line;
 }
 
 .footerDetails {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
-  color: #999;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #fef3c7;
+  color: #9ca3af;
 }
 
 @media (max-width: 1200px) {
@@ -579,7 +685,7 @@
 
   .settingsPanel {
     border-right: none;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 2px solid #fef3c7;
   }
 
   .previewPanel {
@@ -589,13 +695,19 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 10px;
+    padding: 0;
+  }
+
+  .header {
+    padding: 16px 20px;
   }
 
   .titleBar {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    margin: 20px;
+    padding: 16px 20px;
   }
 
   .titleActions {
@@ -607,7 +719,19 @@
     flex: 1;
   }
 
+  .tabs {
+    margin: 0 20px;
+  }
+
+  .editorLayout {
+    margin: 0 20px 20px;
+  }
+
   .invoiceInfo {
     grid-template-columns: 1fr;
+  }
+
+  .invoicePreview {
+    padding: 30px 20px;
   }
 }
