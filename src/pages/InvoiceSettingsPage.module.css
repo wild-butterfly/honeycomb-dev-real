@@ -150,6 +150,238 @@
   object-fit: contain;
 }
 
+.helpText {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.checkboxGroup {
+  margin-bottom: 20px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.checkbox input[type="checkbox"] {
+  width: auto;
+  margin: 3px 0 0 0;
+  cursor: pointer;
+}
+
+.checkbox span {
+  flex: 1;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #ffe066;
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+
+.tab:hover {
+  color: #ad8c11;
+}
+
+.tab.active {
+  color: #ad8c11;
+  border-bottom-color: #ffd600;
+}
+
+.templatesContainer {
+  background: white;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.templatesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.searchBar {
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border: 2px solid #ffe066;
+  border-radius: 8px;
+  background: #fffbe4;
+  color: #7d6836;
+}
+
+.newTemplateButton,
+.createFirstButton {
+  padding: 10px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.newTemplateButton:hover,
+.createFirstButton:hover {
+  background: #0052cc;
+  transform: translateY(-1px);
+}
+
+.templatesList {
+  margin-top: 20px;
+}
+
+.templatesTable {
+  width: 100%;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 200px 1fr 150px 60px;
+  gap: 20px;
+  padding: 12px 16px;
+  background: #fffbe4;
+  border-radius: 8px 8px 0 0;
+  border: 2px solid #ffe066;
+  border-bottom: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ad8c11;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 200px 1fr 150px 60px;
+  gap: 20px;
+  padding: 16px;
+  border: 2px solid #ffe066;
+  border-top: none;
+  background: white;
+  transition: background 0.2s;
+}
+
+.tableRow:hover {
+  background: #fffef5;
+}
+
+.tableRow:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeActive {
+  background: #d4f5e9;
+  color: #0d7c4b;
+}
+
+.badgeInactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.badgeDefault {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.templateName {
+  color: #0066ff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.templateName:hover {
+  text-decoration: underline;
+}
+
+.menuButton {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0 8px;
+  transition: color 0.2s;
+}
+
+.menuButton:hover {
+  color: #333;
+}
+
+.emptyState {
+  padding: 60px 20px;
+  text-align: center;
+  color: #666;
+  border: 2px solid #ffe066;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: white;
+}
+
+.emptyState p {
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.pagination {
+  margin-top: 20px;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
 .actions {
   padding: 30px;
   display: flex;
@@ -195,7 +427,21 @@
     padding: 20px;
   }
 
-  .actions {
+  .templatesHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchBar {
+    max-width: 100%;
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 120px 1fr 100px 40px;
+    gap: 10px;
+    padding: 12px;
+    font-size: 0.85rem;
     padding: 20px;
     flex-direction: column;
   }

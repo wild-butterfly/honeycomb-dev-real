@@ -6,29 +6,32 @@ import styles from "./InvoiceSettingsPage.module.css";
 interface InvoiceSettings {
   id?: number;
   company_id: number;
-  company_name?: string;
-  company_address?: string;
-  company_city?: string;
-  company_state?: string;
-  company_postal_code?: string;
-  company_phone?: string;
-  company_email?: string;
-  company_website?: string;
-  company_logo_url?: string;
-  tax_registration_number?: string;
-  bank_name?: string;
-  bank_account_number?: string;
-  bank_sort_code?: string;
-  bank_code?: string;
-  iban?: string;
-  swift_code?: string;
+  tax_calculation_method?: string;
+  default_payment_term?: string;
   custom_invoice_notes?: string;
-  payment_terms?: string;
+  invoice_footer?: string;
+  attach_pdf_email?: boolean;
+  show_employee_on_invoice?: boolean;
+}
+
+interface InvoiceTemplate {
+  id: number;
+  name: string;
+  status: "active" | "inactive";
+  is_default: boolean;
+  main_color?: string;
+  accent_color?: string;
+  font_size?: string;
+  created_at: string;
 }
 
 const InvoiceSettingsPage: React.FC = () => {
   const { companyId } = useCompany();
+  const [activeTab, setActiveTab] = useState<"general" | "templates">(
+    "general",
+  );
   const [formData, setFormData] = useState<InvoiceSettings | null>(null);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
@@ -53,13 +56,27 @@ const InvoiceSettingsPage: React.FC = () => {
           // Initialize new settings
           setFormData({
             company_id: companyId,
+            tax_calculation_method: "subtotal",
+            default_payment_term: "14",
+            attach_pdf_email: true,
+            show_employee_on_invoice: true,
           });
         }
+
+        // Load templates
+        const templatesData = await api.get<InvoiceTemplate[]>(
+          `/invoice-templates/${companyId}`,
+        );
+        setTemplates(templatesData || []);
       } catch (error) {
         console.error("Error loading invoice settings:", error);
         // Initialize new settings if not found
         setFormData({
           company_id: companyId,
+          tax_calculation_method: "subtotal",
+          default_payment_term: "14",
+          attach_pdf_email: true,
+          show_employee_on_invoice: true,
         });
       } finally {
         setLoading(false);
@@ -70,11 +87,15 @@ const InvoiceSettingsPage: React.FC = () => {
   }, [companyId]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
     setFormData((prev) =>
-      prev ? { ...prev, [name]: value || undefined } : null,
+      prev ? { ...prev, [name]: type === "checkbox" ? checked : value } : null,
     );
   };
 
@@ -86,24 +107,12 @@ const InvoiceSettingsPage: React.FC = () => {
 
       const payload = {
         company_id: companyId,
-        company_name: formData.company_name || null,
-        company_address: formData.company_address || null,
-        company_city: formData.company_city || null,
-        company_state: formData.company_state || null,
-        company_postal_code: formData.company_postal_code || null,
-        company_phone: formData.company_phone || null,
-        company_email: formData.company_email || null,
-        company_website: formData.company_website || null,
-        company_logo_url: formData.company_logo_url || null,
-        tax_registration_number: formData.tax_registration_number || null,
-        bank_name: formData.bank_name || null,
-        bank_account_number: formData.bank_account_number || null,
-        bank_sort_code: formData.bank_sort_code || null,
-        bank_code: formData.bank_code || null,
-        iban: formData.iban || null,
-        swift_code: formData.swift_code || null,
+        tax_calculation_method: formData.tax_calculation_method || null,
+        default_payment_term: formData.default_payment_term || null,
         custom_invoice_notes: formData.custom_invoice_notes || null,
-        payment_terms: formData.payment_terms || null,
+        invoice_footer: formData.invoice_footer || null,
+        attach_pdf_email: formData.attach_pdf_email ?? true,
+        show_employee_on_invoice: formData.show_employee_on_invoice ?? true,
       };
 
       const result = await api.post<InvoiceSettings>(
@@ -130,6 +139,11 @@ const InvoiceSettingsPage: React.FC = () => {
     }
   };
 
+  const handleCreateTemplate = () => {
+    // TODO: Open template editor modal
+    alert("Template editor coming soon!");
+  };
+
   if (loading) {
     return <div className={styles.container}>Loading...</div>;
   }
@@ -142,7 +156,7 @@ const InvoiceSettingsPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>Invoice Settings</h1>
-        <p>Configure your company details for invoice generation</p>
+        <p>Configure invoice preferences and templates</p>
       </div>
 
       {message && (
@@ -151,267 +165,235 @@ const InvoiceSettingsPage: React.FC = () => {
         </div>
       )}
 
-      <div className={styles.form}>
-        {/* Company Information Section */}
-        <fieldset className={styles.section}>
-          <legend className={styles.sectionTitle}>Company Information</legend>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="company_name">Company Name</label>
-            <input
-              type="text"
-              id="company_name"
-              name="company_name"
-              value={formData.company_name || ""}
-              onChange={handleInputChange}
-              placeholder="Your company name"
-            />
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_address">Street Address</label>
-              <input
-                type="text"
-                id="company_address"
-                name="company_address"
-                value={formData.company_address || ""}
-                onChange={handleInputChange}
-                placeholder="Street address"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_city">City</label>
-              <input
-                type="text"
-                id="company_city"
-                name="company_city"
-                value={formData.company_city || ""}
-                onChange={handleInputChange}
-                placeholder="City"
-              />
-            </div>
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_state">State/Province</label>
-              <input
-                type="text"
-                id="company_state"
-                name="company_state"
-                value={formData.company_state || ""}
-                onChange={handleInputChange}
-                placeholder="State or province"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_postal_code">Postal Code</label>
-              <input
-                type="text"
-                id="company_postal_code"
-                name="company_postal_code"
-                value={formData.company_postal_code || ""}
-                onChange={handleInputChange}
-                placeholder="Postal or ZIP code"
-              />
-            </div>
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_phone">Phone Number</label>
-              <input
-                type="tel"
-                id="company_phone"
-                name="company_phone"
-                value={formData.company_phone || ""}
-                onChange={handleInputChange}
-                placeholder="Phone number"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="company_email">Email Address</label>
-              <input
-                type="email"
-                id="company_email"
-                name="company_email"
-                value={formData.company_email || ""}
-                onChange={handleInputChange}
-                placeholder="contact@company.com"
-              />
-            </div>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="company_website">Website</label>
-            <input
-              type="url"
-              id="company_website"
-              name="company_website"
-              value={formData.company_website || ""}
-              onChange={handleInputChange}
-              placeholder="https://www.company.com"
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="company_logo_url">Company Logo URL</label>
-            <input
-              type="url"
-              id="company_logo_url"
-              name="company_logo_url"
-              value={formData.company_logo_url || ""}
-              onChange={handleInputChange}
-              placeholder="https://example.com/logo.png"
-            />
-            {formData.company_logo_url && (
-              <div className={styles.logoPreview}>
-                <img src={formData.company_logo_url} alt="Company logo" />
-              </div>
-            )}
-          </div>
-        </fieldset>
-
-        {/* Tax Information Section */}
-        <fieldset className={styles.section}>
-          <legend className={styles.sectionTitle}>Tax Information</legend>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="tax_registration_number">
-              Tax Registration Number / VAT ID
-            </label>
-            <input
-              type="text"
-              id="tax_registration_number"
-              name="tax_registration_number"
-              value={formData.tax_registration_number || ""}
-              onChange={handleInputChange}
-              placeholder="e.g., VAT ID or Tax registration number"
-            />
-          </div>
-        </fieldset>
-
-        {/* Bank Information Section */}
-        <fieldset className={styles.section}>
-          <legend className={styles.sectionTitle}>Bank Details</legend>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="bank_name">Bank Name</label>
-            <input
-              type="text"
-              id="bank_name"
-              name="bank_name"
-              value={formData.bank_name || ""}
-              onChange={handleInputChange}
-              placeholder="Bank name"
-            />
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="bank_account_number">Account Number</label>
-              <input
-                type="text"
-                id="bank_account_number"
-                name="bank_account_number"
-                value={formData.bank_account_number || ""}
-                onChange={handleInputChange}
-                placeholder="Account number"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="bank_sort_code">Sort Code</label>
-              <input
-                type="text"
-                id="bank_sort_code"
-                name="bank_sort_code"
-                value={formData.bank_sort_code || ""}
-                onChange={handleInputChange}
-                placeholder="Sort code (XX-XX-XX)"
-              />
-            </div>
-          </div>
-
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="iban">IBAN</label>
-              <input
-                type="text"
-                id="iban"
-                name="iban"
-                value={formData.iban || ""}
-                onChange={handleInputChange}
-                placeholder="International Bank Account Number"
-              />
-            </div>
-            <div className={styles.formGroup}>
-              <label htmlFor="swift_code">SWIFT/BIC Code</label>
-              <input
-                type="text"
-                id="swift_code"
-                name="swift_code"
-                value={formData.swift_code || ""}
-                onChange={handleInputChange}
-                placeholder="SWIFT code"
-              />
-            </div>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="bank_code">Bank Code</label>
-            <input
-              type="text"
-              id="bank_code"
-              name="bank_code"
-              value={formData.bank_code || ""}
-              onChange={handleInputChange}
-              placeholder="Bank code"
-            />
-          </div>
-        </fieldset>
-
-        {/* Invoice Defaults Section */}
-        <fieldset className={styles.section}>
-          <legend className={styles.sectionTitle}>Invoice Defaults</legend>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="payment_terms">Payment Terms</label>
-            <input
-              type="text"
-              id="payment_terms"
-              name="payment_terms"
-              value={formData.payment_terms || ""}
-              onChange={handleInputChange}
-              placeholder="e.g., Net 30, Due upon receipt"
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="custom_invoice_notes">Custom Invoice Notes</label>
-            <textarea
-              id="custom_invoice_notes"
-              name="custom_invoice_notes"
-              value={formData.custom_invoice_notes || ""}
-              onChange={handleInputChange}
-              placeholder="Any additional notes to include on invoices"
-              rows={4}
-            />
-          </div>
-        </fieldset>
-
-        {/* Save Button */}
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.saveButton}
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
-        </div>
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === "general" ? styles.active : ""}`}
+          onClick={() => setActiveTab("general")}
+        >
+          General Settings
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === "templates" ? styles.active : ""}`}
+          onClick={() => setActiveTab("templates")}
+        >
+          Invoice Templates
+        </button>
       </div>
+
+      {/* General Settings Tab */}
+      {activeTab === "general" && (
+        <div className={styles.form}>
+          <fieldset className={styles.section}>
+            <legend className={styles.sectionTitle}>Tax Calculation</legend>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="tax_calculation_method">
+                Tax calculation method
+              </label>
+              <select
+                id="tax_calculation_method"
+                name="tax_calculation_method"
+                value={formData.tax_calculation_method || "subtotal"}
+                onChange={handleInputChange}
+              >
+                <option value="subtotal">
+                  Calculate tax on document sub-total
+                </option>
+                <option value="lineitem">
+                  Calculate tax on each line item
+                </option>
+              </select>
+              <p className={styles.helpText}>
+                Choose how tax is calculated on your invoices
+              </p>
+            </div>
+          </fieldset>
+
+          <fieldset className={styles.section}>
+            <legend className={styles.sectionTitle}>Payment Terms</legend>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="default_payment_term">Default payment term</label>
+              <select
+                id="default_payment_term"
+                name="default_payment_term"
+                value={formData.default_payment_term || "14"}
+                onChange={handleInputChange}
+              >
+                <option value="0">Due upon receipt</option>
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+                <option value="90">90 days</option>
+              </select>
+            </div>
+          </fieldset>
+
+          <fieldset className={styles.section}>
+            <legend className={styles.sectionTitle}>Invoice Content</legend>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="custom_invoice_notes">
+                Default invoice notes
+              </label>
+              <textarea
+                id="custom_invoice_notes"
+                name="custom_invoice_notes"
+                value={formData.custom_invoice_notes || ""}
+                onChange={handleInputChange}
+                placeholder="Add default notes that appear on all invoices..."
+                rows={4}
+              />
+              <p className={styles.helpText}>
+                These notes will appear in the body of your invoices
+              </p>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="invoice_footer">Default invoice footer</label>
+              <textarea
+                id="invoice_footer"
+                name="invoice_footer"
+                value={formData.invoice_footer || ""}
+                onChange={handleInputChange}
+                placeholder="Thank you for your business. Please pay via accounts details below or via Mastercard / VISA..."
+                rows={4}
+              />
+              <p className={styles.helpText}>
+                This text appears at the bottom of all invoices
+              </p>
+            </div>
+          </fieldset>
+
+          <fieldset className={styles.section}>
+            <legend className={styles.sectionTitle}>Display Options</legend>
+
+            <div className={styles.checkboxGroup}>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  name="attach_pdf_email"
+                  checked={formData.attach_pdf_email ?? true}
+                  onChange={handleInputChange}
+                />
+                <span>Always attach invoice PDF to emails</span>
+              </label>
+              <p className={styles.helpText}>
+                Automatically attach PDF when sending invoice emails
+              </p>
+            </div>
+
+            <div className={styles.checkboxGroup}>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  name="show_employee_on_invoice"
+                  checked={formData.show_employee_on_invoice ?? true}
+                  onChange={handleInputChange}
+                />
+                <span>Show employee name on invoice for labour items</span>
+              </label>
+              <p className={styles.helpText}>
+                Display which employee worked on labour line items
+              </p>
+            </div>
+          </fieldset>
+
+          {/* Save Button */}
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.saveButton}
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Templates Tab */}
+      {activeTab === "templates" && (
+        <div className={styles.templatesContainer}>
+          <div className={styles.templatesHeader}>
+            <div className={styles.searchBar}>
+              <input
+                type="text"
+                placeholder="Search templates..."
+                className={styles.searchInput}
+              />
+            </div>
+            <button
+              className={styles.newTemplateButton}
+              onClick={handleCreateTemplate}
+            >
+              + New Template
+            </button>
+          </div>
+
+          <div className={styles.templatesList}>
+            <div className={styles.templatesTable}>
+              <div className={styles.tableHeader}>
+                <div className={styles.col}>STATUS</div>
+                <div className={styles.col}>TEMPLATE NAME</div>
+                <div className={styles.col}>DATE CREATED</div>
+                <div className={styles.col}></div>
+              </div>
+
+              {templates.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>No templates created yet</p>
+                  <button
+                    className={styles.createFirstButton}
+                    onClick={handleCreateTemplate}
+                  >
+                    Create your first template
+                  </button>
+                </div>
+              ) : (
+                templates.map((template) => (
+                  <div key={template.id} className={styles.tableRow}>
+                    <div className={styles.col}>
+                      <span
+                        className={`${styles.badge} ${template.status === "active" ? styles.badgeActive : styles.badgeInactive}`}
+                      >
+                        {template.status.toUpperCase()}
+                      </span>
+                      {template.is_default && (
+                        <span
+                          className={`${styles.badge} ${styles.badgeDefault}`}
+                        >
+                          DEFAULT
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.col}>
+                      <a href="#" className={styles.templateName}>
+                        {template.name}
+                      </a>
+                    </div>
+                    <div className={styles.col}>
+                      {new Date(template.created_at).toLocaleDateString()}
+                    </div>
+                    <div className={styles.col}>
+                      <button className={styles.menuButton}>⋯</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className={styles.pagination}>
+            <span>
+              Showing 1 - {templates.length} of {templates.length}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
