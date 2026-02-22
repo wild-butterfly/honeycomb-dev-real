@@ -9,6 +9,13 @@ export interface User {
   email: string;
   role: string;
   avatar?: string;
+  full_name?: string;
+  phone?: string;
+  job_title?: string;
+  department?: string;
+  address?: string;
+  timezone?: string;
+  language?: string;
 }
 
 interface AuthContextType {

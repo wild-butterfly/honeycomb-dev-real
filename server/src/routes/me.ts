@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { withDbContext } from "../middleware/dbContext";
 import { requireAuth } from "../middleware/authMiddleware";
+import * as profileController from "../controllers/profile.controller";
 
 const router = Router();
 
@@ -39,5 +40,28 @@ router.get("/", async (req, res) => {
   }
 
 });
+
+/* =====================================================
+   PROFILE MANAGEMENT ROUTES
+===================================================== */
+
+// Get current user profile
+router.get("/profile", profileController.getProfile);
+
+// Update current user profile
+router.put("/profile", profileController.updateProfile);
+
+// Upload/update avatar
+router.post(
+  "/avatar",
+  profileController.avatarUpload.single("avatar"),
+  profileController.updateAvatar
+);
+
+// Delete avatar
+router.delete("/avatar", profileController.deleteAvatar);
+
+// Change password
+router.put("/password", profileController.changePassword);
 
 export default router;

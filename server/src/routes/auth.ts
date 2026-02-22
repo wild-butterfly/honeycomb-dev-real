@@ -31,7 +31,15 @@ router.post(
           password_hash,
           role,
           company_id,
-          employee_id
+          employee_id,
+          full_name,
+          phone,
+          avatar,
+          job_title,
+          department,
+          address,
+          timezone,
+          language
         FROM users
         WHERE email = $1
         AND active = true
@@ -99,9 +107,18 @@ router.post(
 
           id: user.id,
           email: user.email,
+          name: user.full_name || user.email.split('@')[0],
           role: user.role,
           company_id: user.company_id,
-          employee_id: user.employee_id
+          employee_id: user.employee_id,
+          full_name: user.full_name,
+          phone: user.phone,
+          avatar: user.avatar,
+          job_title: user.job_title,
+          department: user.department,
+          address: user.address,
+          timezone: user.timezone,
+          language: user.language
 
         }
 
@@ -161,66 +178,99 @@ router.post(
         });
       }
 
-      // 1. Create company
-      const companyResult = await pool.query(
-        `
-        INSERT INTO companies
-        (name, billing_status)
-        VALUES ($1, 'trial')
-        RETURNING id
-        `,
-        [company_name || `New Company`]
-      );
+      // Start a transaction to ensure company and user are created together
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
 
-      const company_id = companyResult.rows[0].id;
+        // 1. Create company
+        const companyResult = await client.query(
+          `
+          INSERT INTO companies
+          (name, billing_status)
+          VALUES ($1, 'trial')
+          RETURNING id
+          `,
+          [company_name || `New Company`]
+        );
 
-      // 2. Hash password
-      const hashed = await bcrypt.hash(password, 10);
+        const company_id = companyResult.rows[0].id;
 
-      // 3. Create user as admin
-      const userResult = await pool.query(
-        `
-        INSERT INTO users
-        (
-          company_id,
-          email,
-          password_hash,
-          role
-        )
-        VALUES
-        ($1, $2, $3, 'admin')
-        RETURNING id, email, role
-        `,
-        [
-          company_id,
-          email,
-          hashed
-        ]
-      );
+        // 2. Hash password
+        const hashed = await bcrypt.hash(password, 10);
 
-      const user = userResult.rows[0];
+        // 3. Create user as admin
+        const userResult = await client.query(
+          `
+          INSERT INTO users
+          (
+            company_id,
+            email,
+            password_hash,
+            role,
+            full_name,
+            active
+          )
+          VALUES
+          ($1, $2, $3, 'admin', $4, true)
+          RETURNING id, email, role, full_name, avatar, timezone, language, company_id
+          `,
+          [
+            company_id,
+            email,
+            hashed,
+            email.split('@')[0]
+          ]
+        );
 
-      // 4. Generate JWT token
-      const token = jwt.sign(
-        {
-          id: user.id,
+        const user = userResult.rows[0];
+        
+        // Commit transaction
+        await client.query('COMMIT');
+        
+        // Log registration for debugging
+        console.log('✅ New registration:', {
+          user_id: user.id,
           email: user.email,
-          role: user.role,
-          company_id
-        },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+          company_id: user.company_id,
+          role: user.role
+        });
 
-      res.json({
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          company_id
-        }
-      });
+        // 4. Generate JWT token
+        const token = jwt.sign(
+          {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            company_id
+          },
+          JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        res.json({
+          token,
+          user: {
+            id: user.id,
+            name: user.full_name || user.email.split('@')[0],
+            email: user.email,
+            role: user.role,
+            company_id,
+            full_name: user.full_name,
+            avatar: user.avatar,
+            timezone: user.timezone,
+            language: user.language
+          }
+        });
+        
+      } catch (err) {
+        // Rollback transaction on error
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
 
     }
     catch (err) {

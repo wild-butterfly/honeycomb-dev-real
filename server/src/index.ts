@@ -10,6 +10,7 @@ import { withDbContext } from "./middleware/dbContext";
 
 /* ROUTES */
 import meRoutes from "./routes/me";
+import usersRoutes from "./routes/users";
 import employeeRoutes from "./routes/employees";
 import companyRoutes from "./routes/companies";
 import jobRoutes from "./routes/jobs";
@@ -78,6 +79,8 @@ app.use("/api/auth", authRoutes);
 /* PROTECTED ROUTES */
 
 app.use("/api/me", requireAuth, withDbContext, meRoutes);
+
+app.use("/api/users", requireAuth, withDbContext, usersRoutes);
 
 app.use("/api/employees", requireAuth, withDbContext, employeeRoutes);
 

@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./SignUpPage.module.css";
 import { register } from "../services/api";
+import { useCompany } from "../context/CompanyContext";
 
 // B) Eğer resmi public yerine src altında tutuyorsan bu satırı aç:
 // import winkingBee from "../../assets/winkingbee.png";
 
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
+  const { reloadCompanies } = useCompany();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,6 +51,9 @@ const SignUpPage: React.FC = () => {
       if (res?.user) {
         localStorage.setItem("user", JSON.stringify(res.user));
       }
+
+      // Reload companies list (fixes company switcher not showing companies until refresh)
+      await reloadCompanies();
 
       // Registration successful, redirect to dashboard
       navigate("/dashboard");

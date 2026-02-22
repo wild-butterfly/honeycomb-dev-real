@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 import { apiPost } from "../services/api";
+import { useCompany } from "../context/CompanyContext";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { reloadCompanies } = useCompany();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +41,9 @@ const LoginPage: React.FC = () => {
       if (res.user) {
         localStorage.setItem("user", JSON.stringify(res.user));
       }
+
+      // ✅ Reload companies list (fixes company switcher not showing companies until refresh)
+      await reloadCompanies();
 
       // ✅ Dashboard'a yönlendir
       navigate("/dashboard");

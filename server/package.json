@@ -27,6 +27,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.19.7",
     "@types/pg": "^8.16.0",
+    "axios": "^1.13.5",
+    "form-data": "^4.0.5",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
