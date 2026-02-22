@@ -58,12 +58,6 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
         icon: FiFileText({ size: 18 }),
         path: "/dashboard/settings?tab=invoice-settings",
       },
-      {
-        id: "company",
-        label: "Company Details",
-        icon: FiSettings({ size: 18 }),
-        path: "/dashboard/settings?tab=company",
-      },
     ],
   },
   {
