@@ -23,6 +23,7 @@ import FinancialSummaryPage from "./pages/FinancialSummaryPage";
 import CostReportPage from "./pages/CostReportPage";
 import InvoicingPage from "./pages/InvoicingPage";
 import SettingsPage from "./pages/SettingsPage";
+import InvoiceTemplateEditor from "./pages/InvoiceTemplateEditor";
 import AdminServiceCatalogsPage from "./pages/AdminServiceCatalogsPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
@@ -140,6 +141,10 @@ const App: React.FC = () => {
           {/* INVOICING */}
           <Route path="/dashboard/invoices" element={<InvoicingPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
+          <Route
+            path="/dashboard/invoice-template-editor"
+            element={<InvoiceTemplateEditor />}
+          />
 
           {/* ADMIN */}
           <Route path="/admin" element={<AdminServiceCatalogsPage />} />

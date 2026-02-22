@@ -339,6 +339,12 @@
   color: #0066ff;
   text-decoration: none;
   font-weight: 600;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-align: left;
 }
 
 .templateName:hover {

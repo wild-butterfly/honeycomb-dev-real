@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCompany } from "../context/CompanyContext";
 import api from "../services/api";
 import styles from "./InvoiceSettingsPage.module.css";
@@ -26,6 +27,7 @@ interface InvoiceTemplate {
 }
 
 const InvoiceSettingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { companyId } = useCompany();
   const [activeTab, setActiveTab] = useState<"general" | "templates">(
     "general",
@@ -140,8 +142,11 @@ const InvoiceSettingsPage: React.FC = () => {
   };
 
   const handleCreateTemplate = () => {
-    // TODO: Open template editor modal
-    alert("Template editor coming soon!");
+    navigate("/dashboard/invoice-template-editor");
+  };
+
+  const handleEditTemplate = (templateId: number) => {
+    navigate(`/dashboard/invoice-template-editor?id=${templateId}`);
   };
 
   if (loading) {
@@ -371,9 +376,12 @@ const InvoiceSettingsPage: React.FC = () => {
                       )}
                     </div>
                     <div className={styles.col}>
-                      <a href="#" className={styles.templateName}>
+                      <button
+                        className={styles.templateName}
+                        onClick={() => handleEditTemplate(template.id)}
+                      >
                         {template.name}
-                      </a>
+                      </button>
                     </div>
                     <div className={styles.col}>
                       {new Date(template.created_at).toLocaleDateString()}
