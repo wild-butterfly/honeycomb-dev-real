@@ -81,7 +81,16 @@ export const generateInvoicePdf = async (
       return;
     }
 
-    const invoice: Invoice = invoiceResult.rows[0];
+    // Convert invoice numeric fields from string to number
+    let invoice: Invoice = invoiceResult.rows[0];
+    invoice = {
+      ...invoice,
+      subtotal: typeof invoice.subtotal === 'string' ? parseFloat(invoice.subtotal) : invoice.subtotal,
+      tax_amount: typeof invoice.tax_amount === 'string' ? parseFloat(invoice.tax_amount) : invoice.tax_amount,
+      total_with_tax: typeof invoice.total_with_tax === 'string' ? parseFloat(invoice.total_with_tax) : invoice.total_with_tax,
+      amount_paid: typeof invoice.amount_paid === 'string' ? parseFloat(invoice.amount_paid) : invoice.amount_paid,
+      amount_unpaid: typeof invoice.amount_unpaid === 'string' ? parseFloat(invoice.amount_unpaid) : invoice.amount_unpaid,
+    };
 
     // Fetch invoice line items
     const lineItemsResult = await pool.query(
@@ -89,11 +98,39 @@ export const generateInvoicePdf = async (
       [id]
     );
 
-    const lineItems: InvoiceLineItem[] = lineItemsResult.rows;
+    // Convert string values to numbers
+    const lineItems: InvoiceLineItem[] = lineItemsResult.rows.map((item: any) => ({
+      ...item,
+      quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity) : item.quantity,
+      cost: typeof item.cost === 'string' ? parseFloat(item.cost) : item.cost,
+      price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+      markup: typeof item.markup === 'string' ? parseFloat(item.markup) : item.markup,
+      tax: typeof item.tax === 'string' ? parseFloat(item.tax) : item.tax,
+      discount: typeof item.discount === 'string' ? parseFloat(item.discount) : item.discount,
+      total: typeof item.total === 'string' ? parseFloat(item.total) : item.total,
+    }));
 
     // Fetch invoice settings for the company
     let settings: InvoiceSettings = {};
+    let template: any = null;
+    
     if (invoice.company_id) {
+      // First try to get the default invoice template
+      const templateResult = await pool.query(
+        `SELECT * FROM public.invoice_templates WHERE company_id = $1 AND is_default = true ORDER BY created_at DESC LIMIT 1`,
+        [invoice.company_id]
+      );
+      
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+        console.log("Using invoice template for PDF generation:", template.name);
+        console.log("Template Column Visibility - show_line_items:", template.show_line_items);
+        console.log("Template Column Visibility - show_line_quantities:", template.show_line_quantities);
+        console.log("Template Column Visibility - show_line_prices:", template.show_line_prices);
+        console.log("Template Column Visibility - show_line_totals:", template.show_line_totals);
+      }
+      
+      // Also fetch legacy invoice settings for company info
       const settingsResult = await pool.query(
         `SELECT * FROM public.invoice_settings WHERE company_id = $1`,
         [invoice.company_id]
@@ -118,9 +155,9 @@ export const generateInvoicePdf = async (
 
     doc.pipe(res);
 
-    // Colors (Honeycomb theme)
-    const primaryColor = "#ffe066";
-    const darkColor = "#1a1a1a";
+    // Colors (Use template colors if available, otherwise default to Honeycomb theme)
+    const primaryColor = template?.table_header_background_color || "#ffe066";
+    const darkColor = template?.text_color || "#1a1a1a";
     const lightGray = "#f3f4f6";
     const borderColor = "#e5e7eb";
 
@@ -133,9 +170,11 @@ export const generateInvoicePdf = async (
     // ===== HEADER SECTION =====
     let yPosition = 50;
 
-    // Company Logo (if available)
-    if (settings.company_logo_url) {
+    // Company Logo (if available and enabled in template)
+    const showLogo = template?.show_company_logo !== false; // Default to true if template not specified
+    if (showLogo && settings.company_logo_url) {
       try {
+        console.log("📸 Rendering company logo (show_company_logo:", showLogo, ")");
         doc.image(settings.company_logo_url, margins, yPosition, {
           width: 80,
           height: 80,
@@ -287,11 +326,30 @@ export const generateInvoicePdf = async (
 
     // ===== LINE ITEMS TABLE =====
     const tableTop = yPosition;
+    
+    // Determine which columns to show based on template
+    const showQuantity = template ? template.show_line_quantities !== false : true;
+    const showPrice = template ? template.show_line_prices !== false : true;
+    const showTotal = template ? template.show_line_totals !== false : true;
+    
+    console.log("PDF Generation - Column Visibility:");
+    console.log("  show_line_quantities:", showQuantity);
+    console.log("  show_line_prices:", showPrice);
+    console.log("  show_line_totals:", showTotal);
+    
+    // Calculate dynamic column widths based on visible columns
+    let visibleCols = 1; // Description always visible
+    if (showQuantity) visibleCols++;
+    if (showPrice) visibleCols++;
+    if (showTotal) visibleCols++;
+    
+    // Distribute width evenly among visible columns, description gets 40% of first column slot
+    const baseColWidth = contentWidth / 3;
     const colWidths = {
       description: contentWidth * 0.4,
-      quantity: contentWidth * 0.15,
-      price: contentWidth * 0.15,
-      total: contentWidth * 0.3,
+      quantity: showQuantity ? contentWidth * 0.2 : 0,
+      price: showPrice ? contentWidth * 0.2 : 0,
+      total: showTotal ? contentWidth * 0.2 : 0,
     };
 
     // Table header
@@ -305,27 +363,41 @@ export const generateInvoicePdf = async (
     doc
       .fontSize(10)
       .font("Helvetica-Bold")
-      .fillColor(darkColor)
-      .text("Description", margins + 5, tableTop + 7, {
-        width: colWidths.description - 10,
-      })
-      .text("Qty", margins + colWidths.description + 5, tableTop + 7, {
+      .fillColor(darkColor);
+    
+    let xPos = margins + 5;
+    
+    // Description header (always shown)
+    doc.text("Description", xPos, tableTop + 7, {
+      width: colWidths.description - 10,
+    });
+    xPos += colWidths.description;
+    
+    // Qty header (conditional)
+    if (showQuantity) {
+      doc.text("Qty", xPos, tableTop + 7, {
         width: colWidths.quantity - 10,
         align: "right",
-      })
-      .text("Price", margins + colWidths.description + colWidths.quantity + 5, tableTop + 7, {
+      });
+      xPos += colWidths.quantity;
+    }
+    
+    // Price header (conditional)
+    if (showPrice) {
+      doc.text("Price", xPos, tableTop + 7, {
         width: colWidths.price - 10,
         align: "right",
-      })
-      .text(
-        "Total",
-        margins + colWidths.description + colWidths.quantity + colWidths.price + 5,
-        tableTop + 7,
-        {
-          width: colWidths.total - 10,
-          align: "right",
-        }
-      );
+      });
+      xPos += colWidths.price;
+    }
+    
+    // Total header (conditional)
+    if (showTotal) {
+      doc.text("Total", xPos, tableTop + 7, {
+        width: colWidths.total - 10,
+        align: "right",
+      });
+    }
 
     yPosition = tableTop + 30;
 
@@ -344,22 +416,41 @@ export const generateInvoicePdf = async (
       doc
         .fontSize(10)
         .font("Helvetica")
-        .fillColor("#333")
-        .text(item.name || item.description || "", margins + 5, yPosition, {
-          width: colWidths.description - 10,
-        })
-        .text(item.quantity.toString(), margins + colWidths.description + 5, yPosition, {
+        .fillColor("#333");
+      
+      let rowXPos = margins + 5;
+      
+      // Description (always shown)
+      doc.text(item.name || item.description || "", rowXPos, yPosition, {
+        width: colWidths.description - 10,
+      });
+      rowXPos += colWidths.description;
+      
+      // Quantity (conditional)
+      if (showQuantity) {
+        doc.text(item.quantity.toString(), rowXPos, yPosition, {
           width: colWidths.quantity - 10,
           align: "right",
-        })
-        .text(`$${item.price.toFixed(2)}`, margins + colWidths.description + colWidths.quantity + 5, yPosition, {
+        });
+        rowXPos += colWidths.quantity;
+      }
+      
+      // Price (conditional)
+      if (showPrice) {
+        doc.text(`$${item.price.toFixed(2)}`, rowXPos, yPosition, {
           width: colWidths.price - 10,
           align: "right",
-        })
-        .text(`$${item.total.toFixed(2)}`, margins + colWidths.description + colWidths.quantity + colWidths.price + 5, yPosition, {
+        });
+        rowXPos += colWidths.price;
+      }
+      
+      // Total (conditional)
+      if (showTotal) {
+        doc.text(`$${item.total.toFixed(2)}`, rowXPos, yPosition, {
           width: colWidths.total - 10,
           align: "right",
         });
+      }
 
       yPosition += rowHeight;
     });

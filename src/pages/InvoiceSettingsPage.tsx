@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useCompany } from "../context/CompanyContext";
 import api from "../services/api";
+import InvoiceTemplateEditorModal from "../components/InvoiceTemplateEditorModal";
+import ConfirmModal from "../components/ConfirmModal";
 import styles from "./InvoiceSettingsPage.module.css";
 
 interface InvoiceSettings {
@@ -27,7 +28,6 @@ interface InvoiceTemplate {
 }
 
 const InvoiceSettingsPage: React.FC = () => {
-  const navigate = useNavigate();
   const { companyId } = useCompany();
   const [activeTab, setActiveTab] = useState<"general" | "templates">(
     "general",
@@ -36,15 +36,50 @@ const InvoiceSettingsPage: React.FC = () => {
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
+    null,
+  );
+
+  // Confirm modal state
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+
+  // Load templates
+  const loadTemplates = async (compId: number) => {
+    if (!compId) {
+      console.warn("❌ No companyId, skipping template load");
+      return [];
+    }
+    try {
+      console.log("📋 Loading templates for company:", compId);
+      const templatesData = await api.get<InvoiceTemplate[]>(
+        `/invoice-templates/${compId}`,
+      );
+      console.log("✅ Loaded templates:", templatesData);
+      setTemplates(templatesData || []);
+      return templatesData || [];
+    } catch (error) {
+      console.error("❌ Error loading templates:", error);
+      return [];
+    }
+  };
+
   // Load existing settings
   useEffect(() => {
     const loadSettings = async () => {
-      if (!companyId) return;
+      console.log("⚙️ loadSettings() called, companyId:", companyId);
+      if (!companyId) {
+        console.warn("⚠️ No companyId, skipping load");
+        return;
+      }
 
       try {
         setLoading(true);
@@ -65,11 +100,14 @@ const InvoiceSettingsPage: React.FC = () => {
           });
         }
 
-        // Load templates
-        const templatesData = await api.get<InvoiceTemplate[]>(
-          `/invoice-templates/${companyId}`,
-        );
-        setTemplates(templatesData || []);
+        // Load templates and auto-switch if they exist
+        const templatesData = await loadTemplates(companyId);
+        if (templatesData && templatesData.length > 0) {
+          console.log(
+            "📌 Found existing templates, auto-switching to templates tab",
+          );
+          setActiveTab("templates");
+        }
       } catch (error) {
         console.error("Error loading invoice settings:", error);
         // Initialize new settings if not found
@@ -142,11 +180,93 @@ const InvoiceSettingsPage: React.FC = () => {
   };
 
   const handleCreateTemplate = () => {
-    navigate("/dashboard/invoice-template-editor");
+    setSelectedTemplateId(null);
+    setIsModalOpen(true);
   };
 
   const handleEditTemplate = (templateId: number) => {
-    navigate(`/dashboard/invoice-template-editor?id=${templateId}`);
+    setSelectedTemplateId(templateId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTemplateId(null);
+  };
+
+  const handleTemplateSaved = async () => {
+    // Reload templates after saving
+    if (companyId) {
+      await loadTemplates(companyId);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: number) => {
+    setTemplateToDelete(id);
+    setIsConfirmModalOpen(true);
+  };
+
+  const confirmDeleteTemplate = async () => {
+    if (templateToDelete === null) return;
+
+    try {
+      await api.delete(`/invoice-templates/${templateToDelete}`);
+      setMessage({ type: "success", text: "Template deleted successfully" });
+      if (companyId) {
+        await loadTemplates(companyId);
+      }
+      setOpenMenuId(null);
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Failed to delete template",
+      });
+    } finally {
+      setIsConfirmModalOpen(false);
+      setTemplateToDelete(null);
+    }
+  };
+
+  const handleDuplicateTemplate = async (id: number) => {
+    try {
+      const template = templates.find((t) => t.id === id);
+      if (!template) return;
+
+      const newTemplate = {
+        ...template,
+        id: undefined,
+        name: `${template.name} (Copy)`,
+        is_default: false,
+      };
+
+      await api.post("/invoice-templates", newTemplate);
+      setMessage({ type: "success", text: "Template duplicated successfully" });
+      if (companyId) {
+        await loadTemplates(companyId);
+      }
+      setOpenMenuId(null);
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Failed to duplicate template",
+      });
+    }
+  };
+
+  const handleSetAsDefault = async (id: number) => {
+    try {
+      await api.put(`/invoice-templates/${id}`, { is_default: true });
+      setMessage({ type: "success", text: "Template set as default" });
+      if (companyId) {
+        await loadTemplates(companyId);
+      }
+      setOpenMenuId(null);
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: error.message || "Failed to set template as default",
+      });
+    }
   };
 
   if (loading) {
@@ -365,7 +485,9 @@ const InvoiceSettingsPage: React.FC = () => {
                       <span
                         className={`${styles.badge} ${template.status === "active" ? styles.badgeActive : styles.badgeInactive}`}
                       >
-                        {template.status.toUpperCase()}
+                        {template.status
+                          ? template.status.toUpperCase()
+                          : "INACTIVE"}
                       </span>
                       {template.is_default && (
                         <span
@@ -387,7 +509,50 @@ const InvoiceSettingsPage: React.FC = () => {
                       {new Date(template.created_at).toLocaleDateString()}
                     </div>
                     <div className={styles.col}>
-                      <button className={styles.menuButton}>⋯</button>
+                      <div className={styles.menuWrapper}>
+                        <button
+                          className={styles.menuButton}
+                          onClick={() =>
+                            setOpenMenuId(
+                              openMenuId === template.id ? null : template.id,
+                            )
+                          }
+                        >
+                          ⋯
+                        </button>
+                        {openMenuId === template.id && (
+                          <div className={styles.dropdown}>
+                            <button
+                              className={styles.dropdownItem}
+                              onClick={() => handleEditTemplate(template.id)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className={styles.dropdownItem}
+                              onClick={() =>
+                                handleDuplicateTemplate(template.id)
+                              }
+                            >
+                              Duplicate
+                            </button>
+                            {!template.is_default && (
+                              <button
+                                className={styles.dropdownItem}
+                                onClick={() => handleSetAsDefault(template.id)}
+                              >
+                                Set as Default
+                              </button>
+                            )}
+                            <button
+                              className={`${styles.dropdownItem} ${styles.dangerItem}`}
+                              onClick={() => handleDeleteTemplate(template.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -401,6 +566,29 @@ const InvoiceSettingsPage: React.FC = () => {
             </span>
           </div>
         </div>
+      )}
+
+      {/* Template Editor Modal */}
+      <InvoiceTemplateEditorModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        templateId={selectedTemplateId}
+        onSave={handleTemplateSaved}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {isConfirmModalOpen && (
+        <ConfirmModal
+          title="Delete Template"
+          description="Are you sure you want to delete this template? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={confirmDeleteTemplate}
+          onCancel={() => {
+            setIsConfirmModalOpen(false);
+            setTemplateToDelete(null);
+          }}
+        />
       )}
     </div>
   );
