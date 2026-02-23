@@ -132,6 +132,27 @@ export const createTemplate = async (req: Request, res: Response) => {
     console.log("Sections received:", sections);
     console.log("Sections type:", typeof sections);
     console.log("Sections is array?", Array.isArray(sections));
+    console.log("Sections full value:", JSON.stringify(sections, null, 2));
+
+    // Ensure sections is properly handled - convert string to array if needed
+    let sectionsToSave = [];
+    if (Array.isArray(sections)) {
+      sectionsToSave = sections;
+      console.log("✅ Sections is already an array");
+    } else if (typeof sections === 'string') {
+      try {
+        sectionsToSave = JSON.parse(sections);
+        console.log("✅ Parsed sections from string");
+      } catch (e) {
+        console.warn("⚠️  Could not parse sections string:", sections);
+        sectionsToSave = [];
+      }
+    } else if (!sections) {
+      console.log("⚠️  Sections is null/undefined, using empty array");
+      sectionsToSave = [];
+    }
+
+    console.log("Sections to save after processing:", JSON.stringify(sectionsToSave, null, 2));
     console.log("show_company_logo:", show_company_logo);
     console.log("=== VISIBILITY COLUMNS RECEIVED ===");
     console.log("show_line_items (from request):", show_line_items, "type:", typeof show_line_items);
@@ -213,7 +234,7 @@ export const createTemplate = async (req: Request, res: Response) => {
         show_material_items !== undefined ? show_material_items : true,
         default_description,
         default_footer,
-        JSON.stringify(sections || []),
+        JSON.stringify(sectionsToSave),
       ]
     );
 
@@ -307,7 +328,40 @@ export const updateTemplate = async (req: Request, res: Response) => {
   try {
     console.log("=== UPDATE TEMPLATE ===");
     console.log("Template ID:", id);
-    console.log("Template name:", name);
+    console.log("Template name:", name, "| Type:", typeof name, "| Is null?", name === null, "| Is undefined?", name === undefined);
+    console.log("Sections received in UPDATE:", sections);
+    console.log("Sections type in UPDATE:", typeof sections);
+    console.log("Sections is array in UPDATE?", Array.isArray(sections));
+    console.log("Sections full value in UPDATE:", JSON.stringify(sections, null, 2));
+
+    // Ensure sections is properly handled - convert string to array if needed
+    let sectionsToSave = [];
+    if (Array.isArray(sections)) {
+      sectionsToSave = sections;
+      console.log("✅ Sections is already an array");
+    } else if (typeof sections === 'string') {
+      try {
+        sectionsToSave = JSON.parse(sections);
+        console.log("✅ Parsed sections from string");
+      } catch (e) {
+        console.warn("⚠️  Could not parse sections string:", sections);
+        sectionsToSave = [];
+      }
+    } else if (!sections) {
+      console.log("⚠️  Sections is null/undefined, using empty array");
+      sectionsToSave = [];
+    }
+
+    console.log("Sections to save after processing:", JSON.stringify(sectionsToSave, null, 2));
+    console.log("is_default:", is_default, "| Type:", typeof is_default);
+    
+    // Validate required fields - ensure name is a non-empty string
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      console.error("❌ Update rejected: Template name is empty, missing, or not a string");
+      console.error("   Received name:", name, "| Type:", typeof name);
+      return res.status(400).json({ error: "Template name is required and must be a string" });
+    }
+    
     console.log("Sections received:", sections);
     console.log("Sections type:", typeof sections);
     console.log("=== VISIBILITY COLUMNS RECEIVED IN UPDATE ===");
@@ -343,12 +397,14 @@ export const updateTemplate = async (req: Request, res: Response) => {
 
     // If this is set as default, unset other defaults
     if (is_default) {
+      console.log("Setting template", id, "as default. Unsetting others for company", company_id);
       await pool.query(
         `UPDATE invoice_templates SET is_default = false WHERE company_id = $1 AND id != $2`,
         [company_id, id]
       );
     }
 
+    console.log("About to update template. Received is_default:", is_default, "type:", typeof is_default);
     const result = await pool.query(
       `UPDATE invoice_templates SET
         name = $1, is_default = $2, status = $3, main_color = $4, accent_color = $5,
@@ -407,7 +463,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
         show_material_items !== undefined ? show_material_items : true,
         default_description,
         default_footer,
-        JSON.stringify(sections || []),
+        JSON.stringify(sectionsToSave),
         id,
       ]
     );
