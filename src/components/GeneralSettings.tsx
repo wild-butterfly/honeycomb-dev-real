@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useCompany } from "../context/CompanyContext";
+import api from "../services/api";
 import {
   getGeneralSettings,
   updateGeneralSettings,
@@ -79,6 +80,9 @@ const GeneralSettings: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -139,6 +143,7 @@ const GeneralSettings: React.FC = () => {
         }));
         setTaxes(data.taxes);
         setCustomerSources(data.customerSources);
+        setCompanyLogo(data.settings.logo_url || "");
       } catch (error) {
         console.error("Failed to load settings:", error);
         setMessage({
@@ -283,6 +288,104 @@ const GeneralSettings: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !companyId) return;
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: "error", text: "File size must not exceed 5MB" });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setMessage({ type: "error", text: "Please select an image file" });
+      return;
+    }
+
+    setUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      console.log("Uploading logo for company:", companyId);
+
+      const data = await api.post<{ settings: any }>(
+        `/general-settings/${companyId}/logo`,
+        formData,
+      );
+
+      console.log("Logo upload response:", data);
+
+      if (data?.settings?.logo_url) {
+        setCompanyLogo(data.settings.logo_url);
+        setMessage({
+          type: "success",
+          text: "Company logo updated successfully!",
+        });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({
+          type: "error",
+          text: "Logo uploaded but not reflected. Please refresh.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to upload logo:", error);
+      const errorMsg = error?.message || "Failed to upload company logo";
+      setMessage({ type: "error", text: errorMsg });
+    } finally {
+      setUploadingLogo(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    if (!window.confirm("Are you sure you want to delete the company logo?")) {
+      return;
+    }
+
+    if (!companyId) return;
+
+    setUploadingLogo(true);
+    setMessage(null);
+
+    try {
+      console.log("Deleting logo for company:", companyId);
+
+      const data = await api.delete<{ settings: any }>(
+        `/general-settings/${companyId}/logo`,
+      );
+
+      console.log("Logo delete response:", data);
+
+      if (data?.settings) {
+        setCompanyLogo("");
+        setMessage({
+          type: "success",
+          text: "Company logo deleted successfully!",
+        });
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (error: any) {
+      console.error("Failed to delete logo:", error);
+      const errorMsg = error?.message || "Failed to delete company logo";
+      setMessage({ type: "error", text: errorMsg });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("handleSubmit called with companyId:", companyId);
@@ -355,6 +458,68 @@ const GeneralSettings: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            {/* Company Logo Section */}
+            <section className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2>Company Logo</h2>
+              </div>
+              <div className={styles.logoSection}>
+                <div className={styles.logoWrapper}>
+                  {companyLogo ? (
+                    <img
+                      src={
+                        companyLogo.startsWith("http")
+                          ? companyLogo
+                          : `http://localhost:3001${companyLogo}`
+                      }
+                      alt="Company logo"
+                      className={styles.logoImage}
+                    />
+                  ) : (
+                    <div className={styles.logoPlaceholder}>
+                      <div className={styles.logoInitials}>LOGO</div>
+                    </div>
+                  )}
+                  {uploadingLogo && (
+                    <div className={styles.logoOverlay}>
+                      <div className={styles.spinner}></div>
+                    </div>
+                  )}
+                </div>
+                <div className={styles.logoActions}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLogoClick}
+                    disabled={uploadingLogo}
+                    className={styles.uploadButton}
+                  >
+                    {uploadingLogo ? "Uploading..." : "Upload Logo"}
+                  </button>
+                  {companyLogo && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteLogo}
+                      disabled={uploadingLogo}
+                      className={styles.deleteButton}
+                    >
+                      Delete Logo
+                    </button>
+                  )}
+                  <p className={styles.logoHint}>
+                    JPG, PNG, GIF or WebP. Max size 5MB. This logo appears on
+                    invoices.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* Account Settings */}
             <section className={styles.section}>
               <div className={styles.sectionHeader}>

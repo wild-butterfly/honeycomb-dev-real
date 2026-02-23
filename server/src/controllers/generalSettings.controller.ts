@@ -4,6 +4,9 @@
 
 import { Request, Response } from "express";
 import { pool } from "../db";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 /* =========================================================
    GET GENERAL SETTINGS
@@ -32,7 +35,8 @@ export const getGeneralSettings = async (req: Request, res: Response) => {
         unpriced_jobs_cleanup_days,
         expired_quotes_cleanup_days,
         inactive_jobs_cleanup_days,
-        auto_archive_stale_days
+        auto_archive_stale_days,
+        logo_url
       FROM companies 
       WHERE id = $1`,
       [companyId]
@@ -306,5 +310,191 @@ export const incrementSourceUsage = async (req: Request, res: Response) => {
     console.error("Error incrementing source usage:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return res.status(500).json({ error: `Failed to update source usage: ${errorMessage}` });
+  }
+};
+/* =========================================================
+   COMPANY LOGO UPLOAD
+========================================================= */
+
+// Configure multer for logo uploads
+const logoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), "uploads", "logos");
+    
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Generate unique filename with timestamp and random string
+    const ext = path.extname(file.originalname);
+    const filename = `logo-${Date.now()}-${Math.random().toString(36).substring(2, 9)}${ext}`;
+    cb(null, filename);
+  },
+});
+
+const logoFileFilter = (req: any, file: any, cb: any) => {
+  // Accept images only
+  const allowedTypes = /jpeg|jpg|png|gif|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed (jpeg, jpg, png, gif, webp)"));
+  }
+};
+
+export const logoUpload = multer({
+  storage: logoStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: logoFileFilter,
+});
+
+export const uploadLogo = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+
+    console.log("uploadLogo called with companyId:", companyId);
+    console.log("req.file:", req.file ? { filename: req.file.filename, path: req.file.path } : "NO FILE");
+
+    if (!req.file) {
+      console.error("No file uploaded");
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Construct the file path that will be stored in database
+    const logoPath = `/uploads/logos/${req.file.filename}`;
+
+    console.log("Saving logo path to database:", logoPath);
+
+    // Update company logo in database
+    const result = await pool.query(
+      `UPDATE companies 
+       SET logo_url = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, name as business_name, abn, payee_name, bsb_number, 
+                 bank_account_number, job_number_prefix, starting_job_number,
+                 currency, date_format, timezone, auto_assign_phase, 
+                 show_state_on_invoices, auto_archive_unpriced,
+                 unpriced_jobs_cleanup_days, expired_quotes_cleanup_days,
+                 inactive_jobs_cleanup_days, auto_archive_stale_days, logo_url`,
+      [logoPath, companyId]
+    );
+
+    if (result.rows.length === 0) {
+      console.error("Company not found:", companyId);
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    console.log("Logo updated successfully for company:", companyId);
+
+    // Get taxes and customer sources
+    const taxesResult = await pool.query(
+      `SELECT id, name, rate 
+       FROM taxes 
+       WHERE company_id = $1 AND is_active = true
+       ORDER BY name`,
+      [companyId]
+    );
+
+    const sourcesResult = await pool.query(
+      `SELECT id, name 
+       FROM customer_sources 
+       WHERE company_id = $1 AND is_active = true
+       ORDER BY usage_count DESC, name`,
+      [companyId]
+    );
+
+    res.json({
+      settings: result.rows[0],
+      taxes: taxesResult.rows,
+      customerSources: sourcesResult.rows,
+    });
+  } catch (error) {
+    console.error("Error uploading logo:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: `Failed to upload logo: ${errorMessage}` });
+  }
+};
+
+export const deleteLogo = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+
+    console.log("deleteLogo called with companyId:", companyId);
+
+    // Get current logo path
+    const logoResult = await pool.query(
+      `SELECT logo_url FROM companies WHERE id = $1`,
+      [companyId]
+    );
+
+    if (logoResult.rows.length === 0) {
+      console.error("Company not found:", companyId);
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    const logoUrl = logoResult.rows[0].logo_url;
+    
+    // Delete file from disk if it exists
+    if (logoUrl) {
+      const filePath = path.join(process.cwd(), logoUrl);
+      console.log("Attempting to delete file:", filePath);
+      
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log("File deleted successfully");
+      } else {
+        console.log("File does not exist:", filePath);
+      }
+    }
+
+    // Remove logo from database
+    const result = await pool.query(
+      `UPDATE companies 
+       SET logo_url = NULL, updated_at = NOW()
+       WHERE id = $1
+       RETURNING id, name as business_name, abn, payee_name, bsb_number, 
+                 bank_account_number, job_number_prefix, starting_job_number,
+                 currency, date_format, timezone, auto_assign_phase, 
+                 show_state_on_invoices, auto_archive_unpriced,
+                 unpriced_jobs_cleanup_days, expired_quotes_cleanup_days,
+                 inactive_jobs_cleanup_days, auto_archive_stale_days, logo_url`,
+      [companyId]
+    );
+
+    // Get taxes and customer sources
+    const taxesResult = await pool.query(
+      `SELECT id, name, rate 
+       FROM taxes 
+       WHERE company_id = $1 AND is_active = true
+       ORDER BY name`,
+      [companyId]
+    );
+
+    const sourcesResult = await pool.query(
+      `SELECT id, name 
+       FROM customer_sources 
+       WHERE company_id = $1 AND is_active = true
+       ORDER BY usage_count DESC, name`,
+      [companyId]
+    );
+
+    res.json({
+      settings: result.rows[0],
+      taxes: taxesResult.rows,
+      customerSources: sourcesResult.rows,
+    });
+  } catch (error) {
+    console.error("Error deleting logo:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: `Failed to delete logo: ${errorMessage}` });
   }
 };

@@ -37,6 +37,7 @@ export interface GeneralSettingsData {
   expired_quotes_cleanup_days: string;
   inactive_jobs_cleanup_days: string | null;
   auto_archive_stale_days: string;
+  logo_url?: string;
 }
 
 export interface Tax {
