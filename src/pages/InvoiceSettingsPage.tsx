@@ -8,6 +8,14 @@ import styles from "./InvoiceSettingsPage.module.css";
 interface InvoiceSettings {
   id?: number;
   company_id: number;
+  company_name?: string;
+  company_address?: string;
+  company_city?: string;
+  company_state?: string;
+  company_postal_code?: string;
+  company_phone?: string;
+  company_email?: string;
+  company_website?: string;
   tax_calculation_method?: string;
   default_payment_term?: string;
   custom_invoice_notes?: string;
@@ -93,6 +101,14 @@ const InvoiceSettingsPage: React.FC = () => {
           // Initialize new settings
           setFormData({
             company_id: companyId,
+            company_name: "",
+            company_address: "",
+            company_city: "",
+            company_state: "",
+            company_postal_code: "",
+            company_phone: "",
+            company_email: "",
+            company_website: "",
             tax_calculation_method: "subtotal",
             default_payment_term: "14",
             attach_pdf_email: true,
@@ -107,12 +123,23 @@ const InvoiceSettingsPage: React.FC = () => {
             "📌 Found existing templates, auto-switching to templates tab",
           );
           setActiveTab("templates");
+        } else {
+          console.log("📌 No templates found, staying on general tab");
+          setActiveTab("general");
         }
       } catch (error) {
         console.error("Error loading invoice settings:", error);
         // Initialize new settings if not found
         setFormData({
           company_id: companyId,
+          company_name: "",
+          company_address: "",
+          company_city: "",
+          company_state: "",
+          company_postal_code: "",
+          company_phone: "",
+          company_email: "",
+          company_website: "",
           tax_calculation_method: "subtotal",
           default_payment_term: "14",
           attach_pdf_email: true,
@@ -147,6 +174,14 @@ const InvoiceSettingsPage: React.FC = () => {
 
       const payload = {
         company_id: companyId,
+        company_name: formData.company_name || null,
+        company_address: formData.company_address || null,
+        company_city: formData.company_city || null,
+        company_state: formData.company_state || null,
+        company_postal_code: formData.company_postal_code || null,
+        company_phone: formData.company_phone || null,
+        company_email: formData.company_email || null,
+        company_website: formData.company_website || null,
         tax_calculation_method: formData.tax_calculation_method || null,
         default_payment_term: formData.default_payment_term || null,
         custom_invoice_notes: formData.custom_invoice_notes || null,
@@ -193,6 +228,14 @@ const InvoiceSettingsPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedTemplateId(null);
   };
+
+  // Reload templates when templates tab is active
+  useEffect(() => {
+    if (activeTab === "templates" && companyId) {
+      console.log("📋 Templates tab is active, loading templates...");
+      loadTemplates(companyId);
+    }
+  }, [activeTab, companyId]);
 
   const handleTemplateSaved = async () => {
     // Reload templates after saving
@@ -309,6 +352,113 @@ const InvoiceSettingsPage: React.FC = () => {
       {/* General Settings Tab */}
       {activeTab === "general" && (
         <div className={styles.form}>
+          <fieldset className={styles.section}>
+            <legend className={styles.sectionTitle}>Company Details</legend>
+            <p className={styles.helpText}>
+              This information appears on your invoices and quotes
+            </p>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="company_name">Business Name</label>
+              <input
+                type="text"
+                id="company_name"
+                name="company_name"
+                value={formData.company_name || ""}
+                onChange={handleInputChange}
+                placeholder="Your Company Name"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="company_address">Street Address</label>
+              <input
+                type="text"
+                id="company_address"
+                name="company_address"
+                value={formData.company_address || ""}
+                onChange={handleInputChange}
+                placeholder="123 Business Street"
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="company_city">City/Suburb</label>
+                <input
+                  type="text"
+                  id="company_city"
+                  name="company_city"
+                  value={formData.company_city || ""}
+                  onChange={handleInputChange}
+                  placeholder="Melbourne"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="company_postal_code">Postcode</label>
+                <input
+                  type="text"
+                  id="company_postal_code"
+                  name="company_postal_code"
+                  value={formData.company_postal_code || ""}
+                  onChange={handleInputChange}
+                  placeholder="3000"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="company_state">State</label>
+              <input
+                type="text"
+                id="company_state"
+                name="company_state"
+                value={formData.company_state || ""}
+                onChange={handleInputChange}
+                placeholder="Victoria"
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="company_phone">Phone Number</label>
+                <input
+                  type="tel"
+                  id="company_phone"
+                  name="company_phone"
+                  value={formData.company_phone || ""}
+                  onChange={handleInputChange}
+                  placeholder="1300 123 456"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="company_email">Email Address</label>
+                <input
+                  type="email"
+                  id="company_email"
+                  name="company_email"
+                  value={formData.company_email || ""}
+                  onChange={handleInputChange}
+                  placeholder="info@company.com"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="company_website">Website (Optional)</label>
+              <input
+                type="url"
+                id="company_website"
+                name="company_website"
+                value={formData.company_website || ""}
+                onChange={handleInputChange}
+                placeholder="https://www.company.com"
+              />
+            </div>
+          </fieldset>
+
           <fieldset className={styles.section}>
             <legend className={styles.sectionTitle}>Tax Calculation</legend>
 

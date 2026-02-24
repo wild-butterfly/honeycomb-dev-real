@@ -37,6 +37,9 @@ export const getProfile = async (req: Request, res: Response) => {
 
     let targetUserId = userId;
 
+    // 🔒 SECURITY: When switching companies, fetch that company's admin profile instead
+    // This prevents users from seeing avatars/profiles from other companies
+    
     // If superadmin is impersonating a company (not in god mode and company selected),
     // fetch that company's admin user instead of the superadmin's own profile
     if (isSuperadmin && !isGodMode && currentCompanyId && currentCompanyId !== userCompanyId) {
@@ -66,6 +69,39 @@ export const getProfile = async (req: Request, res: Response) => {
         return res.status(404).json({ 
           error: "No admin user found for this company" 
         });
+      }
+    } else if (!isSuperadmin && !isGodMode && currentCompanyId && currentCompanyId !== userCompanyId) {
+      // For regular admins/owners: if switching to a different company, fetch that company's admin profile
+      // This ensures each company sees only its own admin avatar
+      const isAdminRole = userRole === 'admin' || userRole === 'owner';
+      
+      if (isAdminRole) {
+        const companyAdminResult = await db.query(
+          `
+          SELECT id FROM users 
+          WHERE company_id = $1 
+            AND active = true 
+            AND role IN ('admin', 'owner')
+          ORDER BY 
+            CASE role 
+              WHEN 'owner' THEN 1 
+              WHEN 'admin' THEN 2 
+              ELSE 3 
+            END,
+            created_at ASC
+          LIMIT 1
+          `,
+          [currentCompanyId]
+        );
+
+        if (companyAdminResult.rows.length > 0) {
+          targetUserId = companyAdminResult.rows[0].id;
+        } else {
+          // No admin found for this company, return empty state
+          return res.status(404).json({ 
+            error: "No admin user found for this company" 
+          });
+        }
       }
     }
 
@@ -410,8 +446,32 @@ export const updateAvatar = async (req: Request, res: Response) => {
 
     const oldAvatar = oldAvatarResult.rows[0]?.avatar;
 
+    // 🔒 BUG FIX: If targetUserId differs from current user, rename the file to use correct user ID
+    let finalFilename = req.file.filename;
+    const currentFilenameUserId = (req as any).user?.id;
+    
+    if (targetUserId !== currentFilenameUserId) {
+      // Extract file extension
+      const ext = path.extname(req.file.filename);
+      // Generate correct filename with targetUserId
+      finalFilename = `avatar-${targetUserId}-${Date.now()}${ext}`;
+      
+      // Rename file on disk
+      const oldPath = req.file.path;
+      const newPath = path.join(path.dirname(oldPath), finalFilename);
+      
+      try {
+        fs.renameSync(oldPath, newPath);
+        console.log(`✅ Renamed avatar file: ${req.file.filename} → ${finalFilename}`);
+      } catch (renameErr) {
+        console.error("Failed to rename avatar file:", renameErr);
+        fs.unlinkSync(oldPath);
+        return res.status(500).json({ error: "Failed to process avatar file" });
+      }
+    }
+
     // Generate the URL for the new avatar
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = `/uploads/avatars/${finalFilename}`;
 
     // Update user avatar in database
     const { rows } = await db.query(

@@ -264,3 +264,13 @@ textarea:-webkit-autofill {
     padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* ---------- Hide Sidebar When Modal Open ---------- */
+body.invoice-modal-open aside[class*="SettingsSidebar"],
+body.invoice-modal-open aside[class*="sidebar"] {
+  display: none !important;
+}
+
+body.invoice-modal-open main {
+  padding-left: 0 !important;
+}

@@ -17,13 +17,21 @@ router.use(withDbContext);
 ================================ */
 
 router.get("/invoices", controller.getAll);
+router.get("/invoices/:id/pdf", controller.downloadInvoicePdf);
 router.get("/invoices/:id", controller.getById);
 router.post("/invoices", requireRole(["admin", "manager"]), controller.create);
 router.put("/invoices/:id", requireRole(["admin", "manager"]), controller.update);
+router.delete("/invoices/:id", requireRole(["admin", "manager"]), controller.deleteInvoice);
 router.post(
    "/invoices/:id/approve",
    requireRole(["admin", "manager"]),
    controller.approve
+);
+
+router.post(
+   "/invoices/:id/sync-xero",
+   requireRole(["admin", "manager"]),
+   controller.syncWithXero
 );
 
 /* ===============================

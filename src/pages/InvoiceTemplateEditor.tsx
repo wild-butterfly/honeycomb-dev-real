@@ -6,6 +6,8 @@ import api from "../services/api";
 import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
 import styles from "./InvoiceTemplateEditor.module.css";
 
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:3001/api";
+
 interface TemplateData {
   id?: number;
   company_id: number;
@@ -153,6 +155,54 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
     type: "success" | "error";
     text: string;
   } | null>(null);
+
+  const handlePreviewPdf = async () => {
+    if (!companyData) {
+      setMessage({ type: "error", text: "Company data is not available yet." });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const impersonateCompany = localStorage.getItem("impersonateCompany");
+
+      const response = await fetch(
+        `${API_BASE}/invoice-templates/preview-pdf`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(impersonateCompany
+              ? { "X-Company-Id": impersonateCompany }
+              : {}),
+          },
+          body: JSON.stringify({
+            template: templateData,
+            company: companyData,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to generate preview PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "invoice-template-preview.pdf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Preview PDF error:", error);
+      setMessage({ type: "error", text: "Failed to download preview PDF." });
+    }
+  };
 
   // Load template and company data
   useEffect(() => {
@@ -1876,6 +1926,15 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
 
           {/* Right Panel - Preview */}
           <div className={styles.previewPanel}>
+            <div className={styles.previewActions}>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={handlePreviewPdf}
+              >
+                Download PDF Preview
+              </button>
+            </div>
             <div className={styles.previewContainer}>
               <div
                 className={`${styles.invoicePreview} ${
@@ -1938,7 +1997,14 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     className={styles.companyDetails}
                     style={{ color: templateData.text_color }}
                   >
-                    <h3 style={{ color: templateData.main_color }}>
+                    <h3
+                      style={{
+                        color: "#000000",
+                        fontSize: "1.1rem",
+                        fontWeight: "bold",
+                        marginTop: "0",
+                      }}
+                    >
                       {companyData?.business_name || "Your Company"}
                     </h3>
                     <p>{companyData?.company_address || "5a Harmeet Close"}</p>
@@ -1968,10 +2034,9 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     <p>
                       <strong>Site Address</strong>
                     </p>
-                    <p>123 Street</p>
-                    <p>Suburb</p>
-                    <p>City, 1234</p>
-                    <p>Region</p>
+                    <p>Sample Customer</p>
+                    <p>456 Job Site Road</p>
+                    <p>Mulgrave VIC 3170</p>
                   </div>
                   <div className={styles.invoiceNumbers}>
                     <p>
@@ -1987,7 +2052,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       <strong>Due Date:</strong> Sun Mar 08 2026
                     </p>
                     <p>
-                      <strong>GST Number:</strong> 33118605451
+                      <strong>ABN:</strong> 33118605451
                     </p>
                   </div>
                 </div>

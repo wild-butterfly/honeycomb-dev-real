@@ -1,23 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
 import styles from "./DashboardNavbar.module.css";
 import CompanySwitcher from "./CompanySwitcher";
 import { useAuth } from "../context/AuthContext";
+import { useCompany } from "../context/CompanyContext";
+import api from "../services/api";
 
 type Props = {
   onLogout?: () => void;
   onNewJob?: () => void;
 };
 
+interface ProfileData {
+  id: number;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  avatar?: string;
+  job_title?: string;
+  department?: string;
+  address?: string;
+  timezone?: string;
+  language?: string;
+  role?: string;
+}
+
 const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { companyId } = useCompany();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [companyAvatar, setCompanyAvatar] = useState<string | null>(null);
 
   const closeMenu = () => setMenuOpen(false);
   const closeProfileMenu = () => setProfileMenuOpen(false);
+
+  // 🔒 SECURITY: Reload profile when switching companies to get that company's admin avatar
+  useEffect(() => {
+    const loadCompanyProfile = async () => {
+      try {
+        const data = await api.get<ProfileData>("/me/profile");
+        if (data?.avatar) {
+          // Update the company-scoped avatar display
+          const avatarUrl = data.avatar.startsWith("http")
+            ? data.avatar
+            : `http://localhost:3001${data.avatar}`;
+          setCompanyAvatar(avatarUrl);
+        } else {
+          setCompanyAvatar(null);
+        }
+      } catch (error) {
+        console.error("Failed to load company profile:", error);
+        // Avoid showing a stale avatar from another company
+        setCompanyAvatar(null);
+      }
+    };
+
+    loadCompanyProfile();
+  }, [companyId]);
 
   const handleNewJobClick = () => {
     onNewJob?.();
@@ -139,9 +181,9 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
               onClick={() => setProfileMenuOpen((prev) => !prev)}
               aria-expanded={profileMenuOpen}
             >
-              {user?.avatar && (
+              {companyAvatar && (
                 <img
-                  src={user.avatar}
+                  src={companyAvatar}
                   alt="User avatar"
                   className={styles.profileAvatar}
                 />
@@ -158,9 +200,9 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
                 />
                 <div className={styles.profileDropdown}>
                   <div className={styles.profileHeader}>
-                    {user?.avatar && (
+                    {companyAvatar && (
                       <img
-                        src={user.avatar}
+                        src={companyAvatar}
                         alt="User avatar"
                         className={styles.profileHeaderAvatar}
                       />

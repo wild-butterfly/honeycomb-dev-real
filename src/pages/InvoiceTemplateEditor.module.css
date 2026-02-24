@@ -595,6 +595,12 @@
   padding: 30px 24px;
 }
 
+.previewActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
 .previewContainer {
   max-width: 800px;
   margin: 0 auto;

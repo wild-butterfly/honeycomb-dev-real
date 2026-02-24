@@ -10,7 +10,7 @@ import LeftSidebar from "../components/LeftSidebar";
 import Footer from "../components/Footer";
 import styles from "./InvoicingPage.module.css";
 import { FiPlus } from "react-icons/fi";
-import { apiGet, apiPost } from "../services/api";
+import { apiGet, apiPost, apiDelete } from "../services/api";
 import {
   DocumentDuplicateIcon,
   DocumentTextIcon,
@@ -113,10 +113,13 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
     try {
       setLoading(true);
       // Create invoice with data from modal
-      const newInvoice = await apiPost<any>("/invoices", {
+      const payload = {
         ...invoiceData,
         jobId,
-      });
+        templateId: invoiceData.defaultTemplateId, // Use the default template if available
+      };
+
+      const newInvoice = await apiPost<any>("/invoices", payload);
       setInvoices([...invoices, newInvoice]);
       setShowQuickInvoiceModal(false);
       setSelectedInvoice(newInvoice);
@@ -151,13 +154,12 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
     }
 
     try {
-      // TODO: Replace with actual API call
-      await fetch(`/api/invoices/${invoiceId}`, {
-        method: "DELETE",
-      });
+      await apiDelete(`/invoices/${invoiceId}`);
       setInvoices(invoices.filter((inv) => inv.id !== invoiceId));
+      console.log(`✅ Invoice ${invoiceId} deleted successfully`);
     } catch (error) {
       console.error("Error deleting invoice:", error);
+      alert("Failed to delete invoice. Please try again.");
     }
   };
 
@@ -197,15 +199,12 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
       }
 
       // Fetch PDF from backend
-      const response = await fetch(
-        `http://localhost:3001/api/invoices/${invoiceId}/pdf`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch(`/api/invoices/${invoiceId}/pdf`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to download invoice: ${response.statusText}`);

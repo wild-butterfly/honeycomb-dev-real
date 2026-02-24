@@ -32,6 +32,10 @@ interface Props {
 export default function QuickInvoiceModal({ jobId, onClose, onCreate }: Props) {
   // State
   const [customerId, setCustomerId] = useState<string>("");
+  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [defaultTemplateId, setDefaultTemplateId] = useState<number | null>(
+    null,
+  );
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
   const [notes, setNotes] = useState("");
   const [paymentPeriod, setPaymentPeriod] =
@@ -40,6 +44,7 @@ export default function QuickInvoiceModal({ jobId, onClose, onCreate }: Props) {
     useState<CardPaymentFeeOption>("COMPANY_SETTING");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [template, setTemplate] = useState<any | null>(null);
 
   // Service Catalogs State
   const [serviceCatalogs, setServiceCatalogs] = useState<ServiceCatalog[]>([]);
@@ -78,37 +83,57 @@ export default function QuickInvoiceModal({ jobId, onClose, onCreate }: Props) {
   const loadAll = async () => {
     try {
       setLoading(true);
-
       setError("");
 
-      const [job, labour, materials, subs, fees] = await Promise.all([
-        apiGet<any>(`/jobs/${jobId}`),
+      // Load job data with proper error handling
+      let job: any = null;
+      let labour: any[] = [];
 
-        apiGet<any[]>(`/jobs/${jobId}/labour`),
-
-        apiGet<any[]>(`/jobs/${jobId}/materials`).catch(() => []),
-
-        apiGet<any[]>(`/jobs/${jobId}/subcontractors`).catch(() => []),
-
-        apiGet<any[]>(`/jobs/${jobId}/fees`).catch(() => []),
-      ]);
+      try {
+        job = await apiGet<any>(`/jobs/${jobId}`);
+      } catch (err) {
+        console.error("Error loading job:", err);
+        setError("Failed to load job details");
+        setLoading(false);
+        return;
+      }
 
       setCustomerId(job?.customer_id || "");
 
-      const items = [
-        ...convertLabour(labour || []),
+      // Extract company ID and load default template
+      if (job?.company_id) {
+        setCompanyId(job.company_id);
+        try {
+          const templatesData = await apiGet<any[]>(
+            `/invoice-templates/${job.company_id}`,
+          );
+          const defaultTemplate = templatesData?.find((t: any) => t.is_default);
+          if (defaultTemplate) {
+            setDefaultTemplateId(defaultTemplate.id);
+            // LOAD FULL TEMPLATE
+            const fullTemplate = await apiGet<any>(
+              `/invoice-templates/template/${defaultTemplate.id}`,
+            );
+            setTemplate(fullTemplate);
+          }
+        } catch (err) {
+          console.warn("Could not load default template:", err);
+        }
+      }
 
-        ...convertMaterials(materials || []),
+      try {
+        const labourData = await apiGet<any[]>(`/jobs/${jobId}/labour`);
+        labour = labourData || [];
+      } catch (err) {
+        console.warn("Could not load labour data:", err);
+        labour = [];
+      }
 
-        ...convertSubs(subs || []),
-
-        ...convertFees(fees || []),
-      ];
+      const items = [...convertLabour(labour || [])];
 
       setLineItems(items);
     } catch (err: any) {
-      console.error(err);
-
+      console.error("Error in loadAll:", err);
       setError("Failed to load invoice data");
     } finally {
       setLoading(false);
@@ -299,6 +324,12 @@ export default function QuickInvoiceModal({ jobId, onClose, onCreate }: Props) {
       paymentPeriod,
 
       cardPaymentFee,
+
+      companyId,
+
+      templateId: defaultTemplateId,
+
+      template: template,
     });
   };
 

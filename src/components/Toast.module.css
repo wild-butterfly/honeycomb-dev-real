@@ -2,21 +2,26 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  background: #fff8e1;
-  border: 1px solid #ffd54f;
+  background: linear-gradient(135deg, #fffef9 0%, #fffef5 100%);
+  border: 2px solid #ffd600;
   color: #5d4b00;
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 12px 20px;
+  border-radius: 12px;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(255, 214, 0, 0.3);
   animation: slideIn 0.25s ease;
   z-index: 9999;
+  max-width: 320px;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .icon {
   font-weight: bold;
+  color: #ffd600;
+  font-size: 1.1rem;
 }
 
 @keyframes slideIn {

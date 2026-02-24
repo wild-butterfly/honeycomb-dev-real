@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { pool } from "../db";
+import { renderInvoicePdf } from "../utils/pdfRenderer";
 
 // Get all templates for a company
 export const getCompanyTemplates = async (req: Request, res: Response) => {
@@ -277,6 +278,126 @@ export const createTemplate = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error creating template:", error);
     res.status(500).json({ error: "Failed to create template" });
+  }
+};
+
+export const previewTemplatePdf = async (req: Request, res: Response) => {
+  try {
+    const { template, company } = req.body || {};
+
+    console.log("=== PREVIEW PDF REQUEST ===");
+    console.log("Company data received:", JSON.stringify(company, null, 2));
+
+    if (!template) {
+      return res.status(400).json({ error: "Template data is required" });
+    }
+
+    // Get payment term from invoice settings
+    const companyId = (req as any).companyId || (req as any).user?.company_id;
+    let paymentTermDays = 14; // Default to 14 days
+    
+    if (companyId) {
+      try {
+        const invoiceSettings = await pool.query(
+          "SELECT default_payment_term FROM invoice_settings WHERE company_id = $1",
+          [companyId]
+        );
+        if (invoiceSettings.rows.length > 0 && invoiceSettings.rows[0].default_payment_term) {
+          paymentTermDays = parseInt(invoiceSettings.rows[0].default_payment_term) || 14;
+        }
+      } catch (err) {
+        console.warn("Could not load payment term, using default:", err);
+      }
+    }
+
+    const lineItems = Array.isArray(template.sections) && template.sections.length > 0
+      ? template.sections.flatMap((section: any) =>
+          Array.isArray(section.items)
+            ? section.items.map((item: any, idx: number) => ({
+                id: `section-${section.id || "x"}-${idx}`,
+                name: item.name || item.description || "Item",
+                description: item.description || "",
+                quantity: Number(item.quantity) || 1,
+                price: Number(item.price) || 0,
+                total: (Number(item.quantity) || 1) * (Number(item.price) || 0),
+              }))
+            : []
+        )
+      : [
+          { id: "item-1", name: "Service Callout", description: "Standard service callout", quantity: 1, price: 120, total: 120 },
+          { id: "item-2", name: "Labour", description: "2 hours", quantity: 2, price: 95, total: 190 },
+          { id: "item-3", name: "Materials", description: "Parts and fittings", quantity: 1, price: 75, total: 75 },
+        ];
+
+    const subtotal = lineItems.reduce((sum: number, item: any) => sum + (Number(item.total) || 0), 0);
+    const taxAmount = Math.round(subtotal * 0.1 * 100) / 100;
+    const totalWithTax = subtotal + taxAmount;
+
+    // Calculate due date based on payment term
+    const invoiceDate = new Date();
+    const dueDate = new Date(invoiceDate);
+    dueDate.setDate(dueDate.getDate() + paymentTermDays);
+
+    const invoice = {
+      invoice_number: "INV-DRAFT",
+      created_at: invoiceDate.toISOString(),
+      due_date: dueDate.toISOString(),
+      status: "draft",
+      subtotal,
+      tax_amount: taxAmount,
+      total_with_tax: totalWithTax,
+    };
+
+    const settings = {
+      business_name: company?.business_name || "Your Company",
+      company_name: company?.business_name || "Your Company",
+      company_address: company?.company_address || "",
+      company_suburb: company?.company_suburb || "",
+      company_city: company?.company_city || "",
+      company_state: company?.company_state || "",
+      company_postcode: company?.company_postal_code || "",
+      company_postal_code: company?.company_postal_code || "",
+      company_email: company?.company_email || "",
+      company_phone: company?.company_phone || "",
+      abn: company?.abn || "",
+      gst_number: company?.abn || "",
+      logo_url: company?.logo_url || "",
+      bank_name: "Demo Bank",
+      bsb: "013 231",
+      bank_account: "1078 53001",
+    };
+
+    console.log("Settings object for PDF:", JSON.stringify(settings, null, 2));
+
+    const customer = {
+      name: "Sample Customer",
+      address: "123 Sample Street",
+      suburb: "Mulgrave",
+      state: "VIC",
+      postcode: "3170",
+    };
+
+    const job = {
+      job_number: "JOB-12345",
+      site_address: "456 Job Site Road",
+      suburb: "Mulgrave",
+      state: "VIC",
+      postcode: "3170",
+    };
+
+    await renderInvoicePdf({
+      invoice,
+      lineItems,
+      template,
+      settings,
+      company: settings,
+      customer,
+      job,
+      res,
+    });
+  } catch (error: any) {
+    console.error("Error generating preview PDF:", error);
+    res.status(500).json({ error: "Failed to generate preview PDF" });
   }
 };
 

@@ -396,7 +396,7 @@ const ProfileSettings: React.FC = () => {
     ? profile.avatar.startsWith("http")
       ? profile.avatar
       : `http://localhost:3001${profile.avatar}`
-    : user?.avatar;
+    : null;
 
   return (
     <div className={styles.container}>
@@ -415,7 +415,7 @@ const ProfileSettings: React.FC = () => {
         <form onSubmit={handleSubmit}>
           {/* Avatar Section */}
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Profile Picture</h2>
+            <h2 className={styles.sectionTitle}>User Avatar</h2>
             <div className={styles.avatarSection}>
               <div className={styles.avatarWrapper}>
                 {avatarUrl ? (

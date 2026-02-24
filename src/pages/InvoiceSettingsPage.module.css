@@ -243,12 +243,12 @@
 
 .newTemplateButton,
 .createFirstButton {
-  padding: 10px 20px;
-  background: #0066ff;
+  padding: 10px 24px;
+  background: var(--hc-gold-strong);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -256,8 +256,9 @@
 
 .newTemplateButton:hover,
 .createFirstButton:hover {
-  background: #0052cc;
+  background: rgba(244, 180, 0, 0.9);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(244, 180, 0, 0.25);
 }
 
 .templatesList {
@@ -365,6 +366,58 @@
   color: #333;
 }
 
+.menuWrapper {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  z-index: 1000;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1f2937;
+  transition: background-color 0.2s;
+}
+
+.dropdownItem:hover {
+  background-color: #f3f4f6;
+  color: #d4a574;
+}
+
+.dropdownItem:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdownItem:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.dangerItem {
+  color: #dc2626;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dangerItem:hover {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
 .emptyState {
   padding: 60px 20px;
   text-align: center;
@@ -397,26 +450,25 @@
 }
 
 .saveButton {
-  padding: 12px 28px;
-  background: #ffd600;
-  color: #1a1a1a;
+  padding: 10px 24px;
+  background: var(--hc-gold-strong);
+  color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
 }
 
 .saveButton:hover:not(:disabled) {
-  background: #ffb800;
-  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
-  transform: translateY(-2px);
+  background: rgba(244, 180, 0, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(244, 180, 0, 0.25);
 }
 
 .saveButton:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

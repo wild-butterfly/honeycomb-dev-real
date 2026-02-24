@@ -11,6 +11,9 @@ import {
   addCustomerSource,
   removeCustomerSource,
   incrementSourceUsage,
+  logoUpload,
+  uploadLogo,
+  deleteLogo,
 } from "../controllers/generalSettings.controller";
 
 const router = Router();
@@ -47,5 +50,15 @@ router.delete("/:companyId/sources/:sourceId", removeCustomerSource);
 
 // Increment source usage count
 router.patch("/:companyId/sources/:sourceId/increment", incrementSourceUsage);
+
+/* =========================================================
+   COMPANY LOGO ROUTES
+========================================================= */
+
+// Upload company logo
+router.post("/:companyId/logo", logoUpload.single("logo"), uploadLogo);
+
+// Delete company logo
+router.delete("/:companyId/logo", deleteLogo);
 
 export default router;

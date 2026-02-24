@@ -100,6 +100,9 @@ export interface QuickInvoiceData {
   paymentPeriod: PaymentPeriod;
   cardPaymentFee: CardPaymentFeeOption;
   notes?: string;
+  companyId?: number | null;
+  templateId?: number | null;
+  template?: any;
 }
 
 export interface XeroConfig {

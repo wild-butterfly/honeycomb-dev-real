@@ -15,30 +15,39 @@ export const getGeneralSettings = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
 
-    // Get company settings
+    // Get company settings with invoice_settings joined
+    // Prefer invoice_settings.company_name over companies.name if available
     const companyResult = await pool.query(
       `SELECT 
-        id,
-        name as business_name,
-        abn,
-        payee_name,
-        bsb_number,
-        bank_account_number,
-        job_number_prefix,
-        starting_job_number,
-        currency,
-        date_format,
-        timezone,
-        auto_assign_phase,
-        show_state_on_invoices,
-        auto_archive_unpriced,
-        unpriced_jobs_cleanup_days,
-        expired_quotes_cleanup_days,
-        inactive_jobs_cleanup_days,
-        auto_archive_stale_days,
-        logo_url
-      FROM companies 
-      WHERE id = $1`,
+        c.id,
+        COALESCE(i.company_name, c.name) as business_name,
+        c.abn,
+        c.payee_name,
+        c.bsb_number,
+        c.bank_account_number,
+        c.job_number_prefix,
+        c.starting_job_number,
+        c.currency,
+        c.date_format,
+        c.timezone,
+        c.auto_assign_phase,
+        c.show_state_on_invoices,
+        c.auto_archive_unpriced,
+        c.unpriced_jobs_cleanup_days,
+        c.expired_quotes_cleanup_days,
+        c.inactive_jobs_cleanup_days,
+        c.auto_archive_stale_days,
+        c.logo_url,
+        i.company_address,
+        i.company_city,
+        i.company_state,
+        i.company_postal_code,
+        i.company_phone,
+        i.company_email,
+        i.company_website
+      FROM companies c
+      LEFT JOIN invoice_settings i ON c.id = i.company_id
+      WHERE c.id = $1`,
       [companyId]
     );
 

@@ -3,6 +3,8 @@
 // Invoice routes - draft creation from labour entries
 
 import { Request, Response } from "express";
+import { pool } from "../db";
+import { renderInvoicePdf } from "../utils/pdfRenderer";
 
 type LineItemInput = {
   id?: string | number;
@@ -15,6 +17,7 @@ type LineItemInput = {
   tax?: number;
   discount?: number;
   total?: number;
+  category?: string;
 };
 
 type LineItemResponse = {
@@ -28,6 +31,7 @@ type LineItemResponse = {
   tax: number;
   discount: number;
   total: number;
+  category?: string;
 };
 
 type InvoiceRow = {
@@ -166,6 +170,7 @@ const normalizeLineItems = (items: LineItemInput[]) => {
       tax,
       discount,
       total,
+      category: item.category || "labour", // ← Add category support
       _afterDiscount: afterDiscount,
       _taxAmount: taxAmount,
     };
@@ -215,6 +220,7 @@ const loadLabourLineItems = async (db: any, jobId: number) => {
     tax: 10,
     discount: 0,
     total: toNumber(entry.total) || toNumber(entry.chargeable_hours) * toNumber(entry.rate),
+    category: "labour", // ← Set category for labour entries
   }));
 };
 
@@ -358,7 +364,8 @@ export const getById = async (req: Request, res: Response) => {
         markup,
         tax,
         discount,
-        total
+        total,
+        category
       FROM invoice_line_items
       WHERE invoice_id = $1
       ORDER BY id ASC
@@ -377,6 +384,7 @@ export const getById = async (req: Request, res: Response) => {
       tax: toNumber(row.tax),
       discount: toNumber(row.discount),
       total: toNumber(row.total),
+      category: row.category || "labour",
     }));
 
     const margins = {
@@ -544,7 +552,8 @@ export const create = async (req: Request, res: Response) => {
           markup,
           tax,
           discount,
-          total
+          total,
+          category
         )
         VALUES
         (
@@ -557,7 +566,8 @@ export const create = async (req: Request, res: Response) => {
           $7,
           $8,
           $9,
-          $10
+          $10,
+          $11
         )
         RETURNING *
         `,
@@ -572,6 +582,7 @@ export const create = async (req: Request, res: Response) => {
           item.tax,
           item.discount,
           item.total,
+          item.category,
         ]
       );
 
@@ -699,7 +710,8 @@ export const update = async (req: Request, res: Response) => {
           markup,
           tax,
           discount,
-          total
+          total,
+          category
         )
         VALUES
         (
@@ -712,7 +724,8 @@ export const update = async (req: Request, res: Response) => {
           $7,
           $8,
           $9,
-          $10
+          $10,
+          $11
         )
         RETURNING *
         `,
@@ -727,6 +740,7 @@ export const update = async (req: Request, res: Response) => {
           item.tax,
           item.discount,
           item.total,
+          item.category,
         ]
       );
 
@@ -795,5 +809,362 @@ export const approve = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("invoices.approve error:", err);
     return res.status(500).json({ error: "Failed to approve invoice" });
+  }
+};
+
+// Delete an invoice
+export const deleteInvoice = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const db = (req as any).db;
+
+  if (!db) {
+    return res.status(500).json({ error: "Database context not found" });
+  }
+
+  try {
+    // First, delete related line items
+    await db.query(`DELETE FROM invoice_line_items WHERE invoice_id = $1`, [id]);
+
+    // Then delete the invoice
+    const result = await db.query(
+      `DELETE FROM invoices WHERE id = $1 RETURNING id, invoice_number`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Invoice not found" });
+    }
+
+    console.log(`✅ Invoice deleted: ${result.rows[0].invoice_number}`);
+    return res.json({ 
+      success: true, 
+      message: `Invoice ${result.rows[0].invoice_number} deleted successfully` 
+    });
+  } catch (err) {
+    console.error("invoices.delete error:", err);
+    return res.status(500).json({ error: "Failed to delete invoice" });
+  }
+};
+
+/* ===============================
+   SYNC WITH XERO
+================================ */
+export const syncWithXero = async (req: Request, res: Response) => {
+  try {
+    const invoiceId = req.params.id;
+    console.log("🔄 Syncing invoice with Xero:", invoiceId);
+
+    // TEMP SUCCESS RESPONSE
+    // (Replace later with real Xero integration)
+    return res.json({
+      success: true,
+      message: "Invoice synced with Xero",
+      invoiceId,
+    });
+  } catch (err) {
+    console.error("invoices.syncWithXero error:", err);
+    return res.status(500).json({
+      error: "Failed to sync with Xero",
+    });
+  }
+};
+
+/* ===============================
+   DOWNLOAD INVOICE PDF
+================================ */
+export const downloadInvoicePdf = async (req: Request, res: Response) => {
+  try {
+    const invoiceId = req.params.id;
+    console.log("📥 Downloading invoice PDF:", invoiceId);
+
+    try {
+      // Fetch invoice
+      const invoiceResult = await pool.query(
+        "SELECT * FROM invoices WHERE id = $1",
+        [invoiceId]
+      );
+      console.log("✅ Invoice fetched");
+
+      if (invoiceResult.rows.length === 0) {
+        return res.status(404).json({ error: "Invoice not found" });
+      }
+
+      const invoice = invoiceResult.rows[0];
+      console.log("   - Invoice ID:", invoice.id);
+      console.log("   - Company ID:", invoice.company_id);
+      console.log("   - Customer ID:", invoice.customer_id);
+      console.log("   - Job ID:", invoice.job_id);
+
+      // Ensure invoice amounts are numbers
+      invoice.subtotal = Number(invoice.subtotal) || 0;
+      invoice.tax_amount = Number(invoice.tax_amount) || 0;
+      invoice.total_with_tax = Number(invoice.total_with_tax) || 0;
+
+      // ===== LOAD CUSTOMER DATA =====
+      console.log("📥 Loading customer data...");
+      let customer: any = {};
+      if (invoice.customer_id) {
+        try {
+          const customerResult = await pool.query(
+            "SELECT id, name, email, phone, address, suburb, state, postcode FROM customers WHERE id = $1",
+            [invoice.customer_id]
+          );
+          if (customerResult.rows.length > 0) {
+            customer = customerResult.rows[0];
+            console.log("✅ Customer fetched:", customer.name);
+            // Inject customer name into invoice for PDF rendering
+            invoice.customer_name = customer.name;
+            invoice.customer_email = customer.email;
+            invoice.customer_phone = customer.phone;
+            invoice.customer_address = customer.address;
+            invoice.customer_suburb = customer.suburb;
+            invoice.customer_state = customer.state;
+            invoice.customer_postcode = customer.postcode;
+          }
+        } catch (err) {
+          console.warn("⚠️  Could not load customer data:", err);
+        }
+      }
+
+      // ===== LOAD JOB DATA =====
+      console.log("📥 Loading job data...");
+      let job: any = {};
+      if (invoice.job_id) {
+        try {
+          const jobResult = await pool.query(
+            "SELECT id, title, description, location, site_address, suburb, state, postcode FROM jobs WHERE id = $1",
+            [invoice.job_id]
+          );
+          if (jobResult.rows.length > 0) {
+            job = jobResult.rows[0];
+            console.log("✅ Job fetched:", job.title);
+            // Inject job info into invoice for PDF rendering
+            invoice.job_name = job.title;
+            invoice.job_location = job.location;
+            invoice.job_site_address = job.site_address;
+            invoice.job_suburb = job.suburb;
+            invoice.job_state = job.state;
+            invoice.job_postcode = job.postcode;
+          }
+        } catch (err) {
+          console.warn("⚠️  Could not load job data:", err);
+        }
+      }
+
+      // Fetch line items
+      const itemsResult = await pool.query(
+        "SELECT * FROM invoice_line_items WHERE invoice_id = $1 ORDER BY id ASC",
+        [invoiceId]
+      );
+      console.log("✅ Line items fetched:", itemsResult.rows.length);
+
+      const lineItems = itemsResult.rows.map((item: any) => ({
+        ...item,
+        quantity: Number(item.quantity) || 0,
+        price: Number(item.price) || 0,
+        total: Number(item.total) || 0,
+        category: item.category || "labour",
+      }));
+
+      // ===== LOAD LABOUR ENTRIES (from job) =====
+      const hasLabourLineItems = lineItems.some((item: any) => {
+        const category = String(item.category || "").toLowerCase();
+        const name = String(item.name || "").toLowerCase();
+        return category === "labour" || name.startsWith("labour");
+      });
+
+      console.log("📥 Loading labour entries...");
+      let labourItems: any[] = [];
+      if (invoice.job_id && !hasLabourLineItems) {
+        try {
+          const labourResult = await pool.query(
+            `SELECT 
+              le.id,
+              e.name AS employee_name,
+              le.chargeable_hours::float AS chargeable_hours,
+              le.rate::float AS rate,
+              le.total::float AS total,
+              le.notes AS description
+            FROM labour_entries le
+            JOIN employees e ON e.id = le.employee_id
+            WHERE le.job_id = $1
+            ORDER BY le.created_at ASC`,
+            [invoice.job_id]
+          );
+          
+          labourItems = labourResult.rows.map((entry: any, idx: number) => ({
+            id: `labour-${entry.id || idx}`,
+            name: `Labour - ${entry.employee_name || "Unknown"}`,
+            description: entry.description || "",
+            quantity: Number(entry.chargeable_hours) || 0,
+            price: Number(entry.rate) || 0,
+            total: Number(entry.total) || 0,
+            category: "labour",
+          }));
+          console.log("✅ Labour entries fetched:", labourItems.length);
+        } catch (err) {
+          console.warn("⚠️  Could not load labour entries:", (err as Error).message);
+        }
+      } else if (hasLabourLineItems) {
+        console.log("ℹ️  Skipping labour entries load (labour line items already present)");
+      }
+
+      // ===== MERGE LINE ITEMS + LABOUR ENTRIES =====
+      const allLineItems = [...lineItems, ...labourItems];
+      console.log("📊 Total items for PDF (line items + labour):", allLineItems.length);
+
+      // Fetch template
+      const templateResult = await pool.query(
+        "SELECT * FROM invoice_templates WHERE company_id = $1 AND is_default = true LIMIT 1",
+        [invoice.company_id]
+      );
+      console.log("✅ Template fetched");
+
+      const template = templateResult.rows[0];
+
+      // DEBUG: Log exact template structure
+      console.log("\n🔍 TEMPLATE DATA LOADED:");
+      if (template) {
+        console.log("   - Template ID:", template.id);
+        console.log("   - Columns:", Object.keys(template).length);
+      } else {
+        console.log("   - ⚠️ No template found");
+      }
+
+    // Parse sections if they exist (with null check)
+    if (template) {
+      if (template.sections && typeof template.sections === "string") {
+        try {
+          template.parsedSections = JSON.parse(template.sections);
+          console.log("✅ Template sections parsed:", template.parsedSections.length);
+        } catch (err) {
+          console.error("❌ Error parsing sections:", err);
+          template.parsedSections = [];
+        }
+      } else if (template.sections) {
+        template.parsedSections = template.sections;
+      } else {
+        template.parsedSections = [];
+      }
+    }
+
+    // Fetch settings
+    const settingsResult = await pool.query(
+      "SELECT * FROM invoice_settings WHERE company_id = $1",
+      [invoice.company_id]
+    );
+
+    let settings = settingsResult.rows[0] || {};
+
+    // Fetch company (load all columns for complete company data)
+    const companyResult = await pool.query(
+      `SELECT * FROM companies WHERE id = $1`,
+      [invoice.company_id]
+    );
+
+    const company = companyResult.rows[0] || {};
+
+    // Merge settings and company data - settings takes precedence, company is fallback
+    const companyData = {
+      company_name: settings.company_name || company.name || "Company",
+      company_address: settings.company_address || company.address || "",
+      company_suburb: settings.company_suburb || company.suburb || "",
+      company_city: settings.company_city || company.city || "",
+      company_state: settings.company_state || company.state || "",
+      company_postcode: settings.company_postcode || company.postcode || "",
+      company_email: settings.company_email || company.email || "",
+      company_phone: settings.company_phone || company.phone || "",
+      gst_number: settings.gst_number || company.gst_number || "",
+      logo_url: settings.logo_url || company.logo_url || "",
+      bank_name: settings.bank_name || company.bank_name || "",
+    };
+
+    console.log("📊 PDF Data Ready:");
+    console.log("   - Invoice:", invoice.invoice_number);
+    console.log("   - Line items:", lineItems.length);
+    console.log("   - Template sections:", template?.parsedSections?.length || 0);
+    console.log("   - Company:", companyData.company_name);
+
+    // DEBUG: Log company data
+    console.log("\n🔍 COMPANY DATA (merged settings + company):");
+    console.log("   - company_name:", companyData.company_name);
+    console.log("   - company_address:", companyData.company_address);
+    console.log("   - company_email:", companyData.company_email);
+    console.log("   - company_phone:", companyData.company_phone);
+    console.log("   - gst_number:", companyData.gst_number);
+    console.log("   - logo_url:", companyData.logo_url);
+
+    console.log("\n✅ All data loaded successfully");
+    console.log("   - Invoice amount:", invoice.subtotal);
+    console.log("   - Template exists:", !!template);
+    console.log("   - Company name:", companyData.company_name);
+
+    // DEBUG: Log template fields to identify missing columns
+    if (template) {
+      console.log("\n🔍 TEMPLATE FIELDS:");
+      console.log("   - header_background_color:", template.header_background_color);
+      console.log("   - main_color:", template.main_color);
+      console.log("   - text_color:", template.text_color);
+      console.log("   - table_header_background_color:", template.table_header_background_color);
+      console.log("   - table_header_style:", template.table_header_style);
+      console.log("   - description_background_color:", template.description_background_color);
+      console.log("   - border_width:", template.border_width);
+      console.log("   - font_size:", template.font_size);
+    } else {
+      console.log("⚠️  No template found!");
+    }
+
+    console.log("\n🎨 Calling renderInvoicePdf...");
+    // Use production PDF renderer
+    try {
+      await renderInvoicePdf({
+        invoice,
+        lineItems: allLineItems,
+        template: template || {},
+        settings: companyData || {},
+        company: companyData || {},
+        customer: customer || {},
+        job: job || {},
+        res,
+      });
+      console.log("✅ PDF rendering completed");
+    } catch (pdfErr) {
+      console.error("❌ PDF Rendering Error:", pdfErr);
+      console.error("   Error type:", (pdfErr as Error).constructor.name);
+      console.error("   Error message:", (pdfErr as Error).message);
+      console.error("   Error stack:", (pdfErr as Error).stack);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: "PDF rendering failed",
+          details: (pdfErr as Error).message,
+          type: (pdfErr as Error).constructor.name
+        });
+      }
+    }
+    } catch (dataErr) {
+      console.error("❌ Data Loading Error:");
+      console.error("   Error type:", (dataErr as Error).constructor.name);
+      console.error("   Error message:", (dataErr as Error).message);
+      console.error("   Error stack:", (dataErr as Error).stack);
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: "Failed to load invoice data",
+          details: (dataErr as Error).message,
+          type: (dataErr as Error).constructor.name
+        });
+      }
+    }
+  } catch (err) {
+    console.error("❌ Invoice PDF Download Error:");
+    console.error("   Error type:", (err as Error).constructor.name);
+    console.error("   Error message:", (err as Error).message);
+    console.error("   Error stack:", (err as Error).stack);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: "Failed to generate PDF",
+        details: (err as Error).message,
+        type: (err as Error).constructor.name
+      });
+    }
   }
 };

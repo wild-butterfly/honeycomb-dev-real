@@ -529,3 +529,123 @@
   font-size: 16px;
   color: #ad8c11;
 }
+/* ==============================
+   LOGO SECTION
+============================== */
+.logoSection {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.logoWrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.logoImage {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border: 2px solid #ffd600;
+  background: #fffbe4;
+  border-radius: 8px;
+}
+
+.logoPlaceholder {
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, #ffe066 0%, #ffd600 100%);
+  border: 2px solid #ffd600;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3b2f0b;
+}
+
+.logoInitials {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.logoOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.uploadButton {
+  padding: 12px 24px;
+  background: #ffd600;
+  border: none;
+  border-radius: 8px;
+  color: #1a1a1a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.2);
+  align-self: flex-start;
+}
+
+.uploadButton:hover:not(:disabled) {
+  background: #ffb800;
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.uploadButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.deleteButton {
+  padding: 12px 24px;
+  background: #fff;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  color: #dc3545;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #dc3545;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.logoHint {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
