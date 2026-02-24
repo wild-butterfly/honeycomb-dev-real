@@ -317,7 +317,7 @@ export const renderInvoicePdf = async ({
     .fillColor("#999")
     .text(` | ${invoice.invoice_number}`);
 
-  y += 18;
+  y += 28;
 
   // Optional description/tagline
   if (template?.default_description) {
@@ -516,31 +516,14 @@ export const renderInvoicePdf = async ({
       align: "right",
     });
 
-    y += totalsBoxHeight + 30;
+    y += totalsBoxHeight + 12;
   }
 
   // ====================================================
   // FOOTER
   // ====================================================
 
-  const footerY = pageHeight - 55;
-
-  doc
-    .strokeColor(borderColor)
-    .lineWidth(borderWidth)
-    .moveTo(margin, footerY - 8)
-    .lineTo(margin + contentWidth, footerY - 8)
-    .stroke();
-
-  doc.fontSize(baseFontSize - 2).font("Helvetica").fillColor("#6b7280");
-
-  let footerLine = footerY;
-
-  if (template?.default_footer) {
-    doc.text(template.default_footer, margin, footerLine, { width: contentWidth });
-    footerLine += 20;
-  }
-
+  const footerText = template?.default_footer?.trim();
   const footerDetailsParts = [] as string[];
   if (settings?.bsb) {
     footerDetailsParts.push(`BSB Number: ${settings.bsb}`);
@@ -552,17 +535,68 @@ export const renderInvoicePdf = async ({
     footerDetailsParts.push(`Invoice number: ${invoice.invoice_number}`);
   }
 
-  if (footerDetailsParts.length > 0) {
+  const footerDetailsText = footerDetailsParts.join(" ");
+  const footerTextSize = baseFontSize - 3;
+  const detailsTextSize = baseFontSize - 4;
+
+  doc.fontSize(footerTextSize).font("Helvetica");
+  const footerTextHeight = footerText
+    ? doc.heightOfString(footerText, { width: contentWidth })
+    : 0;
+
+  doc.fontSize(detailsTextSize).font("Helvetica");
+  const detailsTextHeight = footerDetailsText
+    ? doc.heightOfString(footerDetailsText, { width: contentWidth })
+    : 0;
+
+  const footerPaddingTop = 16;
+  const footerDetailsMarginTop = 14;
+  const footerDetailsPaddingTop = 10;
+  const pageNumberGap = 12;
+  const pageNumberY = pageHeight - 49;
+
+  const footerTextGap = footerText ? 6 : 0;
+  const detailsTextY = footerDetailsText
+    ? pageNumberY - pageNumberGap - detailsTextHeight
+    : pageNumberY - pageNumberGap;
+  const detailsBorderY = footerDetailsText
+    ? detailsTextY - footerDetailsPaddingTop
+    : detailsTextY;
+  const footerTextY = detailsBorderY - footerDetailsMarginTop - footerTextHeight - footerTextGap;
+  const footerY = footerTextY - footerPaddingTop;
+
+  doc
+    .strokeColor(borderColor)
+    .lineWidth(borderWidth)
+    .moveTo(margin, footerY)
+    .lineTo(margin + contentWidth, footerY)
+    .stroke();
+
+  doc.fontSize(footerTextSize).font("Helvetica").fillColor("#6b7280");
+
+  let footerLine = footerY + footerPaddingTop;
+
+  if (footerText) {
+    doc.text(footerText, margin, footerLine, { width: contentWidth });
+    footerLine += footerTextHeight + footerTextGap;
+  }
+
+  if (footerDetailsText) {
     doc
       .strokeColor("#e5e7eb")
       .lineWidth(1)
-      .moveTo(margin, footerLine + 6)
-      .lineTo(margin + contentWidth, footerLine + 6)
+      .moveTo(margin, detailsBorderY)
+      .lineTo(margin + contentWidth, detailsBorderY)
       .stroke();
 
-    doc.fontSize(baseFontSize - 3).fillColor("#9ca3af");
-    doc.text(footerDetailsParts.join(" "), margin, footerLine + 14, { width: contentWidth });
+    doc.fontSize(detailsTextSize).fillColor("#9ca3af");
+    doc.text(footerDetailsText, margin, detailsTextY, { width: contentWidth });
   }
+
+  doc
+    .fontSize(detailsTextSize)
+    .fillColor("#9ca3af")
+    .text("Page 1 / 1", margin, pageNumberY, { width: contentWidth, align: "right" });
 
   doc.end();
 };
