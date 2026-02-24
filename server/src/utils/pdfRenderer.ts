@@ -82,9 +82,8 @@ export const renderInvoicePdf = async ({
   const tableHeaderBg = template?.table_header_background_color || mainColor;
   const tableHeaderGradient = template?.table_header_gradient_color || mainColor;
   const tableHeaderText = template?.table_header_text_color || "#ffffff";
-  // Keep description background visually aligned with highlight colour
-  const descriptionBg =
-    template?.description_background_color || highlightColor;
+  // Use highlight color for all highlighted sections (description, totals, company details)
+  const descriptionBg = highlightColor;
   const descriptionBorder = template?.description_border_color || mainColor;
   const descriptionText = template?.description_text_color || "#374151";
   const documentTitle = template?.document_title || "Tax Invoice";
@@ -190,7 +189,7 @@ export const renderInvoicePdf = async ({
   const companyBoxHeight = logoBoxHeight; // Match logo height
   
   doc
-    .roundedRect(companyBoxX, companyBoxY, companyBoxWidth, companyBoxHeight, 8)
+    .rect(companyBoxX, companyBoxY, companyBoxWidth, companyBoxHeight)
     .fill(highlightColor);
   
   doc

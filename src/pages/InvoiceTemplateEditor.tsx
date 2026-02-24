@@ -1139,21 +1139,16 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       <input
                         type="color"
                         value={templateData.highlight_color}
-                        onChange={(e) => {
-                          const color = e.target.value;
-                          // Single source of truth for all highlight-style areas
-                          handleInputChange("highlight_color", color);
-                          handleInputChange("description_background_color", color);
-                        }}
+                        onChange={(e) =>
+                          handleInputChange("highlight_color", e.target.value)
+                        }
                       />
                       <input
                         type="text"
                         value={templateData.highlight_color}
-                        onChange={(e) => {
-                          const color = e.target.value;
-                          handleInputChange("highlight_color", color);
-                          handleInputChange("description_background_color", color);
-                        }}
+                        onChange={(e) =>
+                          handleInputChange("highlight_color", e.target.value)
+                        }
                         placeholder="#fafafa"
                       />
                     </div>
@@ -1839,7 +1834,10 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     (!companyData?.logo_url ||
                       companyData.logo_url.trim() === "") && (
                       <div className={styles.companyLogoPlaceholder}>
-                        <div className={styles.logoInitials}>
+                        <div
+                          className={styles.logoInitials}
+                          style={{ color: templateData.main_color }}
+                        >
                           {companyData?.business_name
                             ?.charAt(0)
                             ?.toUpperCase() || "CO"}
@@ -1852,7 +1850,6 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       color: templateData.text_color,
                       backgroundColor: templateData.highlight_color,
                       padding: "16px",
-                      borderRadius: "8px",
                     }}
                   >
                     <h3
@@ -1934,7 +1931,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                 <div
                   className={styles.invoiceDescription}
                   style={{
-                    backgroundColor: templateData.description_background_color,
+                    backgroundColor: templateData.highlight_color,
                     borderLeftColor: templateData.description_border_color,
                     color: templateData.description_text_color,
                   }}
@@ -2012,7 +2009,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                             )}
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody style={{ color: templateData.text_color }}>
                           <tr>
                             <td style={{ padding: "10px 16px" }}></td>
                             {templateData.show_line_quantities && (
@@ -2052,7 +2049,15 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                                         </tr>
                                         {section.items.map(
                                           (item: any, idx: number) => (
-                                            <tr key={idx}>
+                                            <tr
+                                              key={idx}
+                                              style={{
+                                                backgroundColor:
+                                                  idx % 2 === 1
+                                                    ? templateData.highlight_color
+                                                    : "transparent",
+                                              }}
+                                            >
                                               <td
                                                 style={{ padding: "10px 16px" }}
                                               >
@@ -2118,7 +2123,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       borderColor: templateData.border_color,
                       borderWidth: templateData.border_width,
                       backgroundColor: templateData.highlight_color,
-                      color: templateData.description_text_color,
+                      color: templateData.text_color,
                     }}
                   >
                     <div className={styles.totalRow}>

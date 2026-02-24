@@ -347,6 +347,10 @@
   margin-bottom: 24px;
 }
 
+.formGroupSpaced {
+  margin-top: 12px;
+}
+
 .formGroup label {
   display: block;
   font-size: 0.95rem;
@@ -613,8 +617,6 @@
     0 8px 32px rgba(0, 0, 0, 0.08),
     0 2px 8px rgba(0, 0, 0, 0.05);
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  border-top: 5px solid #fbbf24;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica",
     "Arial", sans-serif;
@@ -642,10 +644,12 @@
 
 .companyLogo {
   flex-shrink: 0;
-  border: 2px solid #fbbf24;
-  border-radius: 8px;
-  padding: 8px;
-  background: #fffef7;
+  background: #ffffff;
+  width: 150px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .companyLogo img {
@@ -656,10 +660,7 @@
 
 .companyLogoPlaceholder {
   flex-shrink: 0;
-  border: 2px solid #fbbf24;
-  border-radius: 8px;
-  padding: 8px;
-  background: #fffef7;
+  background: #ffffff;
   width: 150px;
   height: 100px;
   display: flex;
@@ -670,7 +671,6 @@
 .logoInitials {
   font-size: 36px;
   font-weight: bold;
-  color: #fbbf24;
   text-align: center;
 }
 
@@ -682,7 +682,6 @@
   font-size: 1.4em;
   font-weight: 800;
   margin: 0 0 10px 0;
-  color: #1f2937;
 }
 
 .companyDetails p {
@@ -714,22 +713,18 @@
 .invoiceTitle {
   font-size: 1.9em;
   font-weight: 800;
-  margin: 35px 0 25px 0;
-  color: #1f2937;
+  margin: 28px 0 0 0;
   letter-spacing: -0.02em;
 }
 
 .invoiceDescription {
-  background: linear-gradient(135deg, #fffef7 0%, #fef9e6 100%);
-  padding: 18px 20px;
-  border-left: 5px solid #fbbf24;
-  border-radius: 6px;
-  margin-bottom: 30px;
+  padding: 10px 12px;
+  border-left: 4px solid;
+  margin-top: 28px;
+  margin-bottom: 18px;
   font-size: 0.9em;
   line-height: 1.6;
   white-space: pre-line;
-  color: #374151;
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
 }
 
 .invoiceSection {
@@ -740,7 +735,6 @@
   font-size: 1.1em;
   font-weight: 700;
   margin: 0 0 10px 0;
-  color: #1f2937;
 }
 
 .sectionDescription {
@@ -753,9 +747,6 @@
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 24px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .invoiceTable thead th {
@@ -763,20 +754,17 @@
   text-align: left;
   font-weight: 700;
   font-size: 0.9em;
-  color: #ffffff;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
 }
 
 .invoiceTable tbody td {
   padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
   font-size: 0.9em;
-  background: white;
-  color: #1f2937;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 .invoiceTable tbody tr:hover {
-  background: #f9fafb;
+  background: var(--highlight-color, #f9fafb);
 }
 
 .invoiceTable thead th:last-child,
@@ -785,14 +773,11 @@
 }
 
 .invoiceTotals {
-  max-width: 320px;
+  max-width: 260px;
   margin-left: auto;
   margin-bottom: 35px;
-  background: linear-gradient(135deg, #fffef7 0%, white 100%);
-  padding: 20px;
-  border-radius: 8px;
-  border: 2px solid #fbbf24;
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.1);
+  padding: 16px;
+  border-style: solid;
 }
 
 .totalRow {
@@ -801,21 +786,19 @@
   padding: 10px 0;
   font-size: 0.95em;
   font-weight: 600;
-  color: #1f2937;
 }
 
 .totalRow:last-child {
-  border-top: 3px solid #fbbf24;
+  border-top-style: solid;
   padding-top: 14px;
   margin-top: 10px;
   font-size: 1.2em;
   font-weight: 800;
-  color: #b99a2a;
 }
 
 .invoiceFooter {
-  border-top: 2px solid #fbbf24;
-  padding-top: 24px;
+  border-top-style: solid;
+  padding-top: 16px;
   font-size: 0.9em;
   line-height: 1.6;
   color: #6b7280;
@@ -824,9 +807,16 @@
 }
 
 .footerDetails {
-  margin-top: 18px;
-  padding-top: 18px;
+  margin-top: 14px;
+  padding-top: 10px;
   border-top: 1px solid #e5e7eb;
+  color: #9ca3af;
+  font-size: 0.75em;
+}
+
+.pageNumber {
+  margin-top: 12px;
+  text-align: right;
   color: #9ca3af;
   font-size: 0.75em;
 }

@@ -1,4 +1,6 @@
 "use strict";
+// server/src/routes/users.ts
+// User management routes for admins
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -34,46 +36,17 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const dbContext_1 = require("../middleware/dbContext");
+const controller = __importStar(require("../controllers/users.controller"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
-const profileController = __importStar(require("../controllers/profile.controller"));
+const dbContext_1 = require("../middleware/dbContext");
 const router = (0, express_1.Router)();
-/* 🔐 Require login first */
-router.use(authMiddleware_1.requireAuth);
-/* 🔐 Then attach DB context */
-router.use(dbContext_1.withDbContext);
-router.get("/", async (req, res) => {
-    const db = req.db;
-    try {
-        const result = await db.query(`
-      SELECT
-        NULLIF(
-          current_setting('app.current_company_id', true),
-          ''
-        )::int AS company_id
-    `);
-        res.json({
-            company_id: result.rows[0]?.company_id ?? null,
-        });
-    }
-    catch (err) {
-        console.error("GET /me failed", err);
-        res.status(500).json({
-            error: "Failed to load session",
-        });
-    }
-});
 /* =====================================================
-   PROFILE MANAGEMENT ROUTES
+   USER MANAGEMENT ROUTES (Admin Only)
 ===================================================== */
-// Get current user profile
-router.get("/profile", profileController.getProfile);
-// Update current user profile
-router.put("/profile", profileController.updateProfile);
-// Upload/update avatar
-router.post("/avatar", profileController.avatarUpload.single("avatar"), profileController.updateAvatar);
-// Delete avatar
-router.delete("/avatar", profileController.deleteAvatar);
-// Change password
-router.put("/password", profileController.changePassword);
+// Create employee account (Admin only)
+router.post("/employees", authMiddleware_1.requireAuth, dbContext_1.withDbContext, controller.createEmployee);
+// List all employees in company (Admin only)
+router.get("/employees", authMiddleware_1.requireAuth, dbContext_1.withDbContext, controller.getCompanyEmployees);
+// Deactivate employee account (Admin only - soft delete)
+router.delete("/employees/:id", authMiddleware_1.requireAuth, dbContext_1.withDbContext, controller.deactivateEmployee);
 exports.default = router;

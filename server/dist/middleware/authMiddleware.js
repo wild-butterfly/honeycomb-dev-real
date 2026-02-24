@@ -11,6 +11,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 REQUIRE AUTH
 ===================================================== */
 async function requireAuth(req, res, next) {
+    // Allow OPTIONS preflight requests to pass through
+    if (req.method === "OPTIONS") {
+        return next();
+    }
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader ||

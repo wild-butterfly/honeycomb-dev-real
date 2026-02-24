@@ -1,4 +1,6 @@
 "use strict";
+// invoices.ts
+// Routes for invoices
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -34,46 +36,26 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const controller = __importStar(require("../controllers/invoices.controller"));
 const dbContext_1 = require("../middleware/dbContext");
 const authMiddleware_1 = require("../middleware/authMiddleware");
-const profileController = __importStar(require("../controllers/profile.controller"));
 const router = (0, express_1.Router)();
-/* 🔐 Require login first */
+/* 🔐 RLS context */
 router.use(authMiddleware_1.requireAuth);
-/* 🔐 Then attach DB context */
 router.use(dbContext_1.withDbContext);
-router.get("/", async (req, res) => {
-    const db = req.db;
-    try {
-        const result = await db.query(`
-      SELECT
-        NULLIF(
-          current_setting('app.current_company_id', true),
-          ''
-        )::int AS company_id
-    `);
-        res.json({
-            company_id: result.rows[0]?.company_id ?? null,
-        });
-    }
-    catch (err) {
-        console.error("GET /me failed", err);
-        res.status(500).json({
-            error: "Failed to load session",
-        });
-    }
-});
-/* =====================================================
-   PROFILE MANAGEMENT ROUTES
-===================================================== */
-// Get current user profile
-router.get("/profile", profileController.getProfile);
-// Update current user profile
-router.put("/profile", profileController.updateProfile);
-// Upload/update avatar
-router.post("/avatar", profileController.avatarUpload.single("avatar"), profileController.updateAvatar);
-// Delete avatar
-router.delete("/avatar", profileController.deleteAvatar);
-// Change password
-router.put("/password", profileController.changePassword);
+/* ===============================
+   INVOICES
+================================ */
+router.get("/invoices", controller.getAll);
+router.get("/invoices/:id/pdf", controller.downloadInvoicePdf);
+router.get("/invoices/:id", controller.getById);
+router.post("/invoices", (0, authMiddleware_1.requireRole)(["admin", "manager"]), controller.create);
+router.put("/invoices/:id", (0, authMiddleware_1.requireRole)(["admin", "manager"]), controller.update);
+router.delete("/invoices/:id", (0, authMiddleware_1.requireRole)(["admin", "manager"]), controller.deleteInvoice);
+router.post("/invoices/:id/approve", (0, authMiddleware_1.requireRole)(["admin", "manager"]), controller.approve);
+router.post("/invoices/:id/sync-xero", (0, authMiddleware_1.requireRole)(["admin", "manager"]), controller.syncWithXero);
+/* ===============================
+   JOB → INVOICES
+================================ */
+router.get("/jobs/:jobId/invoices", controller.getByJobId);
 exports.default = router;

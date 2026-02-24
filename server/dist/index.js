@@ -12,6 +12,7 @@ const authMiddleware_1 = require("./middleware/authMiddleware");
 const dbContext_1 = require("./middleware/dbContext");
 /* ROUTES */
 const me_1 = __importDefault(require("./routes/me"));
+const users_1 = __importDefault(require("./routes/users"));
 const employees_1 = __importDefault(require("./routes/employees"));
 const companies_1 = __importDefault(require("./routes/companies"));
 const jobs_1 = __importDefault(require("./routes/jobs"));
@@ -20,12 +21,40 @@ const tasks_1 = __importDefault(require("./routes/tasks"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const employeeNotes_1 = __importDefault(require("./routes/employeeNotes"));
 const files_1 = __importDefault(require("./routes/files"));
+const invoices_1 = __importDefault(require("./routes/invoices"));
+const invoiceSettings_1 = __importDefault(require("./routes/invoiceSettings"));
+const invoiceTemplates_1 = __importDefault(require("./routes/invoiceTemplates"));
+const pdf_1 = __importDefault(require("./routes/pdf"));
+const serviceCatalogs_1 = __importDefault(require("./routes/serviceCatalogs"));
+const generalSettings_1 = __importDefault(require("./routes/generalSettings"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 /* GLOBAL */
+// Enable CORS with proper configuration
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            process.env.FRONTEND_URL || "http://localhost:3000",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ];
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        }
+        else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "x-Company-Id",
+        "x-Employee-Id",
+    ],
+    optionsSuccessStatus: 200,
 }));
 app.use(express_1.default.json());
 /* STATIC FILES - Serve uploaded files */
@@ -40,6 +69,7 @@ app.get("/", (_req, res) => {
 app.use("/api/auth", auth_1.default);
 /* PROTECTED ROUTES */
 app.use("/api/me", authMiddleware_1.requireAuth, dbContext_1.withDbContext, me_1.default);
+app.use("/api/users", authMiddleware_1.requireAuth, dbContext_1.withDbContext, users_1.default);
 app.use("/api/employees", authMiddleware_1.requireAuth, dbContext_1.withDbContext, employees_1.default);
 app.use("/api/companies", authMiddleware_1.requireAuth, dbContext_1.withDbContext, companies_1.default);
 app.use("/api/jobs", authMiddleware_1.requireAuth, dbContext_1.withDbContext, jobs_1.default);
@@ -47,6 +77,12 @@ app.use("/api/assignments", authMiddleware_1.requireAuth, dbContext_1.withDbCont
 app.use("/api/tasks", authMiddleware_1.requireAuth, dbContext_1.withDbContext, tasks_1.default);
 app.use("/api", employeeNotes_1.default);
 app.use("/api", files_1.default);
+app.use("/api", invoices_1.default);
+app.use("/api", invoiceSettings_1.default);
+app.use("/api/invoice-templates", authMiddleware_1.requireAuth, dbContext_1.withDbContext, invoiceTemplates_1.default);
+app.use("/api", pdf_1.default);
+app.use("/api", serviceCatalogs_1.default);
+app.use("/api/general-settings", authMiddleware_1.requireAuth, dbContext_1.withDbContext, generalSettings_1.default);
 /* 404 */
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });

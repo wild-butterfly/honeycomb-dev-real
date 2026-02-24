@@ -90,8 +90,8 @@ export const createTemplate = async (req: Request, res: Response) => {
     is_default,
     status,
     main_color,
-    accent_color,
     text_color,
+    highlight_color,
     font_size,
     indent_customer_address,
     orientation,
@@ -182,7 +182,7 @@ export const createTemplate = async (req: Request, res: Response) => {
 
     const result = await pool.query(
       `INSERT INTO invoice_templates (
-        company_id, name, is_default, status, main_color, accent_color, text_color,
+        company_id, name, is_default, status, main_color, text_color, highlight_color,
         font_size, indent_customer_address, orientation,
         header_background_color, border_color, border_width,
         table_header_background_color, table_header_gradient_color, table_header_text_color, table_header_style,
@@ -201,8 +201,8 @@ export const createTemplate = async (req: Request, res: Response) => {
         is_default || false,
         status || "active",
         main_color,
-        accent_color,
         text_color,
+        highlight_color,
         font_size,
         indent_customer_address || false,
         orientation || "portrait",
@@ -409,8 +409,8 @@ export const updateTemplate = async (req: Request, res: Response) => {
     is_default,
     status,
     main_color,
-    accent_color,
     text_color,
+    highlight_color,
     font_size,
     indent_customer_address,
     orientation,
@@ -528,8 +528,8 @@ export const updateTemplate = async (req: Request, res: Response) => {
     console.log("About to update template. Received is_default:", is_default, "type:", typeof is_default);
     const result = await pool.query(
       `UPDATE invoice_templates SET
-        name = $1, is_default = $2, status = $3, main_color = $4, accent_color = $5,
-        text_color = $6, font_size = $7, indent_customer_address = $8, orientation = $9,
+        name = $1, is_default = $2, status = $3, main_color = $4,
+        text_color = $5, highlight_color = $6, font_size = $7, indent_customer_address = $8, orientation = $9,
         header_background_color = $10, border_color = $11, border_width = $12,
         table_header_background_color = $13, table_header_gradient_color = $14,
         table_header_text_color = $15, table_header_style = $16,
@@ -550,8 +550,8 @@ export const updateTemplate = async (req: Request, res: Response) => {
         is_default,
         status,
         main_color,
-        accent_color,
         text_color,
+        highlight_color,
         font_size,
         indent_customer_address,
         orientation,
