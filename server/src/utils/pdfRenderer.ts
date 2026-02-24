@@ -77,11 +77,14 @@ export const renderInvoicePdf = async ({
   const borderColor = template?.border_color || "#e5e7eb";
   const borderWidth = parseFloat(template?.border_width || "1") || 1;
   const textColor = template?.text_color || "#111";
-  const headerBgColor = template?.header_background_color || "#f9fafb";
+  const highlightColor = (template as any)?.highlight_color || "#fafafa";
+  const headerBgColor = template?.header_background_color || "#ffffff";
   const tableHeaderBg = template?.table_header_background_color || mainColor;
   const tableHeaderGradient = template?.table_header_gradient_color || mainColor;
   const tableHeaderText = template?.table_header_text_color || "#ffffff";
-  const descriptionBg = template?.description_background_color || "#fffef7";
+  // Keep description background visually aligned with highlight colour
+  const descriptionBg =
+    template?.description_background_color || highlightColor;
   const descriptionBorder = template?.description_border_color || mainColor;
   const descriptionText = template?.description_text_color || "#374151";
   const documentTitle = template?.document_title || "Tax Invoice";
@@ -142,7 +145,7 @@ export const renderInvoicePdf = async ({
   if (template?.show_company_logo !== false) {
     doc
       .rect(margin, headerTop, logoBoxWidth, logoBoxHeight)
-      .fill(descriptionBg)
+      .fill("#ffffff")
       .strokeColor(mainColor)
       .lineWidth(Math.max(borderWidth, 2))
       .stroke();
@@ -178,10 +181,22 @@ export const renderInvoicePdf = async ({
   // RIGHT: Company details
   const rightX = pageWidth - margin - 280;
   const companyNameY = headerTop + 8; // Align with logo
+  
+  // Draw highlight background for company details
+  const companyBoxPadding = 12;
+  const companyBoxX = rightX - companyBoxPadding;
+  const companyBoxY = companyNameY - companyBoxPadding;
+  const companyBoxWidth = 280 + companyBoxPadding * 2;
+  const companyBoxHeight = logoBoxHeight; // Match logo height
+  
+  doc
+    .roundedRect(companyBoxX, companyBoxY, companyBoxWidth, companyBoxHeight, 8)
+    .fill(highlightColor);
+  
   doc
     .fontSize(baseFontSize + 2)
     .font("Helvetica-Bold")
-    .fillColor("#000000")
+    .fillColor(textColor)
     .text(headerCompany.name, rightX, companyNameY, {
       width: 280,
       align: "right",
@@ -402,12 +417,6 @@ export const renderInvoicePdf = async ({
         y = margin;
       }
 
-      if (idx % 2 === 1) {
-        doc.rect(margin, y - 2, contentWidth, 20).fill("#f9fafb");
-      }
-
-      doc.fillColor(textColor);
-
       const rawDescription = (item.description || "").replace(
         /auto-generated from completed assignment/gi,
         ""
@@ -417,25 +426,60 @@ export const renderInvoicePdf = async ({
         ? `${item.name || ""} - ${cleanedDescription}`.trim()
         : item.name || "";
 
+      const descColumn = columnWidths.find((column) => column.key === "description");
+      const qtyColumn = columnWidths.find((column) => column.key === "quantity");
+      const priceColumn = columnWidths.find((column) => column.key === "price");
+      const totalColumn = columnWidths.find((column) => column.key === "total");
+
+      const descHeight = descColumn
+        ? doc.heightOfString(desc, { width: descColumn.width - 20 })
+        : 0;
+      const qtyHeight = qtyColumn
+        ? doc.heightOfString((item.quantity || 0).toString(), { width: qtyColumn.width - 12 })
+        : 0;
+      const priceHeight = priceColumn
+        ? doc.heightOfString(money(item.price || 0), { width: priceColumn.width - 12 })
+        : 0;
+      const totalHeight = totalColumn
+        ? doc.heightOfString(money(item.total || 0), { width: totalColumn.width - 12 })
+        : 0;
+
+      const rowHeight = Math.max(20, descHeight, qtyHeight, priceHeight, totalHeight) + 6;
+
+      if (idx % 2 === 1) {
+        doc.rect(margin, y, contentWidth, rowHeight).fill(highlightColor);
+      }
+
+      doc.fillColor(textColor);
+
       let cellX = margin;
       columnWidths.forEach((column) => {
+        const cellHeight =
+          column.key === "description"
+            ? descHeight
+            : column.key === "quantity"
+              ? qtyHeight
+              : column.key === "price"
+                ? priceHeight
+                : totalHeight;
+        const textY = y + Math.max(0, (rowHeight - cellHeight) / 2);
         if (column.key === "description") {
-          doc.text(desc, cellX + 10, y, { width: column.width - 20 });
+          doc.text(desc, cellX + 10, textY, { width: column.width - 20 });
         }
         if (column.key === "quantity") {
-          doc.text((item.quantity || 0).toString(), cellX + 6, y, {
+          doc.text((item.quantity || 0).toString(), cellX + 6, textY, {
             width: column.width - 12,
             align: "right",
           });
         }
         if (column.key === "price") {
-          doc.text(money(item.price || 0), cellX + 6, y, {
+          doc.text(money(item.price || 0), cellX + 6, textY, {
             width: column.width - 12,
             align: "right",
           });
         }
         if (column.key === "total") {
-          doc.text(money(item.total || 0), cellX + 6, y, {
+          doc.text(money(item.total || 0), cellX + 6, textY, {
             width: column.width - 12,
             align: "right",
           });
@@ -443,15 +487,16 @@ export const renderInvoicePdf = async ({
         cellX += column.width;
       });
 
-      doc
-        .strokeColor(tableHeaderBg)
-        .lineWidth(0.5)
-        .moveTo(margin, y + 18)
-        .lineTo(margin + contentWidth, y + 18)
-        .stroke();
-
-      y += 20;
+      y += rowHeight;
     });
+
+    // Draw line at the end of the table
+    doc
+      .strokeColor(borderColor)
+      .lineWidth(borderWidth)
+      .moveTo(margin, y)
+      .lineTo(margin + contentWidth, y)
+      .stroke();
 
     y += 15;
   }
@@ -467,13 +512,13 @@ export const renderInvoicePdf = async ({
   }
 
   if (template?.show_section_totals !== false) {
-    const totalsBoxWidth = Math.min(320, contentWidth);
+    const totalsBoxWidth = Math.min(260, contentWidth);
     const totalsBoxHeight = 90;
     const totalsBoxX = margin + contentWidth - totalsBoxWidth;
 
     doc
       .rect(totalsBoxX, y, totalsBoxWidth, totalsBoxHeight)
-      .fill(descriptionBg);
+      .fill(highlightColor);
     doc
       .rect(totalsBoxX, y, totalsBoxWidth, totalsBoxHeight)
       .strokeColor(borderColor)
@@ -487,16 +532,16 @@ export const renderInvoicePdf = async ({
     let totalY = y + 12;
 
     doc.fontSize(baseFontSize).font("Helvetica").fillColor(textColor);
-    doc.text("Subtotal", totalsBoxX + 15, totalY);
-    doc.text(money(subtotal), totalsBoxX + 15, totalY, {
-      width: totalsBoxWidth - 30,
+    doc.text("Subtotal", totalsBoxX + 12, totalY);
+    doc.text(money(subtotal), totalsBoxX + 12, totalY, {
+      width: totalsBoxWidth - 24,
       align: "right",
     });
 
     totalY += 18;
-    doc.text("GST Amount", totalsBoxX + 15, totalY);
-    doc.text(money(taxAmount), totalsBoxX + 15, totalY, {
-      width: totalsBoxWidth - 30,
+    doc.text("GST Amount", totalsBoxX + 12, totalY);
+    doc.text(money(taxAmount), totalsBoxX + 12, totalY, {
+      width: totalsBoxWidth - 24,
       align: "right",
     });
 
@@ -510,9 +555,9 @@ export const renderInvoicePdf = async ({
 
     totalY += 10;
     doc.fontSize(baseFontSize + 4).font("Helvetica-Bold").fillColor(mainColor);
-    doc.text("Total", totalsBoxX + 15, totalY);
-    doc.text(money(totalWithTax), totalsBoxX + 15, totalY, {
-      width: totalsBoxWidth - 30,
+    doc.text("Total", totalsBoxX + 12, totalY);
+    doc.text(money(totalWithTax), totalsBoxX + 12, totalY, {
+      width: totalsBoxWidth - 24,
       align: "right",
     });
 

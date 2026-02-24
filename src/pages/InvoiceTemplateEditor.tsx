@@ -17,8 +17,8 @@ interface TemplateData {
 
   // Styling
   main_color: string;
-  accent_color: string;
   text_color: string;
+  highlight_color: string;
   font_size: "small" | "medium" | "large";
   header_background_color: string;
   border_color: string;
@@ -109,16 +109,17 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
     is_default: false,
     status: "active",
     main_color: "#fbbf24",
-    accent_color: "#f59e0b",
     text_color: "#1f2937",
+    highlight_color: "#fafafa",
     font_size: "medium",
-    header_background_color: "#fffef7",
+    header_background_color: "#ffffff",
     border_color: "#fbbf24",
     border_width: "1px",
     table_header_background_color: "#fbbf24",
     table_header_gradient_color: "#f59e0b",
     table_header_text_color: "#ffffff",
-    description_background_color: "#fffef7",
+    // Keep description background in sync with highlight by default
+    description_background_color: "#fafafa",
     description_border_color: "#fbbf24",
     description_text_color: "#374151",
     table_header_style: "solid",
@@ -1069,42 +1070,39 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </p>
 
                   <div className={styles.formGroup}>
-                    <label>Main Colour</label>
+                    <label>Theme Colour</label>
+                    <p className={styles.helpText}>
+                      This color will be applied to borders, headers, and
+                      summary sections
+                    </p>
                     <div className={styles.colorInput}>
                       <input
                         type="color"
                         value={templateData.main_color}
-                        onChange={(e) =>
-                          handleInputChange("main_color", e.target.value)
-                        }
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          handleInputChange("main_color", color);
+                          handleInputChange("border_color", color);
+                          handleInputChange("description_border_color", color);
+                          handleInputChange(
+                            "header_background_color",
+                            "#ffffff",
+                          );
+                        }}
                       />
                       <input
                         type="text"
                         value={templateData.main_color}
-                        onChange={(e) =>
-                          handleInputChange("main_color", e.target.value)
-                        }
-                        placeholder="#FFFFFF"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Accent Colour</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.accent_color}
-                        onChange={(e) =>
-                          handleInputChange("accent_color", e.target.value)
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.accent_color}
-                        onChange={(e) =>
-                          handleInputChange("accent_color", e.target.value)
-                        }
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          handleInputChange("main_color", color);
+                          handleInputChange("border_color", color);
+                          handleInputChange("description_border_color", color);
+                          handleInputChange(
+                            "header_background_color",
+                            "#ffffff",
+                          );
+                        }}
                         placeholder="#FFFFFF"
                       />
                     </div>
@@ -1132,6 +1130,36 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </div>
 
                   <div className={styles.formGroup}>
+                    <label>Highlight Colour</label>
+                    <p className={styles.helpText}>
+                      Background color for company details, description section,
+                      section headers, table row highlights and totals box.
+                    </p>
+                    <div className={styles.colorInput}>
+                      <input
+                        type="color"
+                        value={templateData.highlight_color}
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          // Single source of truth for all highlight-style areas
+                          handleInputChange("highlight_color", color);
+                          handleInputChange("description_background_color", color);
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={templateData.highlight_color}
+                        onChange={(e) => {
+                          const color = e.target.value;
+                          handleInputChange("highlight_color", color);
+                          handleInputChange("description_background_color", color);
+                        }}
+                        placeholder="#fafafa"
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
                     <label>Default Font Size</label>
                     <p className={styles.helpText}>
                       This applies to header content, section titles and line
@@ -1150,81 +1178,6 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Header Background Colour</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.header_background_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "header_background_color",
-                            e.target.value,
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.header_background_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "header_background_color",
-                            e.target.value,
-                          )
-                        }
-                        placeholder="#F5F5F5"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Table Header Text Colour</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.table_header_text_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "table_header_text_color",
-                            e.target.value,
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.table_header_text_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "table_header_text_color",
-                            e.target.value,
-                          )
-                        }
-                        placeholder="#000000"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Border Colour</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.border_color}
-                        onChange={(e) =>
-                          handleInputChange("border_color", e.target.value)
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.border_color}
-                        onChange={(e) =>
-                          handleInputChange("border_color", e.target.value)
-                        }
-                        placeholder="#E0E0E0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formGroup}>
                     <label>Border Width</label>
                     <select
                       value={templateData.border_width}
@@ -1238,67 +1191,15 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     </select>
                   </div>
 
-                  {/* Summary Section Styling */}
+                  {/* Description Section Styling */}
                   <div className={styles.sectionDivider}>
-                    <h4>Summary Section Styling</h4>
+                    <h4>Description Section Styling</h4>
                   </div>
 
-                  <div className={styles.formGroup}>
-                    <label>Background Color</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.description_background_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "description_background_color",
-                            e.target.value,
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.description_background_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "description_background_color",
-                            e.target.value,
-                          )
-                        }
-                        placeholder="#FFFEF7"
-                      />
-                    </div>
-                  </div>
+                  {/* Description background now follows Highlight Colour picker */}
 
                   <div className={styles.formGroup}>
-                    <label>Border Color</label>
-                    <div className={styles.colorInput}>
-                      <input
-                        type="color"
-                        value={templateData.description_border_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "description_border_color",
-                            e.target.value,
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={templateData.description_border_color}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "description_border_color",
-                            e.target.value,
-                          )
-                        }
-                        placeholder="#FBBF24"
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Text Color</label>
+                    <label>Description Text Color</label>
                     <div className={styles.colorInput}>
                       <input
                         type="color"
@@ -1330,23 +1231,6 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Header Style</label>
-                    <select
-                      value={templateData.table_header_style}
-                      onChange={(e) =>
-                        handleInputChange("table_header_style", e.target.value)
-                      }
-                    >
-                      <option value="solid">Solid Color</option>
-                      <option value="gradient">Gradient</option>
-                    </select>
-                    <p className={styles.helpText}>
-                      Choose between solid color or gradient background for
-                      table headers
-                    </p>
-                  </div>
-
-                  <div className={styles.formGroup}>
                     <label>Header Background Color</label>
                     <div className={styles.colorInput}>
                       <input
@@ -1372,38 +1256,6 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       />
                     </div>
                   </div>
-
-                  {templateData.table_header_style === "gradient" && (
-                    <div className={styles.formGroup}>
-                      <label>Header Gradient Color</label>
-                      <div className={styles.colorInput}>
-                        <input
-                          type="color"
-                          value={tableHeaderGradientColor}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "table_header_gradient_color",
-                              e.target.value,
-                            )
-                          }
-                        />
-                        <input
-                          type="text"
-                          value={tableHeaderGradientColor}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "table_header_gradient_color",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="#F59E0B"
-                        />
-                      </div>
-                      <p className={styles.helpText}>
-                        Secondary color used in the header gradient
-                      </p>
-                    </div>
-                  )}
 
                   <div className={styles.formGroup}>
                     <label>Header Text Color</label>
@@ -1544,7 +1396,9 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     />
                   </div>
 
-                  <div className={styles.formGroup}>
+                  <div
+                    className={`${styles.formGroup} ${styles.formGroupSpaced}`}
+                  >
                     <label>Default Description</label>
                     <textarea
                       className={styles.richTextarea}
@@ -1945,9 +1799,8 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                 style={{
                   ...({
                     "--template-font-size": previewFontSize,
+                    "--highlight-color": templateData.highlight_color,
                   } as React.CSSProperties),
-                  borderTop: `${templateData.border_width} solid ${companyData?.logo_url ? templateData.main_color : templateData.border_color}`,
-                  borderBottom: `${templateData.border_width} solid ${templateData.border_color}`,
                 }}
               >
                 {/* Company Header */}
@@ -1995,11 +1848,16 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     )}
                   <div
                     className={styles.companyDetails}
-                    style={{ color: templateData.text_color }}
+                    style={{
+                      color: templateData.text_color,
+                      backgroundColor: templateData.highlight_color,
+                      padding: "16px",
+                      borderRadius: "8px",
+                    }}
                   >
                     <h3
                       style={{
-                        color: "#000000",
+                        color: templateData.text_color,
                         fontSize: "1.1rem",
                         fontWeight: "bold",
                         marginTop: "0",
@@ -2007,15 +1865,21 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                     >
                       {companyData?.business_name || "Your Company"}
                     </h3>
-                    <p>{companyData?.company_address || "5a Harmeet Close"}</p>
-                    <p>
+                    <p style={{ color: templateData.text_color }}>
+                      {companyData?.company_address || "5a Harmeet Close"}
+                    </p>
+                    <p style={{ color: templateData.text_color }}>
                       {companyData?.company_city
                         ? `${companyData.company_city}, ${companyData.company_state || ""} ${companyData.company_postal_code || ""}`
                         : "Mulgrave, 3170"}
                     </p>
-                    <p>Victoria</p>
-                    <p>{companyData?.company_email || "info@company.com"}</p>
-                    <p>{companyData?.company_phone || "1300 303 750"}</p>
+                    <p style={{ color: templateData.text_color }}>Victoria</p>
+                    <p style={{ color: templateData.text_color }}>
+                      {companyData?.company_email || "info@company.com"}
+                    </p>
+                    <p style={{ color: templateData.text_color }}>
+                      {companyData?.company_phone || "1300 303 750"}
+                    </p>
                   </div>
                 </div>
 
@@ -2088,205 +1952,175 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </p>
 
                   {templateData.show_line_items && (
-                    <table className={styles.invoiceTable}>
-                      <thead
-                        style={{
-                          borderBottom: `${templateData.border_width} solid ${templateData.table_header_background_color}`,
-                        }}
-                      >
-                        <tr>
-                          <th
-                            style={{
-                              color: templateData.table_header_text_color,
-                              padding: "12px 16px",
-                              fontWeight: "700",
-                              backgroundColor:
-                                templateData.table_header_style === "solid"
-                                  ? templateData.table_header_background_color
-                                  : undefined,
-                              backgroundImage:
-                                templateData.table_header_style === "gradient"
-                                  ? `linear-gradient(90deg, ${templateData.table_header_background_color} 0%, ${tableHeaderGradientColor} 100%)`
-                                  : "none",
-                              backgroundClip: "padding-box",
-                              boxShadow:
-                                templateData.table_header_style === "gradient"
-                                  ? "inset 0 1px 0 rgba(255,255,255,0.3), 0 3px 8px rgba(0,0,0,0.15)"
-                                  : "none",
-                            }}
-                          >
-                            Item Name
-                          </th>
-                          {templateData.show_line_quantities && (
+                    <>
+                      <table className={styles.invoiceTable}>
+                        <thead>
+                          <tr>
                             <th
                               style={{
                                 color: templateData.table_header_text_color,
                                 padding: "12px 16px",
                                 fontWeight: "700",
                                 backgroundColor:
-                                  templateData.table_header_style === "solid"
-                                    ? templateData.table_header_background_color
-                                    : undefined,
-                                backgroundImage:
-                                  templateData.table_header_style === "gradient"
-                                    ? `linear-gradient(90deg, ${templateData.table_header_background_color} 0%, ${tableHeaderGradientColor} 100%)`
-                                    : "none",
-                                backgroundClip: "padding-box",
-                                boxShadow:
-                                  templateData.table_header_style === "gradient"
-                                    ? "inset 0 1px 0 rgba(255,255,255,0.3), 0 3px 8px rgba(0,0,0,0.15)"
-                                    : "none",
+                                  templateData.table_header_background_color ||
+                                  templateData.main_color,
                               }}
                             >
-                              Quantity
+                              Item Name
                             </th>
-                          )}
-                          {templateData.show_line_prices && (
-                            <th
-                              style={{
-                                color: templateData.table_header_text_color,
-                                padding: "12px 16px",
-                                fontWeight: "700",
-                                backgroundColor:
-                                  templateData.table_header_style === "solid"
-                                    ? templateData.table_header_background_color
-                                    : undefined,
-                                backgroundImage:
-                                  templateData.table_header_style === "gradient"
-                                    ? `linear-gradient(90deg, ${templateData.table_header_background_color} 0%, ${tableHeaderGradientColor} 100%)`
-                                    : "none",
-                                backgroundClip: "padding-box",
-                                boxShadow:
-                                  templateData.table_header_style === "gradient"
-                                    ? "inset 0 1px 0 rgba(255,255,255,0.3), 0 3px 8px rgba(0,0,0,0.15)"
-                                    : "none",
-                              }}
-                            >
-                              Price
-                            </th>
-                          )}
-                          {templateData.show_line_totals && (
-                            <th
-                              style={{
-                                color: templateData.table_header_text_color,
-                                padding: "12px 16px",
-                                fontWeight: "700",
-                                backgroundColor:
-                                  templateData.table_header_style === "solid"
-                                    ? templateData.table_header_background_color
-                                    : undefined,
-                                backgroundImage:
-                                  templateData.table_header_style === "gradient"
-                                    ? `linear-gradient(90deg, ${templateData.table_header_background_color} 0%, ${tableHeaderGradientColor} 100%)`
-                                    : "none",
-                                backgroundClip: "padding-box",
-                                boxShadow:
-                                  templateData.table_header_style === "gradient"
-                                    ? "inset 0 1px 0 rgba(255,255,255,0.3), 0 3px 8px rgba(0,0,0,0.15)"
-                                    : "none",
-                              }}
-                            >
-                              Total
-                            </th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr
-                          style={{
-                            borderBottom: `1px solid ${templateData.table_header_background_color}`,
-                          }}
-                        >
-                          <td style={{ padding: "10px 16px" }}></td>
-                          {templateData.show_line_quantities && (
-                            <td style={{ padding: "10px 16px" }}>1.00</td>
-                          )}
-                          {templateData.show_line_prices && (
-                            <td style={{ padding: "10px 16px" }}>$100.00</td>
-                          )}
-                          {templateData.show_line_totals && (
-                            <td style={{ padding: "10px 16px" }}>$100.00</td>
-                          )}
-                        </tr>
-                        {templateData.sections &&
-                          templateData.sections.length > 0 && (
-                            <>
-                              {templateData.sections.map(
-                                (section: any) =>
-                                  section.items &&
-                                  section.items.length > 0 && (
-                                    <React.Fragment key={section.id}>
-                                      <tr
-                                        style={{
-                                          borderBottom: `1px solid ${templateData.table_header_background_color}`,
-                                          fontWeight: "600",
-                                          color: templateData.main_color,
-                                        }}
-                                      >
-                                        <td
-                                          colSpan={4}
+                            {templateData.show_line_quantities && (
+                              <th
+                                style={{
+                                  color: templateData.table_header_text_color,
+                                  padding: "12px 16px",
+                                  fontWeight: "700",
+                                  backgroundColor:
+                                    templateData.table_header_background_color ||
+                                    templateData.main_color,
+                                }}
+                              >
+                                Quantity
+                              </th>
+                            )}
+                            {templateData.show_line_prices && (
+                              <th
+                                style={{
+                                  color: templateData.table_header_text_color,
+                                  padding: "12px 16px",
+                                  fontWeight: "700",
+                                  backgroundColor:
+                                    templateData.table_header_background_color ||
+                                    templateData.main_color,
+                                }}
+                              >
+                                Price
+                              </th>
+                            )}
+                            {templateData.show_line_totals && (
+                              <th
+                                style={{
+                                  color: templateData.table_header_text_color,
+                                  padding: "12px 16px",
+                                  fontWeight: "700",
+                                  backgroundColor:
+                                    templateData.table_header_background_color ||
+                                    templateData.main_color,
+                                }}
+                              >
+                                Total
+                              </th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style={{ padding: "10px 16px" }}></td>
+                            {templateData.show_line_quantities && (
+                              <td style={{ padding: "10px 16px" }}>1.00</td>
+                            )}
+                            {templateData.show_line_prices && (
+                              <td style={{ padding: "10px 16px" }}>$100.00</td>
+                            )}
+                            {templateData.show_line_totals && (
+                              <td style={{ padding: "10px 16px" }}>$100.00</td>
+                            )}
+                          </tr>
+                          {templateData.sections &&
+                            templateData.sections.length > 0 && (
+                              <>
+                                {templateData.sections.map(
+                                  (section: any) =>
+                                    section.items &&
+                                    section.items.length > 0 && (
+                                      <React.Fragment key={section.id}>
+                                        <tr
                                           style={{
-                                            padding: "10px 16px",
-                                            backgroundColor: "#fafafa",
+                                            fontWeight: "600",
+                                            color: templateData.main_color,
                                           }}
                                         >
-                                          {section.name}
-                                        </td>
-                                      </tr>
-                                      {section.items.map(
-                                        (item: any, idx: number) => (
-                                          <tr
-                                            key={idx}
+                                          <td
+                                            colSpan={4}
                                             style={{
-                                              borderBottom: `1px solid ${templateData.table_header_background_color}`,
+                                              padding: "10px 16px",
+                                              backgroundColor:
+                                                templateData.highlight_color,
                                             }}
                                           >
-                                            <td
-                                              style={{ padding: "10px 16px" }}
-                                            >
-                                              {item.name || item.description}
-                                            </td>
-                                            {templateData.show_line_quantities && (
+                                            {section.name}
+                                          </td>
+                                        </tr>
+                                        {section.items.map(
+                                          (item: any, idx: number) => (
+                                            <tr key={idx}>
                                               <td
                                                 style={{ padding: "10px 16px" }}
                                               >
-                                                {item.quantity || 1}
+                                                {item.name || item.description}
                                               </td>
-                                            )}
-                                            {templateData.show_line_prices && (
-                                              <td
-                                                style={{ padding: "10px 16px" }}
-                                              >
-                                                ${(item.price || 0).toFixed(2)}
-                                              </td>
-                                            )}
-                                            {templateData.show_line_totals && (
-                                              <td
-                                                style={{ padding: "10px 16px" }}
-                                              >
-                                                $
-                                                {(
-                                                  (item.quantity || 1) *
-                                                  (item.price || 0)
-                                                ).toFixed(2)}
-                                              </td>
-                                            )}
-                                          </tr>
-                                        ),
-                                      )}
-                                    </React.Fragment>
-                                  ),
-                              )}
-                            </>
-                          )}
-                      </tbody>
-                    </table>
+                                              {templateData.show_line_quantities && (
+                                                <td
+                                                  style={{
+                                                    padding: "10px 16px",
+                                                  }}
+                                                >
+                                                  {item.quantity || 1}
+                                                </td>
+                                              )}
+                                              {templateData.show_line_prices && (
+                                                <td
+                                                  style={{
+                                                    padding: "10px 16px",
+                                                  }}
+                                                >
+                                                  $
+                                                  {(item.price || 0).toFixed(2)}
+                                                </td>
+                                              )}
+                                              {templateData.show_line_totals && (
+                                                <td
+                                                  style={{
+                                                    padding: "10px 16px",
+                                                  }}
+                                                >
+                                                  $
+                                                  {(
+                                                    (item.quantity || 1) *
+                                                    (item.price || 0)
+                                                  ).toFixed(2)}
+                                                </td>
+                                              )}
+                                            </tr>
+                                          ),
+                                        )}
+                                      </React.Fragment>
+                                    ),
+                                )}
+                              </>
+                            )}
+                        </tbody>
+                      </table>
+                      <div
+                        style={{
+                          borderBottom: `${templateData.border_width} solid ${templateData.border_color}`,
+                          marginBottom: "20px",
+                        }}
+                      />
+                    </>
                   )}
                 </div>
 
                 {/* Totals */}
                 {templateData.show_section_totals && (
-                  <div className={styles.invoiceTotals}>
+                  <div
+                    className={styles.invoiceTotals}
+                    style={{
+                      borderColor: templateData.border_color,
+                      borderWidth: templateData.border_width,
+                      backgroundColor: templateData.highlight_color,
+                      color: templateData.description_text_color,
+                    }}
+                  >
                     <div className={styles.totalRow}>
                       <span>Subtotal</span>
                       <span>$100.00</span>
@@ -2295,7 +2129,13 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                       <span>Tax Amount</span>
                       <span>$15.00</span>
                     </div>
-                    <div className={styles.totalRow}>
+                    <div
+                      className={styles.totalRow}
+                      style={{
+                        borderTop: `${Math.max(parseInt(templateData.border_width), 2)}px solid ${templateData.main_color}`,
+                        color: templateData.main_color,
+                      }}
+                    >
                       <strong>Total</strong>
                       <strong>$115.00</strong>
                     </div>
@@ -2303,13 +2143,22 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                 )}
 
                 {/* Footer */}
-                <div className={styles.invoiceFooter}>
+                <div
+                  className={styles.invoiceFooter}
+                  style={{
+                    borderTopColor: templateData.border_color,
+                    borderTopWidth: templateData.border_width,
+                  }}
+                >
                   {templateData.default_footer}
                   <p className={styles.footerDetails}>
                     <small>
                       BSB Number: 013 231 Bank Account: 1078 53001 Invoice
                       number: INV-DRAFT
                     </small>
+                  </p>
+                  <p className={styles.pageNumber}>
+                    <small>Page 1 / 1</small>
                   </p>
                 </div>
               </div>
