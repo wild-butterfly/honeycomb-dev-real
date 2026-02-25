@@ -25,6 +25,8 @@ import InvoicingPage from "./pages/InvoicingPage";
 import SettingsPage from "./pages/SettingsPage";
 import InvoiceTemplateEditor from "./pages/InvoiceTemplateEditor";
 import AdminServiceCatalogsPage from "./pages/AdminServiceCatalogsPage";
+import JobsPage from "./pages/JobsPage";
+import CustomersPage from "./pages/CustomersPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
@@ -110,6 +112,9 @@ const App: React.FC = () => {
               </NewJobModalProvider>
             }
           />
+
+          <Route path="/dashboard/jobs" element={<JobsPage />} />
+          <Route path="/dashboard/customers" element={<CustomersPage />} />
 
           {/* ✅ JOB (DASHBOARD) — BUNLAR Routes İÇİNDE KALMALI */}
           <Route path="/dashboard/jobs/:id" element={<JobPage />} />

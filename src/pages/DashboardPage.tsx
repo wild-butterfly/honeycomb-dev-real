@@ -7,6 +7,7 @@ import JobsOverTimeChart from "../components/JobsOverTimeChart";
 import AddTask from "../components/AddTask";
 import NewJobModal from "../components/NewJobModal";
 import DashboardNavbar from "../components/DashboardNavbar";
+import Footer from "../components/Footer";
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
 import TaskAssigneeFilterBar from "../components/TaskAssigneeFilterBar";
 import ConfirmModal from "../components/ConfirmModal";
@@ -1213,6 +1214,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           />
         )}
       </div>
+      <Footer />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "./CalendarPage.module.css";
 
 import DashboardNavbar from "../components/DashboardNavbar";
+import Footer from "../components/Footer";
 import CalendarControlsBar from "../components/CalendarControlsBar";
 import MonthCalendarLayout from "../components/MonthCalendarLayout";
 import WeekCalendarLayout from "../components/WeekCalendarLayout";
@@ -304,108 +305,111 @@ const CalendarPage: React.FC = () => {
   /* ================= RENDER ================= */
 
   return (
-    <div className={styles.dashboardBg}>
-      <DashboardNavbar onNewJob={() => {}} onLogout={logout} />
+    <>
+      <div className={styles.dashboardBg}>
+        <DashboardNavbar onNewJob={() => {}} onLogout={logout} />
 
-      <CalendarControlsBar
-        date={selectedDate}
-        onDateChange={setSelectedDate}
-        rangeMode={rangeMode}
-        onRangeModeChange={setRangeMode}
-        onPrev={goPrev}
-        onNext={goNext}
-      />
-
-      <div className={styles.calendarShell}>
-        <main className={styles.calendarMain}>
-          <div className={styles.calendarViewport}>
-            {rangeMode === "day" && (
-              <DesktopCalendarLayout
-                date={selectedDate}
-                employees={employees}
-                items={calendarItems}
-                selectedStaff={selectedStaff}
-                onItemClick={(item: CalendarItem) =>
-                  setOpenContext({
-                    jobId: item.jobId,
-                    assignmentId: item.assignmentId,
-                  })
-                }
-                onAssignmentMove={moveAssignment}
-                onAddJobAt={
-                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
-                }
-              />
-            )}
-
-            {rangeMode === "week" && (
-              <WeekCalendarLayout
-                date={selectedDate}
-                employees={employees}
-                items={calendarItems}
-                onItemClick={(item: CalendarItem) =>
-                  setOpenContext({
-                    jobId: item.jobId,
-                    assignmentId: item.assignmentId,
-                  })
-                }
-                onAssignmentMove={moveAssignment}
-                onAddJobAt={
-                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
-                }
-              />
-            )}
-
-            {rangeMode === "month" && (
-              <MonthCalendarLayout
-                date={selectedDate}
-                employees={employees}
-                items={calendarItems}
-                selectedStaff={selectedStaff}
-                onStaffChange={setSelectedStaff}
-                onItemClick={(item: CalendarItem) =>
-                  setOpenContext({ jobId: item.jobId, assignmentId: null })
-                }
-                onAssignmentMove={moveAssignment}
-                onAddJobAt={
-                  cloneContext ? handleCloneAssignmentAt : handleAddJobAt
-                }
-              />
-            )}
-          </div>
-        </main>
-
-        <aside className={styles.jobsColumn}>
-          <SidebarJobs
-            items={calendarItems}
-            jobFilter={jobFilter}
-            onJobFilterChange={setJobFilter}
-            onJobClick={(jobId) =>
-              setOpenContext({ jobId, assignmentId: null })
-            }
-          />
-        </aside>
-      </div>
-
-      {openContext && (
-        <CalendarJobDetailsModal
-          job={jobs.find((j) => j.id === openContext.jobId)!}
-          employees={employees}
-          focusedAssignmentId={openContext.assignmentId}
-          onClose={() => setOpenContext(null)}
-          onSave={async (updatedJob) => {
-            await apiPut(`/jobs/${updatedJob.id}`, updatedJob);
-            await loadAll();
-          }}
-          onDelete={async (id) => {
-            await apiDelete(`/jobs/${id}`);
-            setOpenContext(null);
-            await loadAll();
-          }}
-          onAssignmentsChanged={loadAll}
+        <CalendarControlsBar
+          date={selectedDate}
+          onDateChange={setSelectedDate}
+          rangeMode={rangeMode}
+          onRangeModeChange={setRangeMode}
+          onPrev={goPrev}
+          onNext={goNext}
         />
-      )}
-    </div>
+
+        <div className={styles.calendarShell}>
+          <main className={styles.calendarMain}>
+            <div className={styles.calendarViewport}>
+              {rangeMode === "day" && (
+                <DesktopCalendarLayout
+                  date={selectedDate}
+                  employees={employees}
+                  items={calendarItems}
+                  selectedStaff={selectedStaff}
+                  onItemClick={(item: CalendarItem) =>
+                    setOpenContext({
+                      jobId: item.jobId,
+                      assignmentId: item.assignmentId,
+                    })
+                  }
+                  onAssignmentMove={moveAssignment}
+                  onAddJobAt={
+                    cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                  }
+                />
+              )}
+
+              {rangeMode === "week" && (
+                <WeekCalendarLayout
+                  date={selectedDate}
+                  employees={employees}
+                  items={calendarItems}
+                  onItemClick={(item: CalendarItem) =>
+                    setOpenContext({
+                      jobId: item.jobId,
+                      assignmentId: item.assignmentId,
+                    })
+                  }
+                  onAssignmentMove={moveAssignment}
+                  onAddJobAt={
+                    cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                  }
+                />
+              )}
+
+              {rangeMode === "month" && (
+                <MonthCalendarLayout
+                  date={selectedDate}
+                  employees={employees}
+                  items={calendarItems}
+                  selectedStaff={selectedStaff}
+                  onStaffChange={setSelectedStaff}
+                  onItemClick={(item: CalendarItem) =>
+                    setOpenContext({ jobId: item.jobId, assignmentId: null })
+                  }
+                  onAssignmentMove={moveAssignment}
+                  onAddJobAt={
+                    cloneContext ? handleCloneAssignmentAt : handleAddJobAt
+                  }
+                />
+              )}
+            </div>
+          </main>
+
+          <aside className={styles.jobsColumn}>
+            <SidebarJobs
+              items={calendarItems}
+              jobFilter={jobFilter}
+              onJobFilterChange={setJobFilter}
+              onJobClick={(jobId) =>
+                setOpenContext({ jobId, assignmentId: null })
+              }
+            />
+          </aside>
+        </div>
+
+        {openContext && (
+          <CalendarJobDetailsModal
+            job={jobs.find((j) => j.id === openContext.jobId)!}
+            employees={employees}
+            focusedAssignmentId={openContext.assignmentId}
+            onClose={() => setOpenContext(null)}
+            onSave={async (updatedJob) => {
+              await apiPut(`/jobs/${updatedJob.id}`, updatedJob);
+              await loadAll();
+            }}
+            onDelete={async (id) => {
+              await apiDelete(`/jobs/${id}`);
+              setOpenContext(null);
+              await loadAll();
+            }}
+            onAssignmentsChanged={loadAll}
+          />
+        )}
+      </div>
+      <Footer />
+    </>
   );
 };
 

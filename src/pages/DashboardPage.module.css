@@ -20,6 +20,9 @@ body {
 /* ✅ Added (your TSX uses dashboardShell in the new version) */
 .dashboardShell {
   width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboardBg {
@@ -32,8 +35,8 @@ body {
       #fffbe9 20px
     ),
     linear-gradient(115deg, #fffef7 80%, #fff7d8 130%);
-  min-height: 100vh;
-  padding: 0 0 46px 0;
+  flex: 1;
+  padding: 0 0 32px 0;
   font-family: "Roboto", Arial, sans-serif;
 }
 
@@ -132,6 +135,21 @@ nav,
   align-items: flex-start;
   flex-wrap: wrap;
   padding: 0 12px;
+}
+
+/* Centered single-card row for Jobs / Customers pages */
+.centerPageRow {
+  max-width: 1400px;
+  margin: 40px auto 0 auto;
+  padding: 0 32px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.centerPageCard {
+  width: 100%;
+  max-width: 1200px;
 }
 
 /* ----------- JOB TABLE ----------- */

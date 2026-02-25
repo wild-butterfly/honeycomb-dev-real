@@ -37,7 +37,7 @@ import { pool } from './db';
     // Insert the template with proper JSON serialization
     const insert = await pool.query(
       `INSERT INTO invoice_templates (
-        company_id, name, is_default, status, main_color, accent_color, text_color,
+        company_id, name, is_default, status, main_color, text_color,
         font_size, indent_customer_address, orientation, header_background_color,
         border_color, border_width, table_header_background_color, table_header_gradient_color,
         table_header_text_color, table_header_style, description_background_color,
@@ -48,9 +48,9 @@ import { pool } from './db';
         show_material_section_totals, show_material_items, default_description, default_footer,
         sections, created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
-        $39, $40, NOW(), NOW()
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+        $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37,
+        $38, $39, NOW(), NOW()
       ) RETURNING id, name, is_default, sections, show_company_logo`,
       [
         2, // company_id
@@ -58,7 +58,6 @@ import { pool } from './db';
         true, // is_default
         tpl.status || 'active',
         tpl.main_color,
-        tpl.accent_color,
         tpl.text_color,
         tpl.font_size,
         tpl.indent_customer_address || false,
