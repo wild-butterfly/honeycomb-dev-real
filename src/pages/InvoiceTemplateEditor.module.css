@@ -307,7 +307,7 @@
 
 .editorLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
   gap: 0;
   background: white;
   border: 2px solid #fbbf24;
@@ -638,7 +638,7 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  font-size: calc(var(--template-font-size, 1rem) * 0.72);
+  font-size: var(--template-font-size, 1rem);
   transform-origin: top left;
 }
 
@@ -794,6 +794,12 @@
   border-style: solid;
 }
 
+.invoicePreview.landscapeOrientation .invoiceTotals {
+  max-width: 210px;
+  margin-bottom: 24px;
+  padding: 10px;
+}
+
 .totalRow {
   display: flex;
   justify-content: space-between;
@@ -802,12 +808,23 @@
   font-weight: 600;
 }
 
+.invoicePreview.landscapeOrientation .totalRow {
+  padding: 7px 0;
+  font-size: 0.88em;
+}
+
 .totalRow:last-child {
   border-top-style: solid;
   padding-top: 14px;
   margin-top: 10px;
   font-size: 1.2em;
   font-weight: 800;
+}
+
+.invoicePreview.landscapeOrientation .totalRow:last-child {
+  padding-top: 10px;
+  margin-top: 8px;
+  font-size: 1.05em;
 }
 
 .invoiceFooter {

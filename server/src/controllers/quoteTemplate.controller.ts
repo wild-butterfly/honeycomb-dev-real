@@ -389,7 +389,10 @@ export const previewQuoteTemplatePdf = async (req: Request, res: Response) => {
         total_with_tax: previewTotal,
       },
       lineItems: previewLineItems,
-      template,
+      template: {
+        ...template,
+        document_type: "quote",
+      },
       settings: company,
       company,
       customer: { name: "Sample Customer" },

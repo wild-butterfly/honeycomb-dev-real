@@ -746,6 +746,7 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
         : "1rem";
   const previewBorderWidth =
     Number.parseFloat(templateData.border_width || "1") || 1;
+  const isLandscapeTemplate = templateData.orientation === "landscape";
 
   return (
     <>
@@ -1914,8 +1915,8 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                       borderRadius: "10px",
                       color: templateData.text_color,
                       boxShadow: "0 2px 8px rgba(251,191,36,0.08)",
-                      padding: "18px 22px",
-                      maxWidth: "280px",
+                      padding: isLandscapeTemplate ? "10px 12px" : "18px 22px",
+                      maxWidth: isLandscapeTemplate ? "210px" : "280px",
                     }}
                   >
                     <div className={styles.totalRow}>
@@ -1931,10 +1932,10 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                       style={{
                         borderTop: `${Math.max(previewBorderWidth, 2)}px solid ${templateData.main_color}`,
                         color: templateData.main_color,
-                        paddingTop: "16px",
-                        marginTop: "12px",
+                        paddingTop: isLandscapeTemplate ? "10px" : "16px",
+                        marginTop: isLandscapeTemplate ? "8px" : "12px",
                         fontWeight: 800,
-                        fontSize: "1.15em",
+                        fontSize: isLandscapeTemplate ? "1.05em" : "1.15em",
                       }}
                     >
                       <strong>Total</strong>
