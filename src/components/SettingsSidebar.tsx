@@ -11,6 +11,7 @@ import {
   FiBell,
   FiSliders,
 } from "react-icons/fi";
+import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import styles from "./SettingsSidebar.module.css";
 
 interface SettingsItem {
@@ -57,6 +58,12 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
         label: "Invoice Settings",
         icon: FiFileText({ size: 18 }),
         path: "/dashboard/settings?tab=invoice-settings",
+      },
+      {
+        id: "quote-settings",
+        label: "Quote Settings",
+        icon: <ClipboardDocumentListIcon style={{ width: 18, height: 18 }} />,
+        path: "/dashboard/settings?tab=quote-settings",
       },
     ],
   },

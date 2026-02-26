@@ -1,3 +1,4 @@
+import SitesPage from "./pages/SitesPage";
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
@@ -113,7 +114,7 @@ const App: React.FC = () => {
             }
           />
 
-          <Route path="/dashboard/jobs" element={<JobsPage />} />
+          <Route path="/dashboard/sites" element={<SitesPage />} />
           <Route path="/dashboard/customers" element={<CustomersPage />} />
 
           {/* ✅ JOB (DASHBOARD) — BUNLAR Routes İÇİNDE KALMALI */}

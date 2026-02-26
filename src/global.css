@@ -274,3 +274,19 @@ body.invoice-modal-open aside[class*="sidebar"] {
 body.invoice-modal-open main {
   padding-left: 0 !important;
 }
+
+body.quote-modal-open aside[class*="SettingsSidebar"],
+body.quote-modal-open aside[class*="sidebar"],
+body.quote-modal-open div[class*="SettingsSidebar_sidebar"],
+body.quote-modal-open div[class*="LeftSidebar_sidebar"] {
+  display: none !important;
+}
+
+body.quote-modal-open main {
+  padding-left: 0 !important;
+}
+
+body.quote-modal-open [class*="SettingsPage_settingsContainer"],
+body.quote-modal-open [class*="SettingsPage_content"] {
+  overflow: visible !important;
+}

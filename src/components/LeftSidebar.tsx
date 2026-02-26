@@ -21,9 +21,8 @@ const LeftSidebar: React.FC = () => {
 
   if (!id) return null;
 
-  const basePath = location.pathname.startsWith("/dashboard")
-    ? `/dashboard/jobs/${id}`
-    : `/jobs/${id}`;
+  // Always use /dashboard/jobs/:id for job sidebar links
+  const basePath = `/dashboard/jobs/${id}`;
 
   const go = (path: string) => {
     navigate(`${basePath}/${path}`);

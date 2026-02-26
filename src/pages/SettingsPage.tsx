@@ -5,6 +5,7 @@ import DashboardNavbar from "../components/DashboardNavbar";
 import LeftSidebar from "../components/LeftSidebar";
 import Footer from "../components/Footer";
 import InvoiceSettingsPage from "./InvoiceSettingsPage";
+import QuoteSettingsPage from "./QuoteSettingsPage";
 import GeneralSettings from "../components/GeneralSettings";
 import ProfileSettings from "../components/ProfileSettings";
 import UserPreferences from "../components/UserPreferences";
@@ -24,6 +25,8 @@ const SettingsPage: React.FC = () => {
         return { id: "preferences", component: <UserPreferences /> };
       case "invoice-settings":
         return { id: "invoice-settings", component: <InvoiceSettingsPage /> };
+      case "quote-settings":
+        return { id: "quote-settings", component: <QuoteSettingsPage /> };
       case "security":
         return { id: "security", component: <SecuritySettings /> };
       case "data":

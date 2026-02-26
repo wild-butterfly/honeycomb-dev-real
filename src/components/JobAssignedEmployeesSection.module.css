@@ -13,16 +13,17 @@
 ========================================================= */
 
 .employeeCard {
-  background: #ffffff;
-  border: 1px solid #ece7da;
-  border-radius: 18px;
+  background: rgba(255, 254, 247, 0.55);
+  border: 1px solid rgba(255, 214, 0, 0.22);
+  border-radius: 14px;
   padding: 18px 22px;
   transition: all 0.2s ease;
 }
 
 .employeeCard:hover {
-  border-color: #f4d97a;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+  border-color: rgba(255, 214, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(185, 154, 42, 0.1);
+  background: rgba(255, 253, 228, 0.8);
 }
 
 /* =========================================================
@@ -162,7 +163,7 @@
 }
 
 .assignmentRow:hover {
-  background: #faf9f6;
+  background: rgba(255, 253, 228, 0.7);
 }
 
 .calendarIcon {

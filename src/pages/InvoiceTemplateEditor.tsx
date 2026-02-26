@@ -58,6 +58,21 @@ interface TemplateData {
   sections: any[];
 }
 
+type StyleSnapshot = Pick<
+  TemplateData,
+  | "main_color"
+  | "text_color"
+  | "highlight_color"
+  | "header_background_color"
+  | "border_color"
+  | "table_header_background_color"
+  | "table_header_gradient_color"
+  | "table_header_text_color"
+  | "description_background_color"
+  | "description_border_color"
+  | "description_text_color"
+>;
+
 interface CompanyData {
   business_name: string;
   abn: string;
@@ -156,6 +171,17 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [blackWhiteMode, setBlackWhiteMode] = useState(false);
+  const [styleBeforeBw, setStyleBeforeBw] = useState<StyleSnapshot | null>(
+    null,
+  );
+
+  const detectBlackWhiteMode = (template: TemplateData) => {
+    return (
+      (template.border_color || "").toLowerCase() === "#111111" &&
+      (template.table_header_background_color || "").toLowerCase() === "#6b7280"
+    );
+  };
 
   const handlePreviewPdf = async () => {
     if (!companyData) {
@@ -459,6 +485,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
             );
             console.log("Template with defaults:", templateWithDefaults);
             setTemplateData(templateWithDefaults);
+            setBlackWhiteMode(detectBlackWhiteMode(templateWithDefaults));
           }
         }
       } catch (error) {
@@ -476,6 +503,59 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleToggleBlackWhiteMode = (enabled: boolean) => {
+    setBlackWhiteMode(enabled);
+    setTemplateData((prev) => {
+      if (enabled) {
+        setStyleBeforeBw({
+          main_color: prev.main_color,
+          text_color: prev.text_color,
+          highlight_color: prev.highlight_color,
+          header_background_color: prev.header_background_color,
+          border_color: prev.border_color,
+          table_header_background_color: prev.table_header_background_color,
+          table_header_gradient_color: prev.table_header_gradient_color,
+          table_header_text_color: prev.table_header_text_color,
+          description_background_color: prev.description_background_color,
+          description_border_color: prev.description_border_color,
+          description_text_color: prev.description_text_color,
+        });
+
+        return {
+          ...prev,
+          main_color: "#111111",
+          text_color: "#111111",
+          highlight_color: "#f8f9fa",
+          header_background_color: "#ffffff",
+          border_color: "#111111",
+          table_header_background_color: "#6b7280",
+          table_header_gradient_color: "#4b5563",
+          table_header_text_color: "#ffffff",
+          description_background_color: "#f8f9fa",
+          description_border_color: "#111111",
+          description_text_color: "#111111",
+        };
+      }
+
+      if (styleBeforeBw) {
+        return {
+          ...prev,
+          ...styleBeforeBw,
+        };
+      }
+
+      return {
+        ...prev,
+        header_background_color: "#ffffff",
+        border_color: prev.main_color,
+        table_header_background_color: prev.main_color,
+        table_header_gradient_color: prev.main_color,
+        table_header_text_color: "#ffffff",
+        description_border_color: prev.main_color,
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -1070,6 +1150,26 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                   </p>
 
                   <div className={styles.formGroup}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginBottom: 0,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={blackWhiteMode}
+                        onChange={(e) =>
+                          handleToggleBlackWhiteMode(e.target.checked)
+                        }
+                      />
+                      <span>Black and White Mode</span>
+                    </label>
+                  </div>
+
+                  <div className={styles.formGroup}>
                     <label>Theme Colour</label>
                     <p className={styles.helpText}>
                       This color will be applied to borders, headers, and
@@ -1081,6 +1181,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                         value={templateData.main_color}
                         onChange={(e) => {
                           const color = e.target.value;
+                          setBlackWhiteMode(false);
                           handleInputChange("main_color", color);
                           handleInputChange("border_color", color);
                           handleInputChange("description_border_color", color);
@@ -1095,6 +1196,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                         value={templateData.main_color}
                         onChange={(e) => {
                           const color = e.target.value;
+                          setBlackWhiteMode(false);
                           handleInputChange("main_color", color);
                           handleInputChange("border_color", color);
                           handleInputChange("description_border_color", color);

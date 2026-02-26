@@ -120,13 +120,13 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
           </NavLink>
 
           <NavLink
-            to="/dashboard/jobs"
+            to="/dashboard/sites"
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.active}` : styles.link
             }
             onClick={closeMenu}
           >
-            Jobs
+            Sites
           </NavLink>
 
           <NavLink

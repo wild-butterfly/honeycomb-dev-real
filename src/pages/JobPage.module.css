@@ -25,7 +25,7 @@
 }
 
 /* =====================================================
-   PREMIUM ENTERPRISE CONTAINER (MATCHES JOB SUMMARY)
+   CONTAINER — matches tableCardModern on other pages
 ===================================================== */
 .pageContainer {
   position: relative;
@@ -37,54 +37,19 @@
   flex-direction: column;
   gap: 40px;
 
-  background: rgba(255, 252, 235, 0.78);
+  background: rgba(255, 255, 255, 0.78);
 
-  /* ✅ premium glass */
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
-  border-radius: 32px;
-
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 214, 0, 0.28);
 
   box-shadow:
-    0 28px 70px rgba(15, 23, 42, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
-    0 0 0 2px rgba(244, 180, 0, 0.1) inset;
+    0 18px 50px rgba(0, 0, 0, 0.08),
+    0 2px 10px rgba(185, 154, 42, 0.12);
 
-  padding: 40px 40px 64px 40px;
-}
-
-/* ✅ üstte turuncu band yok → çok hafif slate shade */
-.pageContainer::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 76px;
-
-  background: linear-gradient(to bottom, rgba(15, 23, 42, 0.05), transparent);
-
-  border-radius: 32px 32px 0 0;
-  pointer-events: none;
-}
-
-/* ✅ üst highlight (premium cam hissi) */
-.pageContainer::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  height: 90px;
-  border-radius: 32px 32px 0 0;
-  pointer-events: none;
-
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0)
-  );
+  padding: 24px 24px 40px 24px;
 }
 
 /* =====================================================
@@ -92,10 +57,10 @@
 ===================================================== */
 .pageHeader h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
-  letter-spacing: -0.5px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #7f6a14;
+  letter-spacing: 0.01em;
 }
 
 /* =====================================================

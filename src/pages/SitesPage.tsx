@@ -1,115 +1,72 @@
-import React, { useEffect, useMemo, useState } from "react";
-import styles from "./CustomersPage.module.css";
-
+import React, { useEffect, useState, useMemo } from "react";
+import { useCompany } from "../context/CompanyContext";
+import api from "../services/api";
 import DashboardNavbar from "../components/DashboardNavbar";
 import Footer from "../components/Footer";
-import { logout } from "../services/api";
-import { fetchJobs } from "../services/jobs";
-import { useCompany } from "../context/CompanyContext";
-import type { CalendarJob } from "../types/calendar";
+import styles from "./SitesPage.module.css";
 
-type CustomerRow = {
-  name: string;
+interface Site {
+  id: number;
   address: string;
-  contactName?: string | null;
-  contactEmail?: string | null;
-  contactPhone?: string | null;
-  jobCount: number;
-  hasActiveJob: boolean;
-};
+  status: string;
+  contact_name?: string;
+  phone?: string;
+  jobs_count?: number;
+}
 
-const CustomersPage: React.FC = () => {
+const SitesPage: React.FC = () => {
   const { companyId } = useCompany();
-
-  const [jobs, setJobs] = useState<CalendarJob[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [sites, setSites] = useState<Site[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const load = async () => {
+    const fetchSites = async () => {
       setLoading(true);
-      try {
-        const list = await fetchJobs();
-        setJobs(Array.isArray(list) ? list : []);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (companyId) {
-      load().catch((e) => {
-        console.error("Failed to load jobs for customers page:", e);
-        setLoading(false);
+      const jobs = await api.get<any[]>(`/jobs?company_id=${companyId}`);
+      const siteMap: { [address: string]: Site } = {};
+      (jobs || []).forEach((job) => {
+        const address = job.site_address || job.address || "(No Address)";
+        if (!siteMap[address]) {
+          siteMap[address] = {
+            id: job.id,
+            address,
+            status: job.status || "ACTIVE",
+            contact_name: job.contact_name || job.customer_name || "",
+            phone: job.phone || job.customer_phone || "",
+            jobs_count: 1,
+          };
+        } else {
+          siteMap[address].jobs_count = (siteMap[address].jobs_count || 1) + 1;
+        }
       });
-    } else {
-      setJobs([]);
-    }
+      setSites(Object.values(siteMap));
+      setLoading(false);
+    };
+    fetchSites();
   }, [companyId]);
 
-  const customers = useMemo<CustomerRow[]>(() => {
-    const byName = new Map<string, CustomerRow>();
-    for (const job of jobs) {
-      const keyRaw = job.client || "Unknown customer";
-      const key = keyRaw.trim() || "Unknown customer";
-      const existing = byName.get(key);
-      const address = job.address || existing?.address || "";
-      const contactName = job.contact_name ?? existing?.contactName ?? null;
-      const contactEmail = job.contact_email ?? existing?.contactEmail ?? null;
-      const contactPhone = job.contact_phone ?? existing?.contactPhone ?? null;
-      const hasActiveJobForThisRow =
-        job.status === "active" ||
-        job.status === "return" ||
-        job.status === "quote";
-      if (existing) {
-        existing.jobCount += 1;
-        existing.address = address;
-        existing.contactName = contactName;
-        existing.contactEmail = contactEmail;
-        existing.contactPhone = contactPhone;
-        existing.hasActiveJob = existing.hasActiveJob || hasActiveJobForThisRow;
-      } else {
-        byName.set(key, {
-          name: key,
-          address,
-          contactName,
-          contactEmail,
-          contactPhone,
-          jobCount: 1,
-          hasActiveJob: hasActiveJobForThisRow,
-        });
-      }
-    }
-    return Array.from(byName.values()).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }, [jobs]);
-
-  const visibleCustomers = useMemo(() => {
+  const visibleSites = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return customers;
-    return customers.filter((c) => {
-      const haystack = [
-        c.name,
-        c.address,
-        c.contactName ?? "",
-        c.contactPhone ?? "",
-      ]
+    if (!q) return sites;
+    return sites.filter((site) => {
+      const haystack = [site.address, site.contact_name ?? "", site.phone ?? ""]
         .join(" ")
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [customers, search]);
+  }, [sites, search]);
 
   return (
     <div className={styles.dashboardShell}>
       <div className={styles.dashboardBg}>
-        <DashboardNavbar onLogout={logout} />
+        <DashboardNavbar />
         <div className={styles.centerPageRow}>
           <div className={`${styles.tableCardModern} ${styles.centerPageCard}`}>
             <div className={styles.tableHeader}>
               <div className={styles.tableHeaderLeft}>
                 <div className={styles.tableHeaderTopRow}>
-                  <h3 className={styles.tableTitle}>Customers</h3>
+                  <h3 className={styles.tableTitle}>Sites</h3>
                   <div className={styles.tableHeaderRightTools}>
                     <div className={styles.jobToolbar}>
                       <div className={styles.jobSearch}>
@@ -130,7 +87,7 @@ const CustomersPage: React.FC = () => {
                           className={styles.jobSearchInput}
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Search customers, address, or contact…"
+                          placeholder="Search sites, address, or contact…"
                         />
                       </div>
                     </div>
@@ -140,11 +97,11 @@ const CustomersPage: React.FC = () => {
                   <div className={styles.tableSubtitle}>
                     <span className={styles.tablePill}>
                       {loading
-                        ? "Loading customers…"
-                        : `${visibleCustomers.length} customers`}
+                        ? "Loading sites…"
+                        : `${visibleSites.length} sites`}
                     </span>
                     <span className={styles.tableHint}>
-                      Customer details are automatically derived from your jobs.
+                      Site details are automatically derived from your jobs.
                     </span>
                   </div>
                 </div>
@@ -156,9 +113,9 @@ const CustomersPage: React.FC = () => {
                 <thead>
                   <tr>
                     <th>Status</th>
-                    <th>Customer</th>
+                    <th>Site</th>
                     <th>Postal Address</th>
-                    <th>Default Customer Contact</th>
+                    <th>Default Site Contact</th>
                     <th>Phone</th>
                     <th>Jobs</th>
                   </tr>
@@ -173,60 +130,62 @@ const CustomersPage: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  ) : visibleCustomers.length === 0 ? (
+                  ) : visibleSites.length === 0 ? (
                     <tr>
                       <td colSpan={6} className={styles.tableStateCell}>
                         <div className={styles.tableEmpty}>
-                          <div className={styles.tableEmptyIcon}>🐝</div>
+                          <div className={styles.tableEmptyIcon}>🏗️</div>
                           <div className={styles.tableEmptyTitle}>
-                            No customers found
+                            No sites found
                           </div>
                           <div className={styles.tableEmptyText}>
                             Try adjusting your search or create a new job to add
-                            customers.
+                            sites.
                           </div>
                         </div>
                       </td>
                     </tr>
                   ) : (
-                    visibleCustomers.map((c) => (
-                      <tr key={c.name} className={styles.jobRow}>
+                    visibleSites.map((site) => (
+                      <tr key={site.id} className={styles.jobRow}>
                         <td>
                           <span
                             className={
-                              c.hasActiveJob
+                              site.status === "ACTIVE"
                                 ? styles.statusActive
                                 : styles.statusPending
                             }
                           >
-                            {c.hasActiveJob ? "ACTIVE" : "INACTIVE"}
+                            {site.status}
                           </span>
                         </td>
                         <td>
-                          <div className={styles.customerCell}>{c.name}</div>
-                        </td>
-                        <td>
                           <div className={styles.customerCell}>
-                            {c.address || "—"}
+                            {site.address}
                           </div>
                         </td>
                         <td>
                           <div className={styles.customerCell}>
-                            {c.contactName || c.contactEmail || "—"}
+                            {site.address}
                           </div>
                         </td>
                         <td>
                           <div className={styles.customerCell}>
-                            {c.contactPhone || "—"}
+                            {site.contact_name || "—"}
                           </div>
                         </td>
                         <td>
                           <div className={styles.customerCell}>
-                            {c.jobCount === 0
+                            {site.phone || "—"}
+                          </div>
+                        </td>
+                        <td>
+                          <div className={styles.customerCell}>
+                            {site.jobs_count === 0
                               ? "No jobs"
-                              : c.jobCount === 1
+                              : site.jobs_count === 1
                                 ? "1 job"
-                                : `${c.jobCount} jobs`}
+                                : `${site.jobs_count} jobs`}
                           </div>
                         </td>
                       </tr>
@@ -243,4 +202,4 @@ const CustomersPage: React.FC = () => {
   );
 };
 
-export default CustomersPage;
+export default SitesPage;

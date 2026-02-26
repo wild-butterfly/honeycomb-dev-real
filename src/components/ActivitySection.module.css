@@ -99,19 +99,20 @@
 /* ================= ACTIVITY CARD (MODERN FERGUS STYLE) ================= */
 
 .activityCard {
-  background: white;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 254, 247, 0.7);
+  border: 1px solid rgba(255, 214, 0, 0.2);
   border-radius: 12px;
   padding: 14px 16px;
 
   transition: all 0.2s ease;
 
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(185, 154, 42, 0.06);
 }
 
 .activityCard:hover {
-  border-color: rgba(244, 180, 0, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: rgba(255, 214, 0, 0.45);
+  background: rgba(255, 253, 228, 0.85);
+  box-shadow: 0 4px 14px rgba(185, 154, 42, 0.12);
   transform: translateX(2px);
 }
 

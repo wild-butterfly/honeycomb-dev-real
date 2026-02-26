@@ -58,6 +58,21 @@ interface TemplateData {
   sections: any[];
 }
 
+type StyleSnapshot = Pick<
+  TemplateData,
+  | "main_color"
+  | "text_color"
+  | "highlight_color"
+  | "header_background_color"
+  | "border_color"
+  | "table_header_background_color"
+  | "table_header_gradient_color"
+  | "table_header_text_color"
+  | "description_background_color"
+  | "description_border_color"
+  | "description_text_color"
+>;
+
 interface CompanyData {
   business_name: string;
   abn: string;
@@ -155,6 +170,17 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [blackWhiteMode, setBlackWhiteMode] = useState(false);
+  const [styleBeforeBw, setStyleBeforeBw] = useState<StyleSnapshot | null>(
+    null,
+  );
+
+  const detectBlackWhiteMode = (template: TemplateData) => {
+    return (
+      (template.border_color || "").toLowerCase() === "#111111" &&
+      (template.table_header_background_color || "").toLowerCase() === "#6b7280"
+    );
+  };
 
   const handlePreviewPdf = async () => {
     if (!companyData) {
@@ -235,12 +261,83 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
             `/quote-templates/template/${currentTemplateId}`,
           );
           if (template) {
+            const defaultMainColor = "#fbbf24";
+            const defaultBorderColor =
+              template.border_color && template.border_color.trim()
+                ? template.border_color
+                : template.main_color && template.main_color.trim()
+                  ? template.main_color
+                  : defaultMainColor;
             const templateWithDefaults: TemplateData = {
               ...template,
+              main_color:
+                template.main_color && template.main_color.trim()
+                  ? template.main_color
+                  : defaultMainColor,
+              text_color:
+                template.text_color && template.text_color.trim()
+                  ? template.text_color
+                  : "#1f2937",
               highlight_color:
                 template.highlight_color && template.highlight_color.trim()
                   ? template.highlight_color
                   : "#fafafa",
+              font_size:
+                template.font_size === "small" ||
+                template.font_size === "medium" ||
+                template.font_size === "large"
+                  ? template.font_size
+                  : "medium",
+              header_background_color:
+                template.header_background_color &&
+                template.header_background_color.trim()
+                  ? template.header_background_color
+                  : "#ffffff",
+              border_color: defaultBorderColor,
+              border_width:
+                template.border_width === "1px" ||
+                template.border_width === "2px" ||
+                template.border_width === "3px"
+                  ? template.border_width
+                  : "1px",
+              table_header_background_color:
+                template.table_header_background_color &&
+                template.table_header_background_color.trim()
+                  ? template.table_header_background_color
+                  : defaultBorderColor,
+              table_header_gradient_color:
+                template.table_header_gradient_color &&
+                template.table_header_gradient_color.trim()
+                  ? template.table_header_gradient_color
+                  : defaultBorderColor,
+              table_header_text_color:
+                template.table_header_text_color &&
+                template.table_header_text_color.trim()
+                  ? template.table_header_text_color
+                  : "#ffffff",
+              description_background_color:
+                template.description_background_color &&
+                template.description_background_color.trim()
+                  ? template.description_background_color
+                  : "#fafafa",
+              description_border_color:
+                template.description_border_color &&
+                template.description_border_color.trim()
+                  ? template.description_border_color
+                  : defaultBorderColor,
+              description_text_color:
+                template.description_text_color &&
+                template.description_text_color.trim()
+                  ? template.description_text_color
+                  : "#374151",
+              table_header_style:
+                template.table_header_style === "gradient" ? "gradient" : "solid",
+              orientation:
+                template.orientation === "landscape" ? "landscape" : "portrait",
+              document_title:
+                template.document_title && template.document_title.trim()
+                  ? template.document_title
+                  : "Quote",
               name:
                 template.name && template.name.trim()
                   ? template.name
@@ -314,6 +411,7 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                 : [],
             };
             setTemplateData(templateWithDefaults);
+            setBlackWhiteMode(detectBlackWhiteMode(templateWithDefaults));
           }
         }
       } catch (error) {
@@ -331,6 +429,59 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
       ...prev,
       [field]: value,
     }));
+  };
+
+  const handleToggleBlackWhiteMode = (enabled: boolean) => {
+    setBlackWhiteMode(enabled);
+    setTemplateData((prev) => {
+      if (enabled) {
+        setStyleBeforeBw({
+          main_color: prev.main_color,
+          text_color: prev.text_color,
+          highlight_color: prev.highlight_color,
+          header_background_color: prev.header_background_color,
+          border_color: prev.border_color,
+          table_header_background_color: prev.table_header_background_color,
+          table_header_gradient_color: prev.table_header_gradient_color,
+          table_header_text_color: prev.table_header_text_color,
+          description_background_color: prev.description_background_color,
+          description_border_color: prev.description_border_color,
+          description_text_color: prev.description_text_color,
+        });
+
+        return {
+          ...prev,
+          main_color: "#111111",
+          text_color: "#111111",
+          highlight_color: "#f8f9fa",
+          header_background_color: "#ffffff",
+          border_color: "#111111",
+          table_header_background_color: "#6b7280",
+          table_header_gradient_color: "#4b5563",
+          table_header_text_color: "#ffffff",
+          description_background_color: "#f8f9fa",
+          description_border_color: "#111111",
+          description_text_color: "#111111",
+        };
+      }
+
+      if (styleBeforeBw) {
+        return {
+          ...prev,
+          ...styleBeforeBw,
+        };
+      }
+
+      return {
+        ...prev,
+        header_background_color: "#ffffff",
+        border_color: prev.main_color,
+        table_header_background_color: prev.main_color,
+        table_header_gradient_color: prev.main_color,
+        table_header_text_color: "#ffffff",
+        description_border_color: prev.main_color,
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -561,6 +712,8 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
       : templateData.font_size === "large"
         ? "1.1rem"
         : "1rem";
+  const previewBorderWidth =
+    Number.parseFloat(templateData.border_width || "1") || 1;
 
   return (
     <>
@@ -655,6 +808,26 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                   </p>
 
                   <div className={styles.formGroup}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginBottom: 0,
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={blackWhiteMode}
+                        onChange={(e) =>
+                          handleToggleBlackWhiteMode(e.target.checked)
+                        }
+                      />
+                      <span>Black and White Mode</span>
+                    </label>
+                  </div>
+
+                  <div className={styles.formGroup}>
                     <label>Theme Colour</label>
                     <p className={styles.helpText}>
                       This color will be applied to borders, headers, and
@@ -666,9 +839,15 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                         value={templateData.main_color}
                         onChange={(e) => {
                           const color = e.target.value;
+                          setBlackWhiteMode(false);
                           handleInputChange("main_color", color);
                           handleInputChange("border_color", color);
                           handleInputChange("description_border_color", color);
+                          handleInputChange(
+                            "table_header_background_color",
+                            color,
+                          );
+                          handleInputChange("table_header_gradient_color", color);
                           handleInputChange(
                             "header_background_color",
                             "#ffffff",
@@ -680,9 +859,15 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                         value={templateData.main_color}
                         onChange={(e) => {
                           const color = e.target.value;
+                          setBlackWhiteMode(false);
                           handleInputChange("main_color", color);
                           handleInputChange("border_color", color);
                           handleInputChange("description_border_color", color);
+                          handleInputChange(
+                            "table_header_background_color",
+                            color,
+                          );
+                          handleInputChange("table_header_gradient_color", color);
                           handleInputChange(
                             "header_background_color",
                             "#ffffff",
@@ -1686,7 +1871,7 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                     className={styles.invoiceTotals}
                     style={{
                       backgroundColor: templateData.highlight_color,
-                      border: `2px solid ${templateData.main_color}`,
+                      border: `${templateData.border_width} solid ${templateData.border_color}`,
                       borderRadius: "10px",
                       color: templateData.text_color,
                       boxShadow: "0 2px 8px rgba(251,191,36,0.08)",
@@ -1705,7 +1890,7 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                     <div
                       className={styles.totalRow}
                       style={{
-                        borderTop: `3px solid ${templateData.main_color}`,
+                        borderTop: `${Math.max(previewBorderWidth, 2)}px solid ${templateData.main_color}`,
                         color: templateData.main_color,
                         paddingTop: "16px",
                         marginTop: "12px",

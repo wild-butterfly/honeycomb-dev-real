@@ -22,6 +22,7 @@ import filesRoutes from "./routes/files";
 import invoiceRoutes from "./routes/invoices";
 import invoiceSettingsRoutes from "./routes/invoiceSettings";
 import invoiceTemplatesRoutes from "./routes/invoiceTemplates";
+import quoteTemplatesRoutes from "./routes/quoteTemplates";
 import pdfRoutes from "./routes/pdf";
 import serviceCatalogsRoutes from "./routes/serviceCatalogs";
 import generalSettingsRoutes from "./routes/generalSettings";
@@ -102,6 +103,7 @@ app.use("/api", invoiceRoutes);
 app.use("/api", invoiceSettingsRoutes);
 
 app.use("/api/invoice-templates", requireAuth, withDbContext, invoiceTemplatesRoutes);
+app.use("/api/quote-templates", requireAuth, withDbContext, quoteTemplatesRoutes);
 
 app.use("/api", pdfRoutes);
 
