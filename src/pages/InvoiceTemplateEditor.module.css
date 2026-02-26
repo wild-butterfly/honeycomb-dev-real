@@ -8,7 +8,7 @@
   background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
   border-bottom: 2px solid #fbbf24;
   box-shadow: 0 2px 16px rgba(255, 214, 0, 0.08);
-  padding: 20px 40px;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: white;
   border: 2px solid #ffd600;
   border-radius: 8px;
@@ -66,18 +66,19 @@
   background: white;
   border: 2px solid #fbbf24;
   border-radius: 12px;
-  padding: 20px 30px;
+  padding: 12px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 30px 40px 20px;
+  margin: 12px 24px 10px;
   box-shadow: 0 4px 16px rgba(251, 191, 36, 0.08);
 }
 
 .titleGroup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .templateLabel {
@@ -88,16 +89,17 @@
 }
 
 .templateName {
-  font-size: 1.3rem;
+  font-size: 1.05rem;
   font-weight: 700;
   border: 2px solid #fbbf24;
   outline: none;
   color: #1f2937;
   background: #fffef7;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 8px;
   transition: all 0.2s;
-  min-width: 300px;
+  min-width: 230px;
+  width: min(420px, 100%);
 }
 
 .templateName::placeholder {
@@ -136,11 +138,13 @@
 
 .titleActions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .primaryButton {
-  padding: 12px 28px;
+  padding: 9px 18px;
   background: #ffd600;
   color: #3b2f0b;
   border: 2px solid #ffd600;
@@ -168,7 +172,7 @@
 }
 
 .secondaryButton {
-  padding: 10px 20px;
+  padding: 8px 14px;
   background: white;
   color: #ad8c11;
   border: 2px solid #ffd600;
@@ -274,12 +278,12 @@
   border-bottom: none;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
-  margin: 0 40px;
+  margin: 0 24px;
 }
 
 .tab {
   flex: 1;
-  padding: 16px 24px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
@@ -303,30 +307,31 @@
 
 .editorLayout {
   display: grid;
-  grid-template-columns: 500px 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0;
   background: white;
   border: 2px solid #fbbf24;
   border-top: none;
   border-radius: 0 0 12px 12px;
-  min-height: 600px;
-  margin: 0 40px 40px;
+  min-height: calc(100vh - 220px);
+  margin: 0 24px 20px;
   box-shadow: 0 8px 24px rgba(251, 191, 36, 0.12);
 }
 
 .settingsPanel {
   border-right: 2px solid #fef3c7;
   overflow-y: auto;
-  max-height: calc(100vh - 300px);
+  max-height: calc(100vh - 230px);
   background: linear-gradient(to bottom, #fffef9 0%, white 100%);
+  min-width: 0;
 }
 
 .tabContent {
-  padding: 28px;
+  padding: 18px;
 }
 
 .section {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .sectionTitle {
@@ -339,12 +344,12 @@
 .sectionSubtitle {
   font-size: 0.9rem;
   color: #6b7280;
-  margin: 0 0 24px 0;
+  margin: 0 0 14px 0;
   line-height: 1.5;
 }
 
 .formGroup {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .formGroupSpaced {
@@ -593,26 +598,35 @@
 }
 
 .previewPanel {
-  overflow-y: auto;
-  max-height: calc(100vh - 300px);
+  overflow: hidden;
+  height: calc(100vh - 230px);
+  max-height: calc(100vh - 230px);
   background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-  padding: 30px 24px;
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
 }
 
 .previewActions {
-  display: flex;
+  display: none;
   justify-content: flex-end;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .previewContainer {
-  max-width: 800px;
-  margin: 0 auto;
+  /* Dimensions set via inline style to match scaled preview */
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .invoicePreview {
   background: white;
-  padding: 50px;
+  /* Base width matches PDFKit A4 portrait (595 points); zoom is applied via inline style */
+  width: 595px;
+  flex-shrink: 0;
+  padding: 12px;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.08),
     0 2px 8px rgba(0, 0, 0, 0.05);
@@ -620,16 +634,16 @@
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica",
     "Arial", sans-serif;
-  aspect-ratio: 8.5 / 11;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
-  font-size: var(--template-font-size, 1rem);
+  font-size: calc(var(--template-font-size, 1rem) * 0.72);
+  transform-origin: top left;
 }
 
 .invoicePreview.landscapeOrientation {
-  aspect-ratio: 11 / 8.5;
+  width: 842px;
 }
 
 .invoiceHeader {

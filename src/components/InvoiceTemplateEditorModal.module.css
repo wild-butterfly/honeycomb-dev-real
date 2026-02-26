@@ -10,7 +10,7 @@
   align-items: flex-start;
   justify-content: center;
   z-index: 10000;
-  padding: 40px 20px 20px;
+  padding: 76px 14px 12px;
   animation: fadeIn 0.2s ease;
   overflow-y: auto;
 }
@@ -26,15 +26,16 @@
 
 .modalContent {
   position: relative;
-  width: 90%;
+  width: 96%;
   max-width: 1300px;
+  max-height: calc(100vh - 52px);
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   animation: slideUp 0.3s ease;
   border: 3px solid #f4b400;
-  margin: auto;
+  margin: 0 auto;
 }
 
 @keyframes slideUp {
@@ -78,7 +79,7 @@
 }
 
 .editorWrapper {
-  max-height: 85vh;
+  max-height: calc(100vh - 96px);
   overflow-y: auto;
 }
 

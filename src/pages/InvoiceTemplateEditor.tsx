@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCompany } from "../context/CompanyContext";
 import { useAuth } from "../context/AuthContext";
@@ -175,6 +175,38 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
   const [styleBeforeBw, setStyleBeforeBw] = useState<StyleSnapshot | null>(
     null,
   );
+
+  const previewPanelRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0.6);
+  const [naturalPreviewH, setNaturalPreviewH] = useState(842);
+
+  useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    const compute = () => {
+      if (!previewRef.current || !previewPanelRef.current) return;
+      const panel = previewPanelRef.current;
+      const preview = previewRef.current;
+      const availW = panel.clientWidth - 28;
+      const availH = panel.clientHeight - 28;
+      const baseW = templateData.orientation === "landscape" ? 842 : 595;
+      const h = preview.scrollHeight;
+      if (h === 0 || availW === 0) return;
+      setNaturalPreviewH(h);
+      setPreviewScale(Math.min(availW / baseW, availH / h));
+    };
+    const debounced = () => {
+      clearTimeout(timerId);
+      timerId = setTimeout(compute, 50);
+    };
+    debounced();
+    const obs = new ResizeObserver(debounced);
+    if (previewPanelRef.current) obs.observe(previewPanelRef.current);
+    return () => {
+      clearTimeout(timerId);
+      obs.disconnect();
+    };
+  }, [templateData]);
 
   const detectBlackWhiteMode = (template: TemplateData) => {
     return (
@@ -1097,6 +1129,13 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
           <div className={styles.titleActions}>
             <button
               className={styles.secondaryButton}
+              onClick={handlePreviewPdf}
+              type="button"
+            >
+              Download PDF Preview
+            </button>
+            <button
+              className={styles.secondaryButton}
               onClick={handleSetAsDefault}
             >
               Set as default invoice
@@ -1876,27 +1915,27 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
           </div>
 
           {/* Right Panel - Preview */}
-          <div className={styles.previewPanel}>
-            <div className={styles.previewActions}>
-              <button
-                className={styles.primaryButton}
-                type="button"
-                onClick={handlePreviewPdf}
-              >
-                Download PDF Preview
-              </button>
-            </div>
-            <div className={styles.previewContainer}>
+          <div className={styles.previewPanel} ref={previewPanelRef}>
+            <div
+              className={styles.previewContainer}
+              style={{
+                width: (templateData.orientation === "landscape" ? 842 : 595) * previewScale,
+                height: naturalPreviewH * previewScale,
+              }}
+            >
               <div
                 className={`${styles.invoicePreview} ${
                   templateData.orientation === "landscape"
                     ? styles.landscapeOrientation
                     : ""
                 }`}
+                ref={previewRef}
                 style={{
                   ...({
                     "--template-font-size": previewFontSize,
                     "--highlight-color": templateData.highlight_color,
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "top left",
                   } as React.CSSProperties),
                 }}
               >
