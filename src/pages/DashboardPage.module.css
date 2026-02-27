@@ -12,6 +12,241 @@ body {
   background-color: #f7f6f1;
 }
 
+/* ============ DARK MODE ============ */
+:global([data-theme="dark"]) .dashboardBg {
+  background:
+    radial-gradient(ellipse at 0% 0%,   rgba(109, 77, 217, 0.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    #0d0d14;
+}
+
+:global([data-theme="dark"]) .chartCard,
+:global([data-theme="dark"]) .tableCard,
+:global([data-theme="dark"]) .quickActionsCard,
+:global([data-theme="dark"]) .tableCardModern {
+  background: #1a1828;
+  border-color: rgba(139, 92, 246, 0.18);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+:global([data-theme="dark"]) .cardTitle,
+:global([data-theme="dark"]) .quickTitle,
+:global([data-theme="dark"]) .tableTitle {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .tableHint,
+:global([data-theme="dark"]) .tableSubtitle {
+  color: #a9a0c8;
+}
+
+:global([data-theme="dark"]) .quickBtn {
+  background: rgba(26, 24, 40, 0.8);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .quickBtn:hover,
+:global([data-theme="dark"]) .quickBtn:focus {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .detailsBtn {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+:global([data-theme="dark"]) .detailsBtn:hover,
+:global([data-theme="dark"]) .detailsBtn:focus {
+  background: rgba(139, 92, 246, 0.12);
+  color: #ede9ff;
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+:global([data-theme="dark"]) .headerBtnGhost {
+  background: rgba(26, 24, 40, 0.8);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .headerBtnGhost:hover {
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Table */
+:global([data-theme="dark"]) .jobsTableModern thead th {
+  background: rgba(30, 27, 45, 0.95);
+  color: #a78bfa;
+  border-bottom-color: rgba(139, 92, 246, 0.25);
+}
+
+:global([data-theme="dark"]) .jobsTableModern tbody td {
+  background: rgba(26, 24, 40, 0.6);
+  border-bottom-color: rgba(139, 92, 246, 0.1);
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .jobRow:hover td {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+:global([data-theme="dark"]) .tableScrollWrap {
+  background: rgba(26, 24, 40, 0.4);
+  border-color: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .jobTitle {
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .jobLinkCell:hover .jobTitle {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .jobTitle::after {
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+
+:global([data-theme="dark"]) .jobTypeChipModern {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+:global([data-theme="dark"]) .statusPending {
+  background-color: #7a4b13;
+  border-color: #935b1a;
+  color: #fff2d9;
+  box-shadow: none;
+}
+
+:global([data-theme="dark"]) .jobSubtle {
+  color: #9a90bb;
+}
+
+:global([data-theme="dark"]) .customerCell,
+:global([data-theme="dark"]) .dateCell {
+  color: #e7e2ff;
+}
+
+:global([data-theme="dark"]) .tablePill {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+:global([data-theme="dark"]) .tableTopDivider {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0),
+    rgba(139, 92, 246, 0.3),
+    rgba(139, 92, 246, 0)
+  );
+}
+
+:global([data-theme="dark"]) .jobToolbar {
+  background: rgba(20, 18, 33, 0.92);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .jobSearchIcon {
+  color: #b8afe0;
+}
+
+:global([data-theme="dark"]) .jobSearchInput {
+  color: #efeaff;
+}
+
+:global([data-theme="dark"]) .jobSearchInput::placeholder {
+  color: #8f86b4;
+}
+
+:global([data-theme="dark"]) .jobToolbarDivider {
+  background: rgba(139, 92, 246, 0.24);
+}
+
+:global([data-theme="dark"]) .jobClearBtn {
+  background: rgba(26, 24, 40, 0.88);
+  border-color: rgba(139, 92, 246, 0.32);
+  color: #c9c0e8;
+}
+
+:global([data-theme="dark"]) .jobClearBtn:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .thMenu {
+  background: rgba(26, 24, 40, 0.98);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="dark"]) .thMenuItem {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .thMenuItem:hover {
+  background: rgba(139, 92, 246, 0.12);
+}
+
+:global([data-theme="dark"]) .skeletonLineLg,
+:global([data-theme="dark"]) .skeletonLineSm {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0.08),
+    rgba(139, 92, 246, 0.2),
+    rgba(139, 92, 246, 0.08)
+  );
+}
+
+:global([data-theme="dark"]) .tableEmptyTitle { color: #c4b5fd; }
+:global([data-theme="dark"]) .tableEmptyText  { color: #9b93bb; }
+
+:global([data-theme="dark"]) .assigneeBubble {
+  background: #22203a;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+:global([data-theme="dark"]) .assigneeInitials { color: #c4b5fd; }
+
+:global([data-theme="dark"]) .assigneeMore {
+  background: #1a1828;
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .confirmModal {
+  background: #1a1828;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="dark"]) .confirmTitle  { color: #ede9ff; }
+:global([data-theme="dark"]) .confirmText   { color: #9b93bb; }
+
+:global([data-theme="dark"]) .confirmIcon {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .confirmIcon svg { stroke: #a78bfa; }
+
+:global([data-theme="dark"]) .confirmCancel {
+  background: rgba(26, 24, 40, 0.9);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .confirmCancel:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
 body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -1324,8 +1559,16 @@ nav,
 }
 
 .tableEmptyIcon {
-  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   opacity: 0.9;
+}
+
+.tableEmptyIcon img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 .tableEmptyTitle {

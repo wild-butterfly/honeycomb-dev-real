@@ -95,12 +95,12 @@
 
 .beeIcon {
   display: block;
-  font-size: 2.5em;
+  width: 44px;
+  height: 44px;
   margin: 0 auto 9px auto;
-  opacity: 0.82;
-  text-shadow:
-    0 3px 16px #ffd6003a,
-    0 2px 8px #b99a2a11;
+  object-fit: contain;
+  opacity: 0.92;
+  filter: drop-shadow(0 3px 12px #ffd6003a);
 }
 
 .taskListUl {
@@ -540,4 +540,91 @@
     padding: 13px 4px;
     border-radius: 11px;
   }
+}
+
+/* ----------- DARK MODE ----------- */
+:global([data-theme="dark"]) .tasksCard {
+  background: #181627;
+  border-color: rgba(139, 92, 246, 0.36);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.38);
+}
+
+:global([data-theme="dark"]) .tasksTitle {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .addTaskBtn,
+:global([data-theme="dark"]) .viewAllBtn {
+  background: rgba(21, 19, 34, 0.95);
+  color: #d8cdf8;
+  border-color: rgba(139, 92, 246, 0.38);
+}
+
+:global([data-theme="dark"]) .addTaskBtn:hover,
+:global([data-theme="dark"]) .addTaskBtn:focus,
+:global([data-theme="dark"]) .viewAllBtn:hover,
+:global([data-theme="dark"]) .viewAllBtn:focus {
+  background: rgba(139, 92, 246, 0.18);
+  color: #f0ebff;
+  border-color: rgba(167, 139, 250, 0.7);
+}
+
+:global([data-theme="dark"]) .tasksList {
+  color: #eae6ff;
+}
+
+:global([data-theme="dark"]) .emptyState {
+  color: #b9afd9;
+}
+
+:global([data-theme="dark"]) .emptyTitle {
+  color: #d8cdf8;
+}
+
+:global([data-theme="dark"]) .emptyText {
+  color: #a79cc8;
+}
+
+:global([data-theme="dark"]) .taskCardLi {
+  background: rgba(30, 27, 45, 0.92);
+  border-color: rgba(139, 92, 246, 0.34);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32);
+}
+
+:global([data-theme="dark"]) .taskTitleRow {
+  color: #d8cdf8;
+  text-shadow: none;
+}
+
+:global([data-theme="dark"]) .taskDetailRow {
+  color: #b2a8d2;
+}
+
+:global([data-theme="dark"]) .taskLabel {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .toggleBtn:hover,
+:global([data-theme="dark"]) .toggleBtn:focus {
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.34);
+}
+
+:global([data-theme="dark"]) .toggleBtn svg {
+  stroke: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .taskDoneBtn,
+:global([data-theme="dark"]) .taskDeleteBtn {
+  background: rgba(21, 19, 34, 0.95);
+  color: #d8cdf8;
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: none;
+}
+
+:global([data-theme="dark"]) .taskDeleteBtn:hover,
+:global([data-theme="dark"]) .taskDoneBtn:hover {
+  background: rgba(139, 92, 246, 0.18);
+  color: #f0ebff;
+  border-color: rgba(167, 139, 250, 0.68);
 }

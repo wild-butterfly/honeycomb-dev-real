@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
-        <img src="/bee.png" alt="Logo" className={styles.logo} />
+        <img src="/leaf-fall.png" alt="Logo" className={styles.logo} />
       </div>
 
       {/* Hamburger icon always visible on mobile */}

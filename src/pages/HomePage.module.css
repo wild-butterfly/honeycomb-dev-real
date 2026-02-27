@@ -233,6 +233,12 @@
   margin-bottom: 11px;
   display: block;
 }
+
+.icon img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
 .featureCard h3 {
   font-size: 1.13rem;
   color: #222;

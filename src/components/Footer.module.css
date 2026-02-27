@@ -112,3 +112,34 @@
     font-size: 0.95rem;
   }
 }
+
+:global([data-theme="dark"]) .footer {
+  background: linear-gradient(90deg, #141223 80%, #1b1730 120%);
+  border-top-color: rgba(139, 92, 246, 0.42);
+  color: #ece7ff;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .siteName {
+  color: #c4b5fd;
+  text-shadow: none;
+}
+
+:global([data-theme="dark"]) .link {
+  color: #e6e1ff;
+}
+
+:global([data-theme="dark"]) .link::after {
+  background: #8b5cf6;
+}
+
+:global([data-theme="dark"]) .link:hover,
+:global([data-theme="dark"]) .link:focus {
+  color: #f0ebff;
+  background: rgba(139, 92, 246, 0.18);
+  text-shadow: none;
+}
+
+:global([data-theme="dark"]) .right {
+  color: #beb3df;
+}

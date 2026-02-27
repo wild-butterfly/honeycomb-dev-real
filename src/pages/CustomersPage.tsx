@@ -177,7 +177,7 @@ const CustomersPage: React.FC = () => {
                     <tr>
                       <td colSpan={6} className={styles.tableStateCell}>
                         <div className={styles.tableEmpty}>
-                          <div className={styles.tableEmptyIcon}>🐝</div>
+                          <div className={styles.tableEmptyIcon}><img src="/leaf-fall.png" alt="Leaf icon" /></div>
                           <div className={styles.tableEmptyTitle}>
                             No customers found
                           </div>

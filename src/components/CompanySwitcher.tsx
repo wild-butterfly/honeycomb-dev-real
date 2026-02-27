@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./CompanySwitcher.module.css";
 
 import { useCompany } from "../context/CompanyContext";
 
@@ -46,22 +47,25 @@ export default function CompanySwitcher() {
   }
 
   return (
-    <select
-      value={companyId ?? ""}
-      onChange={(e) =>
-        setCompanyId(e.target.value ? Number(e.target.value) : null)
-      }
-    >
-      {/* GOD MODE - Only for superadmins */}
-      {isSuperAdmin && <option value="">🌍 God Mode</option>}
+    <div className={styles.wrapper}>
+      <select
+        className={styles.select}
+        value={companyId ?? ""}
+        onChange={(e) =>
+          setCompanyId(e.target.value ? Number(e.target.value) : null)
+        }
+      >
+        {/* GOD MODE - Only for superadmins */}
+        {isSuperAdmin && <option value="">God Mode</option>}
 
-      {/* COMPANIES */}
+        {/* COMPANIES */}
 
-      {uniqueCompanies.map((c) => (
-        <option key={c.id} value={c.id}>
-          {c.name}
-        </option>
-      ))}
-    </select>
+        {uniqueCompanies.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

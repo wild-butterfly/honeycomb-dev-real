@@ -1609,6 +1609,7 @@ const QuoteTemplateEditor: React.FC<QuoteTemplateEditorProps> = ({
                             maxWidth: "150px",
                             maxHeight: "100px",
                             objectFit: "contain",
+                            filter: blackWhiteMode ? "grayscale(1)" : "none",
                           }}
                           onError={(e) => {
                             const img = e.target as HTMLImageElement;

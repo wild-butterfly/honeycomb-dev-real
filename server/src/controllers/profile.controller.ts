@@ -224,6 +224,7 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
     const {
       full_name,
+      email,
       phone,
       job_title,
       department,
@@ -240,6 +241,23 @@ export const updateProfile = async (req: Request, res: Response) => {
     if (full_name !== undefined) {
       updates.push(`full_name = $${paramIndex++}`);
       values.push(full_name);
+    }
+
+    if (email !== undefined) {
+      const trimmedEmail = String(email).trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        return res.status(400).json({ error: "Invalid email address" });
+      }
+      // Check for duplicate email (exclude current user)
+      const dup = await db.query(
+        `SELECT id FROM users WHERE email = $1 AND id != $2 LIMIT 1`,
+        [trimmedEmail, targetUserId]
+      );
+      if (dup.rows.length > 0) {
+        return res.status(409).json({ error: "Email is already in use" });
+      }
+      updates.push(`email = $${paramIndex++}`);
+      values.push(trimmedEmail);
     }
 
     if (phone !== undefined) {

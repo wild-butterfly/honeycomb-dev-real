@@ -3,6 +3,12 @@
 
 import PDFDocument from "pdfkit";
 import { Response } from "express";
+import sharp from "sharp";
+
+/** Convert an image buffer to grayscale (PNG output). */
+const toGrayscale = async (buffer: Buffer): Promise<Buffer> => {
+  return sharp(buffer).grayscale().png().toBuffer();
+};
 
 interface Config {
   invoice: any;
@@ -76,6 +82,9 @@ export const renderInvoicePdf = async ({
 
   const mainColor = template?.main_color || "#f59e0b";
   const borderColor = template?.border_color || "#e5e7eb";
+  const isBlackWhiteMode =
+    (template?.border_color || "").toLowerCase() === "#111111" &&
+    (template?.table_header_background_color || "").toLowerCase() === "#6b7280";
   const borderWidth = parseFloat(template?.border_width || "1") || 1;
   const textColor = template?.text_color || "#111";
   const highlightColor = (template as any)?.highlight_color || "#fafafa";
@@ -157,26 +166,30 @@ export const renderInvoicePdf = async ({
 
     if (headerCompany.logoUrl) {
       try {
+        let logoBuffer: Buffer;
         if (headerCompany.logoUrl.startsWith("http")) {
           const axios = require("axios");
           const response = await axios.get(headerCompany.logoUrl, {
-            responseType: "arraybuffer"
+            responseType: "arraybuffer",
           });
-          doc.image(response.data, margin + logoBoxPadding, headerTop + logoBoxPadding, {
-            fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
-            align: "center",
-            valign: "center",
-          });
+          logoBuffer = Buffer.from(response.data);
         } else {
+          const fs = require("fs");
           const logoPath = headerCompany.logoUrl.startsWith("/")
             ? require("path").join(__dirname, "..", "..", headerCompany.logoUrl)
             : headerCompany.logoUrl;
-          doc.image(logoPath, margin + logoBoxPadding, headerTop + logoBoxPadding, {
-            fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
-            align: "center",
-            valign: "center",
-          });
+          logoBuffer = fs.readFileSync(logoPath);
         }
+
+        if (isBlackWhiteMode) {
+          logoBuffer = await toGrayscale(logoBuffer);
+        }
+
+        doc.image(logoBuffer, margin + logoBoxPadding, headerTop + logoBoxPadding, {
+          fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
+          align: "center",
+          valign: "center",
+        });
       } catch (err) {
         console.warn("⚠️  Logo failed to load:", (err as Error).message);
       }

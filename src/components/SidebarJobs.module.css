@@ -189,8 +189,16 @@
 }
 
 .sidebarEmptyEmoji {
-  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 6px;
+}
+
+.sidebarEmptyEmoji img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 }
 
 .sidebarEmptyText {

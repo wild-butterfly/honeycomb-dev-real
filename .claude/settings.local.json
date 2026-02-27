@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"labour_entries\")"
+      "Bash(xargs grep -l \"labour_entries\")",
+      "Bash(xargs grep -l \"quote.*pdf\\\\|renderQuote\")"
     ]
   }
 }

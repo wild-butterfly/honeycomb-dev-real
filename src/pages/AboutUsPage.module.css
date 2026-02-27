@@ -87,8 +87,16 @@
 }
 
 .icon {
-  font-size: 1.2em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 5px;
+}
+
+.icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .teamGrid {

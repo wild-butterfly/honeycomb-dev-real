@@ -1,23 +1,56 @@
 .wrapper {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
 .select {
-  height: 28px;
-  padding: 0 6px;
+  height: 38px;
+  padding: 0 12px;
 
-  font-size: 0.78rem;
+  font-size: 0.95rem;
+  line-height: 1;
 
-  border-radius: 6px;
-  border: 2px solid #ffcc00;
+  border-radius: 10px;
+  border: 2px solid #f3c623;
 
-  background: #fffdf5;
-  color: #4a3f00;
+  background: #fffef8;
+  color: #6a5a1e;
 
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(244, 180, 0, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 
   width: auto;
-  min-width: 110px;
+  min-width: 190px;
+  margin: 0;
+}
+
+.select:hover {
+  background: #fffbe9;
+  border-color: #eab308;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #f4b400;
+  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.14);
+}
+
+:global([data-theme="dark"]) .select {
+  background: rgba(21, 19, 34, 0.95);
+  color: #e9e4ff;
+  border-color: rgba(139, 92, 246, 0.48);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .select:hover {
+  background: rgba(35, 31, 54, 0.95);
+  border-color: rgba(167, 139, 250, 0.6);
+}
+
+:global([data-theme="dark"]) .select:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }

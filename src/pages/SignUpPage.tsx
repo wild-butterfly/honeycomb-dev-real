@@ -70,14 +70,14 @@ const SignUpPage: React.FC = () => {
         {/* 🐝 Köşedeki arı (Login ile aynı yapı) */}
         {/* A) public klasörü: */}
         <img
-          src="/winkingbee.png"
-          alt="Bee mascot"
+          src="/leaf-fall.png"
+          alt="Leaf icon"
           className={styles.beeCorner}
           loading="eager"
           decoding="async"
         />
         {/* B) src/assets içinden import ediyorsan: */}
-        {/* <img src={winkingBee} alt="Bee mascot" className={styles.beeCorner} /> */}
+        {/* <img src={winkingBee} alt="Leaf icon" className={styles.beeCorner} /> */}
 
         <h1 id="signupTitle" className={styles.title}>
           Create your Honeycomb <span>account</span>

@@ -47,6 +47,31 @@
   box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
 }
 
+:global([data-theme="dark"]) .wrapper {
+  background: rgba(20, 18, 33, 0.88);
+  border-color: rgba(139, 92, 246, 0.36);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .icon {
+  color: #d6cdf7;
+  background: rgba(34, 30, 53, 0.95);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.14);
+}
+
+:global([data-theme="dark"]) .select {
+  background: rgba(34, 30, 53, 0.95);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #efeaff;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
+}
+
+:global([data-theme="dark"]) .select:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
 @media (max-width: 600px) {
   .wrapper {
     flex-direction: row;

@@ -27,7 +27,7 @@ const AboutUsPage: React.FC = () => {
           <li><span className={styles.icon}>🤝</span> Friendly, real support</li>
           <li><span className={styles.icon}>🔍</span> Transparency & honesty</li>
           <li><span className={styles.icon}>🚀</span> Always improving</li>
-          <li><span className={styles.icon}>🐝</span> Community first</li>
+          <li><span className={styles.icon}><img src="/leaf-fall.png" alt="Leaf icon" /></span> Community first</li>
         </ul>
       </section>
 
@@ -35,12 +35,12 @@ const AboutUsPage: React.FC = () => {
         <h2 className={styles.heading}>Who We Are</h2>
         <div className={styles.teamGrid}>
           <div className={styles.memberCard}>
-            <img className={styles.avatar} src="/bee.png" alt="Daniel, Founder" />
+            <img className={styles.avatar} src="/leaf-fall.png" alt="Founder" />
             <h3 className={styles.memberName}>Aşkın Fear</h3>
             <p className={styles.memberRole}>Founder & Lead Developer</p>
           </div>
           <div className={styles.memberCard}>
-            <img className={styles.avatar} src="/bee.png" alt="Aşkın, Customer Success" />
+            <img className={styles.avatar} src="/leaf-fall.png" alt="Customer Success" />
             <h3 className={styles.memberName}>Beril Köse</h3>
             <p className={styles.memberRole}>Customer Success & Support</p>
           </div>

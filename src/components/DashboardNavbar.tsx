@@ -6,6 +6,7 @@ import CompanySwitcher from "./CompanySwitcher";
 import { useAuth } from "../context/AuthContext";
 import { useCompany } from "../context/CompanyContext";
 import { usePermissions } from "../hooks/usePermissions";
+import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
 
 type Props = {
@@ -32,6 +33,7 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
   const { user, logout } = useAuth();
   const { companyId } = useCompany();
   const { canCreateJob, canAccessSettings } = usePermissions();
+  const { isDark } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [companyAvatar, setCompanyAvatar] = useState<string | null>(null);
@@ -90,8 +92,22 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
     <nav className={styles.navbar}>
       {/* LEFT: logo + brand */}
       <div className={styles.left}>
-        <img src="/logo.png" alt="Flowody" className={styles.logo} />
-        <img src="/flowody.png" alt="" className={styles.logoText} />
+        <img
+          src={isDark ? "/logo-dark.png" : "/logo.png"}
+          alt="Flowody"
+          className={styles.logo}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/logo.png";
+          }}
+        />
+        <img
+          src={isDark ? "/flowody-dark.png" : "/flowody.png"}
+          alt="Flowody"
+          className={styles.logoText}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/Flowody.png";
+          }}
+        />
       </div>
 
       {/* HAMBURGER */}

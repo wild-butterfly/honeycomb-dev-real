@@ -1,5 +1,6 @@
 import SitesPage from "./pages/SitesPage";
 import React, { useState } from "react";
+import { ThemeProvider } from "./context/ThemeContext";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -186,15 +187,17 @@ const App: React.FC = () => {
 ====================================================== */
 
 const RootApp: React.FC = () => (
-  <BrowserRouter>
-    <AuthProvider>
-      <CompanyProvider>
-        <LabourReasonsProvider>
-          <App />
-        </LabourReasonsProvider>
-      </CompanyProvider>
-    </AuthProvider>
-  </BrowserRouter>
+  <ThemeProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <CompanyProvider>
+          <LabourReasonsProvider>
+            <App />
+          </LabourReasonsProvider>
+        </CompanyProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </ThemeProvider>
 );
 
 export default RootApp;

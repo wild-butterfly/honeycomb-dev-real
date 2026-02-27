@@ -1959,6 +1959,7 @@ const InvoiceTemplateEditor: React.FC<InvoiceTemplateEditorProps> = ({
                             maxWidth: "150px",
                             maxHeight: "100px",
                             objectFit: "contain",
+                            filter: blackWhiteMode ? "grayscale(1)" : "none",
                           }}
                           onError={(e) => {
                             console.log(

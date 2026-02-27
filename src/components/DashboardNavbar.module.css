@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  height: 70px;
   padding: 0 28px;
   background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
   border: 2px solid #ffcc00;
@@ -23,14 +23,15 @@
 }
 
 .logo {
-  height: 100px;
-  margin-top: 38px;
+  height: 130px;
+  margin-top: 30px;
+  margin-right: 20px;
 }
 
 .logoText {
-  height: 40px;
+  height: 35px;
   margin-top: 6px;
-  margin-left: -30px;
+  margin-left: -55px;
 }
 /* ================= HAMBURGER ================= */
 .hamburger {
@@ -356,4 +357,114 @@
     display: flex;
     position: static;
   }
+}
+
+/* ================= DARK MODE ================= */
+:global([data-theme="dark"]) .navbar {
+  background: #13121f;
+  border-color: rgba(139, 92, 246, 0.36);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.4),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+:global([data-theme="dark"]) .link {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .link:hover,
+:global([data-theme="dark"]) .link.active {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .bar {
+  background: #c4bce8;
+}
+
+:global([data-theme="dark"]) .logo {
+  filter: none;
+}
+
+:global([data-theme="dark"]) .logoText {
+  filter: none;
+}
+
+:global([data-theme="dark"]) .btnPrimary {
+  background: linear-gradient(180deg, #2b2342, #221c37);
+  border-color: rgba(139, 92, 246, 0.52);
+  color: #efeaff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme="dark"]) .btnPrimary:hover {
+  background: linear-gradient(180deg, #3a2f58, #2b2342);
+  border-color: rgba(167, 139, 250, 0.75);
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.45);
+}
+
+:global([data-theme="dark"]) .btnSecondary {
+  background: rgba(26, 24, 40, 0.8);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .btnSecondary:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .profileButton {
+  background: rgba(26, 24, 40, 0.8);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .profileButton:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .profileDropdown {
+  background: #1c1b2d;
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="dark"]) .profileHeader {
+  background: #13121f;
+  border-bottom-color: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .profileName {
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .profileEmail {
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .profileMenuItem {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .profileMenuItem:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .profileMenuDivider {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .menu.open {
+  background: #13121f;
+  border-bottom-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .link {
+  border-bottom-color: rgba(139, 92, 246, 0.15);
 }

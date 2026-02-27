@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className={styles.loginBg}>
       <main className={styles.card}>
-        <img src="/cutebee.png" alt="Bee mascot" className={styles.beeCorner} />
+        <img src="/leaf-fall.png" alt="Leaf icon" className={styles.beeCorner} />
 
         <h1 className={styles.title}>
           Log In to <span>Honeycomb</span>

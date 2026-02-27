@@ -7,6 +7,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { useTheme } from "../context/ThemeContext";
 
 // Varsayılan dilim verisi
 const DEFAULT_DATA = [
@@ -14,10 +15,8 @@ const DEFAULT_DATA = [
   { name: "Unpaid", value: 32 },
 ];
 
-const COLORS = ["#B99A2A", "#FFB300"];
-
 // Label renderer
-const renderLabel = (props: any) => {
+const renderLabel = (props: any, isDark: boolean) => {
   const {
     cx,
     cy,
@@ -32,7 +31,13 @@ const renderLabel = (props: any) => {
   const x = cx + radius * Math.cos(-midAngle * RAD);
   const y = cy + radius * Math.sin(-midAngle * RAD);
 
-  const textColor = name === "Paid" ? "#5a4a00" : "#d3a000";
+  const textColor = isDark
+    ? name === "Paid"
+      ? "#cec2f6"
+      : "#b199f0"
+    : name === "Paid"
+      ? "#5a4a00"
+      : "#d3a000";
 
   return (
     <text
@@ -59,6 +64,12 @@ export type PaymentsPieChartProps = {
 const PaymentsPieChart: React.FC<PaymentsPieChartProps> = ({
   data = DEFAULT_DATA,
 }) => {
+  const { isDark } = useTheme();
+  const colors = isDark ? ["#7c5cc5", "#a78bfa"] : ["#B99A2A", "#FFB300"];
+  const tooltipBg = isDark ? "#1e1b31" : "#fffde4";
+  const tooltipBorder = isDark ? "1px solid rgba(139, 92, 246, 0.35)" : "1px solid #b99a2a";
+  const tooltipColor = isDark ? "#f2edff" : "#4b3c00";
+
   // Eğer yanlışlıkla job array'i (visibleJobs) geldiyse,
   // bunu Paid/Unpaid'e map etmeye çalışalım ki grafik boş kalmasın.
   // visibleJobs tipinde 'status' varsa buradan türetebiliriz.
@@ -93,30 +104,32 @@ const PaymentsPieChart: React.FC<PaymentsPieChartProps> = ({
             cy="50%"
             outerRadius={70}
             labelLine={false}
-            label={renderLabel}
+            label={(props) => renderLabel(props, isDark)}
           >
             {(chartData as any[]).map((entry, idx) => (
               <Cell
                 key={`cell-${idx}`}
-                fill={COLORS[idx % COLORS.length]}
+                fill={colors[idx % colors.length]}
               />
             ))}
           </Pie>
 
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fffde4",
-              border: "1px solid #b99a2a",
+              backgroundColor: tooltipBg,
+              border: tooltipBorder,
               borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(185,154,42,0.15)",
+              boxShadow: isDark
+                ? "0 8px 18px rgba(0, 0, 0, 0.35)"
+                : "0 4px 12px rgba(185,154,42,0.15)",
               fontSize: "0.8rem",
               fontWeight: 500,
-              color: "#4b3c00",
+              color: tooltipColor,
             }}
           />
           <Legend
             wrapperStyle={{
-              color: "#4b3c00",
+              color: tooltipColor,
               fontSize: "0.8rem",
               fontWeight: 600,
             }}

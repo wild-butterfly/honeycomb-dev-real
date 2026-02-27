@@ -30,15 +30,13 @@ const InvoiceTemplateEditorModal: React.FC<InvoiceTemplateEditorModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   return (
-    <div className={styles.modalOverlay} onClick={handleBackdropClick}>
-      <div className={styles.modalContent}>
+    <div className={styles.modalOverlay}>
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <button className={styles.closeButton} onClick={onClose}>
           ×
         </button>

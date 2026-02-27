@@ -32,7 +32,11 @@ const QuoteTemplateEditorModal: React.FC<QuoteTemplateEditorModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <button className={styles.closeButton} onClick={onClose}>
           ×
         </button>

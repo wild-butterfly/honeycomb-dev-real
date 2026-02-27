@@ -66,9 +66,7 @@ type JobType = {
 /* ───────── Small UI bits ───────── */
 
 const BeeIcon: React.FC = () => (
-  <span className={taskStyles.beeIcon} role="img" aria-label="bee">
-    🐝
-  </span>
+  <img className={taskStyles.beeIcon} src="/leaf-fall.png" alt="Leaf icon" />
 );
 
 const ChevronUp: React.FC<{ className?: string }> = ({ className }) => (
@@ -851,7 +849,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     <tr>
                       <td colSpan={6} className={styles.tableStateCell}>
                         <div className={styles.tableEmpty}>
-                          <div className={styles.tableEmptyIcon}>🐝</div>
+                          <div className={styles.tableEmptyIcon}>
+                            <img src="/leaf-fall.png" alt="Leaf icon" />
+                          </div>
                           <div className={styles.tableEmptyTitle}>
                             No jobs found
                           </div>

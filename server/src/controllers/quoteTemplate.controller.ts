@@ -377,6 +377,25 @@ export const previewQuoteTemplatePdf = async (req: Request, res: Response) => {
     const previewTax = previewSubtotal * 0.1;
     const previewTotal = previewSubtotal + previewTax;
 
+    const settings = {
+      business_name: company?.business_name || "Your Company",
+      company_name: company?.business_name || "Your Company",
+      company_address: company?.company_address || "5a Harmeet Close",
+      company_suburb: company?.company_suburb || "",
+      company_city: company?.company_city || "Mulgrave",
+      company_state: company?.company_state || "VIC",
+      company_postcode: company?.company_postal_code || "3170",
+      company_postal_code: company?.company_postal_code || "3170",
+      company_email: company?.company_email || "info@company.com",
+      company_phone: company?.company_phone || "1300 303 750",
+      abn: company?.abn || "",
+      gst_number: company?.abn || "",
+      logo_url: company?.logo_url || "",
+      bank_name: "Demo Bank",
+      bsb: "013 231",
+      bank_account: "1078 53001",
+    };
+
     // Use the same PDF rendering logic as invoices
     await renderInvoicePdf({
       invoice: {
@@ -393,8 +412,8 @@ export const previewQuoteTemplatePdf = async (req: Request, res: Response) => {
         ...template,
         document_type: "quote",
       },
-      settings: company,
-      company,
+      settings,
+      company: settings,
       customer: { name: "Sample Customer" },
       job: { job_number: "JOB-QUOTE" },
       res,

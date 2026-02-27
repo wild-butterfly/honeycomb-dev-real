@@ -34,6 +34,7 @@ const ProfileSettings: React.FC = () => {
 
   const [formData, setFormData] = useState({
     full_name: "",
+    email: "",
     phone: "",
     job_title: "",
     department: "",
@@ -72,6 +73,7 @@ const ProfileSettings: React.FC = () => {
         setProfile(data);
         setFormData({
           full_name: data.full_name || "",
+          email: data.email || "",
           phone: data.phone || "",
           job_title: data.job_title || "",
           department: data.department || "",
@@ -149,11 +151,12 @@ const ProfileSettings: React.FC = () => {
         setProfile(data.profile);
         setMessage({ type: "success", text: "Profile updated successfully!" });
 
-        // Update auth context with new name
-        if (user && data.profile.full_name) {
+        // Update auth context with new name/email
+        if (user) {
           setUser({
             ...user,
-            name: data.profile.full_name,
+            name: data.profile.full_name ?? user.name,
+            email: data.profile.email ?? user.email,
             avatar: data.profile.avatar,
           });
         }
@@ -493,10 +496,11 @@ const ProfileSettings: React.FC = () => {
                 <input
                   type="email"
                   id="email"
-                  value={profile?.email || user?.email || ""}
-                  readOnly
-                  className={`${styles.input} ${styles.readOnly}`}
-                  title="Email cannot be changed"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={styles.input}
+                  placeholder="Enter your email address"
                 />
               </div>
 

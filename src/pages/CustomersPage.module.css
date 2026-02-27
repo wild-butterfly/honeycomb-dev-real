@@ -211,7 +211,15 @@
   color: #b99a2a;
 }
 .tableEmptyIcon {
-  font-size: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableEmptyIcon img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 .tableEmptyTitle {
   font-size: 1.13rem;

@@ -182,7 +182,7 @@ const SidebarJobs: React.FC<Props> = ({
       <div className={styles.sidebarJobsList}>
         {filteredJobs.length === 0 ? (
           <div className={styles.sidebarEmptyState}>
-            <div className={styles.sidebarEmptyEmoji}>🐝</div>
+            <div className={styles.sidebarEmptyEmoji}><img src="/leaf-fall.png" alt="Leaf icon" /></div>
             <div className={styles.sidebarEmptyText}>No jobs found.</div>
           </div>
         ) : (

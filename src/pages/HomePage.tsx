@@ -6,7 +6,7 @@ const HomePage: React.FC = () => {
   // Bee görselini önden yükle
   useEffect(() => {
     const img = new Image();
-    img.src = "/flyingbee.png";
+    img.src = "/leaf-fall.png";
   }, []);
 
   return (
@@ -25,8 +25,8 @@ const HomePage: React.FC = () => {
         <div className={styles.ctaWrap}>
           <a href="/signup" className={styles.ctaBtn}>Get Started</a>
           <img
-            src="/flyingbee.png"
-            alt="Flying bee"
+            src="/leaf-fall.png"
+            alt="Leaf icon"
             className={styles.flyingBee}
             loading="eager"
             fetchPriority="high"
@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
             <p>Track every job, deadline and update in one beautiful dashboard.</p>
           </div>
           <div className={styles.featureCard}>
-            <span className={styles.icon}>🐝</span>
+            <span className={styles.icon}><img src="/leaf-fall.png" alt="Leaf icon" /></span>
             <h3>Team Collaboration</h3>
             <p>Assign tasks, share updates, and work seamlessly with your team.</p>
           </div>

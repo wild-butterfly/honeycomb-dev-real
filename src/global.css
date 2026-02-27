@@ -45,6 +45,80 @@
   }
 }
 
+/* ======================================================
+   DARK MODE – BLACK + PURPLE THEME
+   Applied when <html data-theme="dark">
+   ====================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Brand accent stays amber for logo consistency */
+  --hc-gold-strong: #f4b400;
+  --hc-gold-dark:   #c99200;
+
+  /* Surface palette */
+  --hc-cream:       #0d0d14;
+  --hc-bg-glass:    #1a1828;
+
+  /* Borders */
+  --hc-border-soft: rgba(139, 92, 246, 0.18);
+
+  /* Shadows */
+  --hc-shadow-soft: rgba(0, 0, 0, 0.35);
+  --hc-shadow-gold: rgba(109, 77, 217, 0.08);
+
+  /* Text */
+  --hc-text-primary: #ede9ff;
+  --hc-text-muted:   #9b93bb;
+}
+
+/* Body background */
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse at 0% 0%,   rgba(109, 77, 217, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.07) 0%, transparent 50%),
+    #0d0d14;
+  color: var(--hc-text-muted);
+}
+
+/* Inputs */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: rgba(26, 24, 40, 0.9);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: var(--hc-text-primary);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--hc-text-primary);
+  box-shadow: 0 0 0px 1000px #1a1828 inset;
+}
+
+/* Glass cards */
+[data-theme="dark"] .glass-card {
+  background: var(--hc-bg-glass);
+  border-color: var(--hc-border-soft);
+}
+
+/* p tags */
+[data-theme="dark"] p {
+  color: var(--hc-text-muted);
+}
+
 /* ---------- Base Reset ---------- */
 * {
   box-sizing: border-box;

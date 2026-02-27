@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { useTheme } from "../context/ThemeContext";
 
 export type JobsOverTimeChartProps = {
   data?: Array<{
@@ -26,6 +27,14 @@ const DEFAULT_TIME_DATA = [
 const JobsOverTimeChart: React.FC<JobsOverTimeChartProps> = ({
   data = DEFAULT_TIME_DATA,
 }) => {
+  const { isDark } = useTheme();
+  const axisColor = isDark ? "#b7aed7" : "#7d6a12";
+  const tooltipBg = isDark ? "#1e1b31" : "#fffde4";
+  const tooltipBorder = isDark ? "1px solid rgba(139, 92, 246, 0.35)" : "1px solid #b99a2a";
+  const tooltipColor = isDark ? "#f2edff" : "#4b3c00";
+  const lineColor = isDark ? "#a78bfa" : "#B99A2A";
+  const dotFill = isDark ? "#1b1630" : "#fffde4";
+  const activeColor = isDark ? "#c4b5fd" : "#FFB300";
 
   let chartData = data;
 
@@ -59,36 +68,38 @@ const JobsOverTimeChart: React.FC<JobsOverTimeChartProps> = ({
         >
           <XAxis
             dataKey="date"
-            stroke="#7d6a12"
+            stroke={axisColor}
             tick={{
-              fill: "#7d6a12",
+              fill: axisColor,
               fontSize: 12,
               fontWeight: 500,
             }}
           />
           <YAxis
-            stroke="#7d6a12"
+            stroke={axisColor}
             allowDecimals={false}
             tick={{
-              fill: "#7d6a12",
+              fill: axisColor,
               fontSize: 12,
               fontWeight: 500,
             }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fffde4",
-              border: "1px solid #b99a2a",
+              backgroundColor: tooltipBg,
+              border: tooltipBorder,
               borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(185,154,42,0.15)",
+              boxShadow: isDark
+                ? "0 8px 18px rgba(0, 0, 0, 0.35)"
+                : "0 4px 12px rgba(185,154,42,0.15)",
               fontSize: "0.8rem",
               fontWeight: 500,
-              color: "#4b3c00",
+              color: tooltipColor,
             }}
           />
           <Legend
             wrapperStyle={{
-              color: "#4b3c00",
+              color: tooltipColor,
               fontSize: "0.8rem",
               fontWeight: 600,
             }}
@@ -97,14 +108,14 @@ const JobsOverTimeChart: React.FC<JobsOverTimeChartProps> = ({
             type="monotone"
             dataKey="count"
             name="Jobs"
-            stroke="#B99A2A"
+            stroke={lineColor}
             strokeWidth={3}
-            dot={{ r: 4, stroke: "#B99A2A", strokeWidth: 1, fill: "#fffde4" }}
+            dot={{ r: 4, stroke: lineColor, strokeWidth: 1, fill: dotFill }}
             activeDot={{
               r: 5,
-              stroke: "#FFB300",
+              stroke: activeColor,
               strokeWidth: 2,
-              fill: "#fff",
+              fill: isDark ? "#241d3b" : "#fff",
             }}
           />
         </LineChart>

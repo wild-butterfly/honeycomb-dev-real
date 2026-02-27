@@ -50,6 +50,28 @@
   box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.4);
 }
 
+:global([data-theme="dark"]) .filterBarWrapper {
+  background: rgba(20, 18, 33, 0.88);
+  border: 1px solid rgba(139, 92, 246, 0.36);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+:global([data-theme="dark"]) .filterLabel {
+  color: #d8d1f4;
+}
+
+:global([data-theme="dark"]) .filterSelect {
+  background: rgba(34, 30, 53, 0.95);
+  color: #efeaff;
+  border: 1px solid rgba(139, 92, 246, 0.36);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+:global([data-theme="dark"]) .filterSelect:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
 @media (max-width: 600px) {
   .filterBarWrapper {
     border-radius: 8px;
