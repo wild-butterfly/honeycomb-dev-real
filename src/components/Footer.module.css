@@ -4,7 +4,7 @@
   border-top: 2.5px solid #ffd600;
   color: #232323;
   font-family: "Roboto", Arial, sans-serif;
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   box-shadow: 0 -2px 20px #ffd60018;
   width: 100%;
   box-sizing: border-box;
@@ -13,19 +13,20 @@
   position: static; /* was: fixed */
   z-index: 1; /* isterseniz kaldırabilirsiniz */
   margin-top: auto; /* grid/flex kolonunda altta dursun */
-  min-height: 70px;
-  padding: 16px 0;
+  height: 65px;
+  padding: 0;
 }
 
 .inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: 8px 24px;
+  height: 100%;
+  padding: 0 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: nowrap;
 }
 
 .left {
@@ -39,12 +40,14 @@
   font-size: 1.18rem;
   color: #e8b100;
   letter-spacing: 0.09em;
-  text-shadow: 0 2px 10px #ffd60033, 0 1px 0 #fff7;
+  text-shadow:
+    0 2px 10px #ffd60033,
+    0 1px 0 #fff7;
 }
 
 .links {
   display: flex;
-  gap: 26px;
+  gap: 18px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -52,10 +55,14 @@
   text-decoration: none;
   color: #232323;
   font-weight: 600;
-  font-size: 1.07rem;
-  padding: 3px 7px;
+  font-size: 0.96rem;
+  padding: 2px 6px;
   border-radius: 7px;
-  transition: color 0.17s, background 0.17s, text-shadow 0.15s, transform 0.15s;
+  transition:
+    color 0.17s,
+    background 0.17s,
+    text-shadow 0.15s,
+    transform 0.15s;
   position: relative;
   overflow: hidden;
 }
@@ -85,7 +92,7 @@
 .right {
   color: #b99a2a;
   font-weight: 600;
-  font-size: 1.06rem;
+  font-size: 0.92rem;
   letter-spacing: 0.02em;
   display: flex;
   align-items: center;
@@ -96,20 +103,21 @@
 /* 📱 Mobil */
 @media (max-width: 800px) {
   .footer {
-    font-size: 1rem;
-    padding: 12px 0;
+    font-size: 0.92rem;
+    height: 65px;
+    padding: 0;
   }
   .inner {
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     text-align: center;
-    padding: 8px 10px;
+    padding: 0 10px;
   }
   .links {
-    gap: 14px;
+    gap: 10px;
   }
   .right {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
   }
 }
 

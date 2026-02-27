@@ -21,8 +21,15 @@
 }
 
 .logo {
-  height: 120px;
-  margin-top: 60px;
+  height: 130px;
+  margin-top: 30px;
+  margin-right: 20px;
+}
+
+.logoText {
+  height: 35px;
+  margin-top: 6px;
+  margin-left: -55px;
 }
 
 /* MENUs */

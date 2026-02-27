@@ -1,16 +1,33 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import styles from "./Navbar.module.css";
+import { useTheme } from "../context/ThemeContext";
 
 const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isDark } = useTheme();
 
   const handleLinkClick = () => setMenuOpen(false);
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
-        <img src="/leaf-fall.png" alt="Logo" className={styles.logo} />
+        <img
+          src={isDark ? "/logo-dark.png" : "/logo.png"}
+          alt="Flowody"
+          className={styles.logo}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/logo.png";
+          }}
+        />
+        <img
+          src={isDark ? "/flowody-dark.png" : "/flowody.png"}
+          alt="Flowody"
+          className={styles.logoText}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/Flowody.png";
+          }}
+        />
       </div>
 
       {/* Hamburger icon always visible on mobile */}
