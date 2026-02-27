@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import styles from "./LoginPage.module.css";
 import { apiPost } from "../services/api";
 import { useCompany } from "../context/CompanyContext";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { reloadCompanies } = useCompany();
+  const { setUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +42,12 @@ const LoginPage: React.FC = () => {
       // ✅ Store user data including role
       if (res.user) {
         localStorage.setItem("user", JSON.stringify(res.user));
+        setUser({
+          id: res.user.id,
+          email: res.user.email,
+          role: res.user.role,
+          name: res.user.email.split("@")[0] || "user",
+        });
       }
 
       // ✅ Reload companies list (fixes company switcher not showing companies until refresh)
