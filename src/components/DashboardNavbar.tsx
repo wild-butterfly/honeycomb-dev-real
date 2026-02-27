@@ -90,8 +90,8 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
     <nav className={styles.navbar}>
       {/* LEFT: logo + brand */}
       <div className={styles.left}>
-        <img src="/bee.png" alt="Honeycomb" className={styles.logo} />
-        <span className={styles.brandText}>Honeycomb</span>
+        <img src="/logo.png" alt="Flowody" className={styles.logo} />
+        <img src="/flowody.png" alt="" className={styles.logoText} />
       </div>
 
       {/* HAMBURGER */}
