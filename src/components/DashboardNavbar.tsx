@@ -5,6 +5,7 @@ import styles from "./DashboardNavbar.module.css";
 import CompanySwitcher from "./CompanySwitcher";
 import { useAuth } from "../context/AuthContext";
 import { useCompany } from "../context/CompanyContext";
+import { usePermissions } from "../hooks/usePermissions";
 import api from "../services/api";
 
 type Props = {
@@ -30,6 +31,7 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { companyId } = useCompany();
+  const { canCreateJob, canAccessSettings } = usePermissions();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [companyAvatar, setCompanyAvatar] = useState<string | null>(null);
@@ -149,29 +151,33 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
             Calendar
           </NavLink>
 
-          <NavLink
-            to="/dashboard/settings"
-            className={({ isActive }) =>
-              isActive ? `${styles.link} ${styles.active}` : styles.link
-            }
-            onClick={closeMenu}
-          >
-            Settings
-          </NavLink>
+          {canAccessSettings && (
+            <NavLink
+              to="/dashboard/settings"
+              className={({ isActive }) =>
+                isActive ? `${styles.link} ${styles.active}` : styles.link
+              }
+              onClick={closeMenu}
+            >
+              Settings
+            </NavLink>
+          )}
         </div>
 
         {/* RIGHT SIDE */}
         <div className={styles.right}>
           <CompanySwitcher />
 
-          <button
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            onClick={handleNewJobClick}
-            type="button"
-          >
-            <span className={styles.plus}>＋</span>
-            New Job
-          </button>
+          {canCreateJob && (
+            <button
+              className={`${styles.btn} ${styles.btnPrimary}`}
+              onClick={handleNewJobClick}
+              type="button"
+            >
+              <span className={styles.plus}>＋</span>
+              New Job
+            </button>
+          )}
 
           {/* Profile Dropdown Menu */}
           <div className={styles.profileMenu}>
@@ -215,31 +221,37 @@ const DashboardNavbar: React.FC<Props> = ({ onLogout, onNewJob }) => {
                     </div>
                   </div>
                   <div className={styles.profileMenuDivider} />
-                  <button
-                    type="button"
-                    className={styles.profileMenuItem}
-                    onClick={handleProfile}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.profileMenuItem}
-                    onClick={handleSettings}
-                  >
-                    {FiSettings({ size: 18 })}
-                    Settings
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.profileMenuItem}
-                    onClick={() => {
-                      navigate("/dashboard/settings?tab=preferences");
-                      closeProfileMenu();
-                    }}
-                  >
-                    Preferences
-                  </button>
+                  {canAccessSettings && (
+                    <button
+                      type="button"
+                      className={styles.profileMenuItem}
+                      onClick={handleProfile}
+                    >
+                      Profile
+                    </button>
+                  )}
+                  {canAccessSettings && (
+                    <button
+                      type="button"
+                      className={styles.profileMenuItem}
+                      onClick={handleSettings}
+                    >
+                      {FiSettings({ size: 18 })}
+                      Settings
+                    </button>
+                  )}
+                  {canAccessSettings && (
+                    <button
+                      type="button"
+                      className={styles.profileMenuItem}
+                      onClick={() => {
+                        navigate("/dashboard/settings?tab=preferences");
+                        closeProfileMenu();
+                      }}
+                    >
+                      Preferences
+                    </button>
+                  )}
                   <div className={styles.profileMenuDivider} />
                   <button
                     type="button"

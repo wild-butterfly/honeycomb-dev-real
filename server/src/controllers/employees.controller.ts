@@ -21,6 +21,7 @@ export const getAll = async (req: Request, res: Response) => {
 SELECT
  id,
  name,
+ role,
  rate,
  active
 FROM employees
@@ -66,6 +67,7 @@ export const getOne = async (req: Request, res: Response) => {
 SELECT
  id,
  name,
+ role,
  rate,
  active
 FROM employees
@@ -113,7 +115,7 @@ export const create = async (req: Request, res: Response) => {
 
   try {
 
-    const { name, rate = 0 } = req.body;
+    const { name, role = null, rate = 0 } = req.body;
 
     if (!name) {
 
@@ -130,6 +132,7 @@ export const create = async (req: Request, res: Response) => {
 INSERT INTO employees
 (
  name,
+ role,
  rate,
  active,
  company_id
@@ -138,6 +141,7 @@ VALUES
 (
  $1,
  $2,
+ $3,
  true,
  COALESCE(
    NULLIF(current_setting('app.current_company_id', true), '')::int,
@@ -149,10 +153,11 @@ VALUES
 RETURNING
  id,
  name,
+ role,
  rate,
  active
 `,
-      [name, rate]
+      [name, role, rate]
 
     );
 
@@ -186,27 +191,29 @@ export const update = async (req: Request, res: Response) => {
 
     const id = toInt(req.params.id);
 
-    const { name, rate, active } = req.body;
+    const { name, role, rate, active } = req.body;
 
 
     const { rows } = await db.query(
 `
 UPDATE employees
 SET
- name = COALESCE($1, name),
- rate = COALESCE($2, rate),
- active = COALESCE($3, active)
-WHERE id = $4 AND (
+ name   = COALESCE($1, name),
+ role   = COALESCE($2, role),
+ rate   = COALESCE($3, rate),
+ active = COALESCE($4, active)
+WHERE id = $5 AND (
   current_setting('app.god_mode') = 'true'
   OR company_id = current_setting('app.current_company_id')::bigint
 )
 RETURNING
  id,
  name,
+ role,
  rate,
  active
 `,
-      [name, rate, active, id]
+      [name, role, rate, active, id]
     );
 
 

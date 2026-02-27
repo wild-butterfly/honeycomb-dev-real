@@ -290,3 +290,34 @@ body.quote-modal-open [class*="SettingsPage_settingsContainer"],
 body.quote-modal-open [class*="SettingsPage_content"] {
   overflow: visible !important;
 }
+
+body.employees-modal-open {
+  overflow: hidden;
+}
+
+body.labour-categories-modal-open {
+  overflow: hidden;
+}
+
+body.employees-modal-open aside[class*="SettingsSidebar"],
+body.employees-modal-open aside[class*="sidebar"],
+body.employees-modal-open div[class*="SettingsSidebar_sidebar"],
+body.employees-modal-open div[class*="LeftSidebar_sidebar"],
+body.labour-categories-modal-open aside[class*="SettingsSidebar"],
+body.labour-categories-modal-open aside[class*="sidebar"],
+body.labour-categories-modal-open div[class*="SettingsSidebar_sidebar"],
+body.labour-categories-modal-open div[class*="LeftSidebar_sidebar"] {
+  display: none !important;
+}
+
+body.employees-modal-open main,
+body.labour-categories-modal-open main {
+  padding-left: 0 !important;
+}
+
+body.employees-modal-open [class*="SettingsPage_settingsContainer"],
+body.employees-modal-open [class*="SettingsPage_content"],
+body.labour-categories-modal-open [class*="SettingsPage_settingsContainer"],
+body.labour-categories-modal-open [class*="SettingsPage_content"] {
+  overflow: visible !important;
+}

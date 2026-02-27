@@ -1,6 +1,6 @@
 import SitesPage from "./pages/SitesPage";
 import React, { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -31,7 +31,7 @@ import CustomersPage from "./pages/CustomersPage";
 
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LabourReasonsProvider } from "./context/LabourReasonsContext";
 
 /* ======================================================
@@ -41,6 +41,20 @@ import { LabourReasonsProvider } from "./context/LabourReasonsContext";
 type CustomerType = {
   id: number;
   name: string;
+};
+
+/* ======================================================
+   ADMIN ROUTE GUARD
+   Redirects Staff users away from admin-only pages.
+====================================================== */
+
+const AdminRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
+  const { user } = useAuth();
+  const role = user?.role ?? "staff";
+  if (role !== "admin" && role !== "superadmin") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return element;
 };
 
 /* ======================================================
@@ -147,7 +161,7 @@ const App: React.FC = () => {
 
           {/* INVOICING */}
           <Route path="/dashboard/invoices" element={<InvoicingPage />} />
-          <Route path="/dashboard/settings" element={<SettingsPage />} />
+          <Route path="/dashboard/settings" element={<AdminRoute element={<SettingsPage />} />} />
           <Route
             path="/dashboard/invoice-template-editor"
             element={<InvoiceTemplateEditor />}

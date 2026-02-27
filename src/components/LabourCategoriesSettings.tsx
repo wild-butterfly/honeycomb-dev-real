@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { FiTrash2, FiPlus } from "react-icons/fi";
 import { useLabourReasons } from "../context/LabourReasonsContext";
 import styles from "./LabourCategoriesSettings.module.css";
@@ -9,6 +10,18 @@ const LabourCategoriesSettings: React.FC = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newPaid, setNewPaid] = useState(true);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.classList.add("labour-categories-modal-open");
+    } else {
+      document.body.classList.remove("labour-categories-modal-open");
+    }
+
+    return () => {
+      document.body.classList.remove("labour-categories-modal-open");
+    };
+  }, [modalOpen]);
 
   const openModal = () => {
     setNewTitle("");
@@ -94,9 +107,12 @@ const LabourCategoriesSettings: React.FC = () => {
         </table>
       </div>
 
-      {modalOpen && (
-        <div className={styles.overlay} onClick={closeModal}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      {modalOpen && createPortal(
+        <div
+          className={styles.overlay}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+        >
+          <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>New Uncharged Reason</h3>
               <button className={styles.closeBtn} onClick={closeModal}>
@@ -152,7 +168,8 @@ const LabourCategoriesSettings: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

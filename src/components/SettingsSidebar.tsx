@@ -12,7 +12,6 @@ import {
   FiSliders,
   FiUsers,
   FiTag,
-  FiDollarSign,
 } from "react-icons/fi";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import styles from "./SettingsSidebar.module.css";
@@ -84,12 +83,6 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
         label: "Labour Categories",
         icon: FiTag({ size: 18 }),
         path: "/dashboard/settings?tab=labour-categories",
-      },
-      {
-        id: "employee-rates",
-        label: "Employee Rates",
-        icon: FiDollarSign({ size: 18 }),
-        path: "/dashboard/settings?tab=employee-rates",
       },
     ],
   },

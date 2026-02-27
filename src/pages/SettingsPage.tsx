@@ -12,6 +12,7 @@ import UserPreferences from "../components/UserPreferences";
 import SecuritySettings from "../components/SecuritySettings";
 import DataPrivacySettings from "../components/DataPrivacySettings";
 import LabourCategoriesSettings from "../components/LabourCategoriesSettings";
+import EmployeesSettings from "../components/EmployeesSettings";
 import styles from "./SettingsPage.module.css";
 
 const SettingsPage: React.FC = () => {
@@ -34,6 +35,8 @@ const SettingsPage: React.FC = () => {
         return { id: "data", component: <DataPrivacySettings /> };
       case "labour-categories":
         return { id: "labour-categories", component: <LabourCategoriesSettings /> };
+      case "employees":
+        return { id: "employees", component: <EmployeesSettings /> };
       case "profile":
       default:
         return { id: "profile", component: <ProfileSettings /> };
