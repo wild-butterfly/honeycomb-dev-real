@@ -32,6 +32,7 @@ import CustomersPage from "./pages/CustomersPage";
 import { NewJobModalProvider } from "./components/NewJobModalContext";
 import { CompanyProvider } from "./context/CompanyContext";
 import { AuthProvider } from "./context/AuthContext";
+import { LabourReasonsProvider } from "./context/LabourReasonsContext";
 
 /* ======================================================
    TYPES
@@ -174,7 +175,9 @@ const RootApp: React.FC = () => (
   <BrowserRouter>
     <AuthProvider>
       <CompanyProvider>
-        <App />
+        <LabourReasonsProvider>
+          <App />
+        </LabourReasonsProvider>
       </CompanyProvider>
     </AuthProvider>
   </BrowserRouter>

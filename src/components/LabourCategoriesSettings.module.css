@@ -1,0 +1,363 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Table Card ── */
+.tableCard {
+  background: #fff;
+  border: 1.5px solid #ffe066;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(244, 180, 0, 0.08);
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #fffef0;
+  border-bottom: 1.5px solid #ffe066;
+}
+
+.tableTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7d6836;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.newBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f4b400;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.newBtn:hover {
+  background: #d4a000;
+  box-shadow: 0 4px 14px rgba(244, 180, 0, 0.3);
+}
+
+/* ── Table ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: 10px 20px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ad8c11;
+  background: #fffdf0;
+  border-bottom: 1px solid #ffe8a0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.thAction {
+  width: 80px;
+  background: #fffdf0;
+  border-bottom: 1px solid #ffe8a0;
+}
+
+.sortIcon {
+  font-size: 10px;
+  margin-left: 4px;
+  color: #c9a227;
+}
+
+.row,
+.rowAlt {
+  transition: background 0.1s;
+}
+
+.row:hover,
+.rowAlt:hover {
+  background: #fffbe4 !important;
+}
+
+.rowAlt {
+  background: #fffef8;
+}
+
+.tdName {
+  padding: 13px 20px;
+  font-size: 14px;
+  color: #7d6836;
+  font-weight: 500;
+  border-bottom: 1px solid #fff3c4;
+}
+
+.tdBadge {
+  padding: 13px 20px;
+  border-bottom: 1px solid #fff3c4;
+}
+
+.tdAction {
+  padding: 10px 20px;
+  border-bottom: 1px solid #fff3c4;
+  text-align: right;
+}
+
+.badgePaid {
+  display: inline-block;
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.badgeUnpaid {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.deleteBtn {
+  background: none;
+  border: 1.5px solid #ffe066;
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  color: #b99a2a;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.deleteBtn:hover {
+  color: #c0392b;
+  border-color: #f5a0a0;
+  background: #fff5f5;
+}
+
+/* Inline delete confirm */
+.confirmInline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.confirmText {
+  font-size: 12px;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.confirmYes,
+.confirmNo {
+  border: none;
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.confirmYes {
+  background: #c0392b;
+  color: #fff;
+}
+
+.confirmYes:hover {
+  background: #a93226;
+}
+
+.confirmNo {
+  background: #ffe8a0;
+  color: #7d6836;
+}
+
+.confirmNo:hover {
+  background: #ffd966;
+}
+
+/* ── Modal ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  border: 1.5px solid #ffe066;
+  box-shadow: 0 20px 60px rgba(244, 180, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+  width: 420px;
+  max-width: 90vw;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 16px;
+  background: #fffef0;
+  border-bottom: 1.5px solid #ffe066;
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #7d6836;
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #b99a2a;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.closeBtn:hover {
+  color: #5c4a00;
+}
+
+.modalBody {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7d6836;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid #ffe066;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  background: #fffef8;
+}
+
+.input:focus {
+  border-color: #f4b400;
+  box-shadow: 0 0 0 3px rgba(244, 180, 0, 0.15);
+}
+
+.radioGroup {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.radioGroup .fieldLabel {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #7d6836;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.radioLabel input[type="radio"] {
+  accent-color: #f4b400;
+  width: 15px;
+  height: 15px;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1.5px solid #ffe8a0;
+  background: #fffef8;
+}
+
+.cancelBtn {
+  background: none;
+  border: 1.5px solid #ffe066;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7d6836;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+  background: #fffbe4;
+}
+
+.createBtn {
+  background: #f4b400;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  letter-spacing: 0.01em;
+}
+
+.createBtn:hover:not(:disabled) {
+  background: #d4a000;
+  box-shadow: 0 4px 14px rgba(244, 180, 0, 0.3);
+}
+
+.createBtn:disabled {
+  background: #ffe8a0;
+  color: #b99a2a;
+  cursor: not-allowed;
+}

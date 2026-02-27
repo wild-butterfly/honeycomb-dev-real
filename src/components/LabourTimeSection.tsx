@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "./LabourTimeSection.module.css";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
-import { labourReasons } from "../config/labourReasons";
+import { useLabourReasons } from "../context/LabourReasonsContext";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import ConfirmModal from "../components/ConfirmModal";
 
@@ -89,7 +89,7 @@ function toSqlString(d: Date) {
 export default function LabourTimeEntrySection({ jobId, assignment }: Props) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [entries, setEntries] = useState<LabourEntry[]>([]);
-  const [reasons] = useState<UnchargedReason[]>(labourReasons);
+  const { reasons } = useLabourReasons();
 
   const [employeeId, setEmployeeId] = useState<number>(0);
   const [rate, setRate] = useState<number>(0);

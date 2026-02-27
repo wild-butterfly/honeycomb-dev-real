@@ -10,6 +10,9 @@ import {
   FiCreditCard,
   FiBell,
   FiSliders,
+  FiUsers,
+  FiTag,
+  FiDollarSign,
 } from "react-icons/fi";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import styles from "./SettingsSidebar.module.css";
@@ -64,6 +67,29 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
         label: "Quote Settings",
         icon: <ClipboardDocumentListIcon style={{ width: 18, height: 18 }} />,
         path: "/dashboard/settings?tab=quote-settings",
+      },
+    ],
+  },
+  {
+    title: "LABOUR",
+    items: [
+      {
+        id: "employees",
+        label: "Employees",
+        icon: FiUsers({ size: 18 }),
+        path: "/dashboard/settings?tab=employees",
+      },
+      {
+        id: "labour-categories",
+        label: "Labour Categories",
+        icon: FiTag({ size: 18 }),
+        path: "/dashboard/settings?tab=labour-categories",
+      },
+      {
+        id: "employee-rates",
+        label: "Employee Rates",
+        icon: FiDollarSign({ size: 18 }),
+        path: "/dashboard/settings?tab=employee-rates",
       },
     ],
   },

@@ -26,6 +26,7 @@ import quoteTemplatesRoutes from "./routes/quoteTemplates";
 import pdfRoutes from "./routes/pdf";
 import serviceCatalogsRoutes from "./routes/serviceCatalogs";
 import generalSettingsRoutes from "./routes/generalSettings";
+import labourReasonsRoutes from "./routes/labourReasons";
 
 dotenv.config();
 
@@ -110,6 +111,8 @@ app.use("/api", pdfRoutes);
 app.use("/api", serviceCatalogsRoutes);
 
 app.use("/api/general-settings", requireAuth, withDbContext, generalSettingsRoutes);
+
+app.use("/api/labour-reasons", requireAuth, withDbContext, labourReasonsRoutes);
 
 /* 404 */
 
