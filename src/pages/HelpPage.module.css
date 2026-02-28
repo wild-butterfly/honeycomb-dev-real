@@ -1,5 +1,5 @@
 .helpBg {
-  background: linear-gradient(110deg, #fffde4 80%, #ffe066 120%);
+  background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
   /* ✅ Footer ve header yüksekliğini hesaba kat */
   min-height: calc(100vh - var(--footer-h, 72px) - var(--header-h, 0px));
   font-family: "Roboto", Arial, sans-serif;
@@ -35,7 +35,9 @@
 .contactSection {
   background: #fff;
   border-radius: 15px;
-  box-shadow: 0 4px 28px #ffd60016, 0 1px 18px #ffe0660c inset;
+  box-shadow:
+    0 4px 28px #ffd60016,
+    0 1px 18px #ffe0660c inset;
   border: 1.5px solid #ffe066;
   margin: 28px auto 0 auto;
   max-width: 650px;
@@ -94,7 +96,9 @@
 .contactSection {
   background: #fffde4;
   border-radius: 14px;
-  box-shadow: 0 4px 20px #ffd60016, 0 1px 18px #ffe0660c inset;
+  box-shadow:
+    0 4px 20px #ffd60016,
+    0 1px 18px #ffe0660c inset;
   border: 1.5px solid #ffe066;
   max-width: 540px;
   width: min(95%, 540px);
@@ -121,7 +125,11 @@
   color: #b99a2a;
   font-weight: 700;
   font-size: 1.02rem;
-  transition: background 0.16s, color 0.16s, border-color 0.15s, transform 0.14s;
+  transition:
+    background 0.16s,
+    color 0.16s,
+    border-color 0.15s,
+    transform 0.14s;
   cursor: pointer;
   text-decoration: none;
 }

@@ -4,28 +4,28 @@
 
 /* ---------- Root Variables ---------- */
 :root {
-  --header-h: 0px;
-  --footer-h: 72px;
+  --header-h: 65px;
+  --footer-h: 65px;
 
-  /* Brand - Honeycomb Warm & Soft */
-  --hc-gold-strong: #f4b400;
-  --hc-gold-dark: #9c7c00;
-  --hc-gold-deep: #6a5a1e;
+  /* Brand - Flowody Autumn Warm */
+  --hc-gold-strong: #f2b632;
+  --hc-gold-dark: #8f620f;
+  --hc-gold-deep: #5f4210;
 
-  /* Honeycomb Modern Palette */
-  --hc-honey: #fbbf24; /* Modern golden */
-  --hc-honey-light: #fef3c7; /* Light yellow */
-  --hc-honey-dark: #eab308; /* Darker yellow */
-  --hc-warm-tan: #f59e0b; /* Warm accent */
-  --hc-cream: #ffffff; /* Clean white */
-  --hc-brown-light: #f97316; /* Soft accent */
-  --hc-brown-dark: #ea580c; /* Deep accent */
+  /* Flowody Core Palette */
+  --hc-honey: #f5c24a; /* signature honey */
+  --hc-honey-light: #fff3d2; /* light warm cream */
+  --hc-honey-dark: #d89a1f; /* deep warm amber */
+  --hc-warm-tan: #c98b35; /* tan accent */
+  --hc-cream: #fffef9; /* soft paper white */
+  --hc-brown-light: #bb7a2c; /* soft autumn accent */
+  --hc-brown-dark: #7a4d16; /* deep accent */
 
-  /* UI - Modern & Minimal */
-  --hc-bg-glass: #ffffff;
-  --hc-border-soft: #e5e7eb;
-  --hc-shadow-soft: rgba(0, 0, 0, 0.04);
-  --hc-shadow-gold: rgba(0, 0, 0, 0.04);
+  /* UI - Warm & Soft */
+  --hc-bg-glass: #fffdf6;
+  --hc-border-soft: #edd9b6;
+  --hc-shadow-soft: rgba(122, 77, 22, 0.08);
+  --hc-shadow-gold: rgba(216, 154, 31, 0.14);
 
   /* Text */
   --hc-text-primary: #1f2937;
@@ -41,7 +41,7 @@
 
 @media (max-width: 480px) {
   :root {
-    --footer-h: 92px;
+    --footer-h: 65px;
   }
 }
 

@@ -84,6 +84,12 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
         icon: FiTag({ size: 18 }),
         path: "/dashboard/settings?tab=labour-categories",
       },
+      {
+        id: "service-catalogs",
+        label: "Service Catalogs",
+        icon: FiDatabase({ size: 18 }),
+        path: "/dashboard/settings?tab=service-catalogs",
+      },
     ],
   },
   {

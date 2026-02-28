@@ -14,6 +14,7 @@ const getAll = async (req, res) => {
 SELECT
  id,
  name,
+ role,
  rate,
  active
 FROM employees
@@ -44,6 +45,7 @@ const getOne = async (req, res) => {
 SELECT
  id,
  name,
+ role,
  rate,
  active
 FROM employees
@@ -74,7 +76,7 @@ exports.getOne = getOne;
 const create = async (req, res) => {
     const db = req.db;
     try {
-        const { name, rate = 0 } = req.body;
+        const { name, role = null, rate = 0 } = req.body;
         if (!name) {
             return res.status(400).json({
                 error: "Name is required"
@@ -84,6 +86,7 @@ const create = async (req, res) => {
 INSERT INTO employees
 (
  name,
+ role,
  rate,
  active,
  company_id
@@ -92,6 +95,7 @@ VALUES
 (
  $1,
  $2,
+ $3,
  true,
  COALESCE(
    NULLIF(current_setting('app.current_company_id', true), '')::int,
@@ -103,9 +107,10 @@ VALUES
 RETURNING
  id,
  name,
+ role,
  rate,
  active
-`, [name, rate]);
+`, [name, role, rate]);
         res.status(201).json(rows[0]);
     }
     catch (err) {
@@ -123,23 +128,25 @@ const update = async (req, res) => {
     const db = req.db;
     try {
         const id = toInt(req.params.id);
-        const { name, rate, active } = req.body;
+        const { name, role, rate, active } = req.body;
         const { rows } = await db.query(`
 UPDATE employees
 SET
- name = COALESCE($1, name),
- rate = COALESCE($2, rate),
- active = COALESCE($3, active)
-WHERE id = $4 AND (
+ name   = COALESCE($1, name),
+ role   = COALESCE($2, role),
+ rate   = COALESCE($3, rate),
+ active = COALESCE($4, active)
+WHERE id = $5 AND (
   current_setting('app.god_mode') = 'true'
   OR company_id = current_setting('app.current_company_id')::bigint
 )
 RETURNING
  id,
  name,
+ role,
  rate,
  active
-`, [name, rate, active, id]);
+`, [name, role, rate, active, id]);
         if (!rows.length) {
             return res.status(404).json({
                 error: "Employee not found"

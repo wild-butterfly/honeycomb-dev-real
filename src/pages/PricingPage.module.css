@@ -1,19 +1,21 @@
 .pricingBg {
   background: linear-gradient(110deg, #fffde4 82%, #f6e6c4 130%);
-  /* Reserve space for fixed footer (and header if you have one) */
-  min-height: calc(100vh - var(--footer-h, 72px) - var(--header-h, 0px));
+  min-height: calc(100vh - var(--header-h) - var(--footer-h));
   font-family: "Roboto", Arial, sans-serif;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
-
-  /* Keep content above the footer, incl. iOS safe area */
-  padding-bottom: 50px;
+  padding: 32px 16px;
+  width: 100%;
+  flex: 1;
 }
 
 .hero {
   text-align: center;
-  padding: 58px 16px 28px 16px;
+  padding: 8px 16px 28px 16px;
+  width: 100%;
 }
 
 .title {
@@ -192,8 +194,7 @@
   .fineprint {
     line-height: 1.4;
     padding: 0 16px;
-    /* 🟡 Daha az alt boşluk */
-    margin: 10px auto calc(var(--footer-h, 72px) + 14px) auto;
+    margin: 10px auto 0 auto;
   }
 }
 

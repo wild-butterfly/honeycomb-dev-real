@@ -80,14 +80,29 @@
   font-weight: 600;
 }
 
-/* VARIANCE COLORS */
-
-.positive {
-  color: #16a34a;
-  font-weight: 600;
+.divider {
+  border-top: 1px dashed rgba(185, 154, 42, 0.35);
+  margin-top: 4px;
+  padding-top: 12px;
 }
 
-.negative {
-  color: #dc2626;
-  font-weight: 600;
+.extraTitle {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #8c7a3d;
+}
+
+.siteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.siteItem {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.35;
 }

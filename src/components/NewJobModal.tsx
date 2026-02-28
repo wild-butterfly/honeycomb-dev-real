@@ -71,6 +71,7 @@ const NewJobModal: React.FC<NewJobModalProps> = ({
   const [site, setSite] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [customerOrderNumber, setCustomerOrderNumber] = useState("");
   const [needsQuote, setNeedsQuote] = useState(false);
 
   // Add Customer modal controls
@@ -113,11 +114,19 @@ const NewJobModal: React.FC<NewJobModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customer || !site || !title) return;
-    onSubmit({ customer, site, title, description, needsQuote });
+    onSubmit({
+      customer,
+      site,
+      title,
+      description,
+      customerOrderNumber,
+      needsQuote,
+    });
     setCustomer("");
     setSite("");
     setTitle("");
     setDescription("");
+    setCustomerOrderNumber("");
     setNeedsQuote(false);
     onClose();
   };
@@ -207,13 +216,27 @@ const NewJobModal: React.FC<NewJobModalProps> = ({
             <span className={styles.label}>
               Site <b>*</b>
             </span>
-            <input
-              className={styles.input}
-              required
-              value={site}
-              onChange={(e) => setSite(e.target.value)}
-              placeholder="Enter site address"
-            />
+            <div className={styles.inputWithButton}>
+              <input
+                className={styles.input}
+                required
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                placeholder="Enter site address"
+              />
+              <div className={styles.siteActions}>
+                <button
+                  type="button"
+                  className={styles.sameAsCustomerBtn}
+                  onClick={() => setSite(customer || customerSearch)}
+                >
+                  <span className={styles.plusIcon}>↻</span> Same as Customer
+                </button>
+                <button type="button" className={styles.addSiteBtn}>
+                  <span className={styles.plusIcon}>＋</span> Add New Site
+                </button>
+              </div>
+            </div>
           </label>
           <div className={styles.checkboxRow}>
             <input
@@ -249,6 +272,15 @@ const NewJobModal: React.FC<NewJobModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter job description"
               rows={3}
+            />
+          </label>
+          <label>
+            <span className={styles.label}>Customer order number (Optional)</span>
+            <input
+              className={styles.input}
+              value={customerOrderNumber}
+              onChange={(e) => setCustomerOrderNumber(e.target.value)}
+              placeholder="Enter customer order number"
             />
           </label>
         </div>

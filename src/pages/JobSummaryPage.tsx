@@ -24,6 +24,8 @@ interface JobDoc {
   title?: string;
   client?: string;
   address?: string;
+  site_address?: string;
+  location?: string;
   contact_name?: string;
   contact_email?: string;
   contact_phone?: string;
@@ -53,6 +55,7 @@ const JobSummaryPage: React.FC = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [labourEntries, setLabourEntries] = useState<LabourEntry[]>([]);
+  const [allJobs, setAllJobs] = useState<JobDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* ================= LOAD ================= */
@@ -62,11 +65,12 @@ const JobSummaryPage: React.FC = () => {
 
     const load = async () => {
       try {
-        const [jobRes, aRes, eRes, lRes] = await Promise.all([
+        const [jobRes, aRes, eRes, lRes, jobsRes] = await Promise.all([
           apiGet<any>(`/jobs/${id}`),
           apiGet<any[]>(`/assignments?job_id=${id}`),
           apiGet<Employee[]>(`/employees`),
           apiGet<JobLabourEntryResponse[]>(`/jobs/${id}/labour`),
+          apiGet<JobDoc[]>(`/jobs`),
         ]);
 
         const resolvedJob: JobDoc = jobRes?.job ?? jobRes;
@@ -85,6 +89,7 @@ const JobSummaryPage: React.FC = () => {
 
         /* === EMPLOYEES === */
         setEmployees(eRes ?? []);
+        setAllJobs(jobsRes ?? []);
 
         /* === LABOUR === */
         const mappedLabour: LabourEntry[] = (lRes ?? []).map((entry) => ({
@@ -108,40 +113,49 @@ const JobSummaryPage: React.FC = () => {
 
   /* ================= DERIVED ================= */
 
-  const assignees = useMemo(() => {
-    const map = new Map<number, string>();
+  const customerSites = useMemo(() => {
+    if (!job?.client) return [];
 
-    assignments.forEach((a) => {
-      const emp = employees.find((e) => e.id === a.employee_id);
-      if (emp) map.set(emp.id, emp.name);
-    });
+    const currentJobId = String(job.id);
+    const clientKey = job.client.trim().toLowerCase();
+    const byAddress = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        address: string;
+        contactName: string;
+        contactEmail: string;
+        contactPhone: string;
+      }
+    >();
 
-    return Array.from(map.entries()).map(([id, name]) => ({
-      id,
-      name,
-    }));
-  }, [assignments, employees]);
+    for (const j of allJobs) {
+      if ((j.client || "").trim().toLowerCase() !== clientKey) continue;
 
-  const scheduledHours = useMemo(() => {
-    return (
-      Math.round(
-        assignments.reduce((sum, a) => {
-          const diff = (a.end.getTime() - a.start.getTime()) / (1000 * 60 * 60);
-          return sum + diff;
-        }, 0) * 10,
-      ) / 10
-    );
-  }, [assignments]);
+      const address = (j.site_address || j.address || j.location || "").trim();
+      if (!address) continue;
 
-  const loggedHours = useMemo(() => {
-    return (
-      Math.round(
-        labourEntries.reduce((sum, entry) => {
-          return sum + (entry.hours ?? 0);
-        }, 0) * 10,
-      ) / 10
-    );
-  }, [labourEntries]);
+      const key = address.toLowerCase();
+      const candidate = {
+        id: String(j.id),
+        name: (j.title || "").trim(),
+        address,
+        contactName: j.contact_name || "",
+        contactEmail: j.contact_email || "",
+        contactPhone: j.contact_phone || j.phone || "",
+      };
+
+      const existing = byAddress.get(key);
+      if (!existing || candidate.id === currentJobId) {
+        byAddress.set(key, candidate);
+      }
+    }
+
+    const sites = Array.from(byAddress.values());
+    sites.sort((a, b) => (a.id === currentJobId ? -1 : b.id === currentJobId ? 1 : 0));
+    return sites;
+  }, [allJobs, job]);
 
   /* ================= RENDER ================= */
 
@@ -173,10 +187,8 @@ const JobSummaryPage: React.FC = () => {
               <TeamScheduleCard
                 job={{
                   ...job,
-                  assigned_staff: assignees.length,
-                  scheduled_hours: scheduledHours,
-                  logged_hours: loggedHours,
                 }}
+                sites={customerSites}
               />
             </div>
 

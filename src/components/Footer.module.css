@@ -1,7 +1,7 @@
 /* Footer.module.css – sabit (fixed) DEĞİL, normal akışta */
 .footer {
-  background: linear-gradient(90deg, #fffbe4 80%, #ffe066 120%);
-  border-top: 2.5px solid #ffd600;
+  background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
+  border-top: 2.5px solid #ffe066;
   color: #232323;
   font-family: "Roboto", Arial, sans-serif;
   font-size: 0.98rem;

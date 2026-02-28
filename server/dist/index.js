@@ -24,9 +24,11 @@ const files_1 = __importDefault(require("./routes/files"));
 const invoices_1 = __importDefault(require("./routes/invoices"));
 const invoiceSettings_1 = __importDefault(require("./routes/invoiceSettings"));
 const invoiceTemplates_1 = __importDefault(require("./routes/invoiceTemplates"));
+const quoteTemplates_1 = __importDefault(require("./routes/quoteTemplates"));
 const pdf_1 = __importDefault(require("./routes/pdf"));
 const serviceCatalogs_1 = __importDefault(require("./routes/serviceCatalogs"));
 const generalSettings_1 = __importDefault(require("./routes/generalSettings"));
+const labourReasons_1 = __importDefault(require("./routes/labourReasons"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 /* GLOBAL */
@@ -80,9 +82,11 @@ app.use("/api", files_1.default);
 app.use("/api", invoices_1.default);
 app.use("/api", invoiceSettings_1.default);
 app.use("/api/invoice-templates", authMiddleware_1.requireAuth, dbContext_1.withDbContext, invoiceTemplates_1.default);
+app.use("/api/quote-templates", authMiddleware_1.requireAuth, dbContext_1.withDbContext, quoteTemplates_1.default);
 app.use("/api", pdf_1.default);
 app.use("/api", serviceCatalogs_1.default);
 app.use("/api/general-settings", authMiddleware_1.requireAuth, dbContext_1.withDbContext, generalSettings_1.default);
+app.use("/api/labour-reasons", authMiddleware_1.requireAuth, dbContext_1.withDbContext, labourReasons_1.default);
 /* 404 */
 app.use((_req, res) => {
     res.status(404).json({ error: "Route not found" });

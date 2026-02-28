@@ -6,6 +6,7 @@ import PaymentsPieChart from "../components/PaymentsPieChart";
 import JobsOverTimeChart from "../components/JobsOverTimeChart";
 import AddTask from "../components/AddTask";
 import NewJobModal from "../components/NewJobModal";
+import AddCustomerModal from "../components/AddCustomerModal";
 import DashboardNavbar from "../components/DashboardNavbar";
 import Footer from "../components/Footer";
 import AssigneeFilterBar from "../components/AssigneeFilterBar";
@@ -185,6 +186,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [taskTab, setTaskTab] = useState<"upcoming" | "overdue">("upcoming");
   const [showCompleted, setShowCompleted] = useState(false);
   const [showNewJobModal, setShowNewJobModal] = useState(false);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [showCleanConfirm, setShowCleanConfirm] = useState(false);
 
   // Filters
@@ -209,6 +211,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   >(null);
 
   const navigate = useNavigate();
+
+  const handleSaveCustomerFromModal = (customer: any) => {
+    const name = String(customer?.company ?? "").trim();
+    if (!name) return;
+    onAddCustomer({ name });
+  };
 
   /* ───────── Multi-tenant: Get current company context ───────── */
   const { companyId } = useCompany();
@@ -991,7 +999,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 <span>New Job</span>
               </button>
 
-              <button className={styles.detailsBtn} type="button">
+              <button
+                className={styles.detailsBtn}
+                type="button"
+                onClick={() => setShowAddCustomerModal(true)}
+              >
                 <span className={styles.qaIcon}>
                   <UserPlus size={18} weight="bold" />
                 </span>
@@ -1192,6 +1204,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           onSubmit={handleAddJob as any}
           customersList={customers}
           onAddCustomer={onAddCustomer}
+        />
+
+        <AddCustomerModal
+          show={showAddCustomerModal}
+          onClose={() => setShowAddCustomerModal(false)}
+          onSave={handleSaveCustomerFromModal}
         />
 
         {showCleanConfirm && (

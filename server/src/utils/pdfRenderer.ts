@@ -49,6 +49,63 @@ const money = (val: any): string => {
   return `$${num.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` || "$0.00";
 };
 
+const parseDaysFromPaymentTerm = (term?: string | null): number | null => {
+  if (!term) return null;
+  const lower = String(term).toLowerCase().trim();
+  if (!lower) return null;
+  if (lower.includes("upon receipt")) return 0;
+  const match = lower.match(/(\d+)/);
+  if (!match) return null;
+  const days = Number(match[1]);
+  return Number.isFinite(days) ? days : null;
+};
+
+const resolveDueDateString = (invoice: any, settings: any): string => {
+  if (invoice?.due_date) return new Date(invoice.due_date).toDateString();
+  if (!invoice?.created_at) return "-";
+
+  const period = String(invoice?.payment_period || "").toUpperCase();
+  const periodDaysMap: Record<string, number> = {
+    "5_DAYS": 5,
+    "7_DAYS": 7,
+    "14_DAYS": 14,
+    "21_DAYS": 21,
+    "30_DAYS": 30,
+    ON_COMPLETION: 0,
+  };
+
+  let days: number | null = periodDaysMap[period] ?? null;
+  if (days === null || period === "ON_COMPLETION") {
+    const settingsDays = parseDaysFromPaymentTerm(settings?.payment_terms);
+    if (settingsDays !== null) days = settingsDays;
+  }
+  if (days === null) days = 14;
+
+  const due = new Date(invoice.created_at);
+  due.setDate(due.getDate() + days);
+  return due.toDateString();
+};
+
+const inferJobNumber = (job: any, invoice: any): string => {
+  const explicit =
+    job?.job_number ||
+    invoice?.job_number ||
+    invoice?.job_no ||
+    invoice?.job_reference ||
+    "";
+  if (explicit) return String(explicit);
+
+  const title = String(job?.title || invoice?.job_name || "").trim();
+  if (!title) return "";
+
+  // Common pattern: "A1TT-28236a Test & Tag" -> "A1TT-28236a"
+  const firstToken = title.split(/\s+/)[0] || "";
+  if (/^[A-Za-z0-9][A-Za-z0-9-]{2,}$/.test(firstToken)) {
+    return firstToken;
+  }
+  return "";
+};
+
 export const renderInvoicePdf = async ({
   invoice,
   lineItems,
@@ -111,7 +168,11 @@ export const renderInvoicePdf = async ({
       company?.business_name ||
       company?.name ||
       "Company",
-    address: settings?.company_address || company?.company_address || company?.address || "",
+    address:
+      settings?.company_address ||
+      company?.company_address ||
+      company?.address ||
+      "",
     city:
       settings?.company_city ||
       settings?.company_suburb ||
@@ -120,7 +181,11 @@ export const renderInvoicePdf = async ({
       company?.city ||
       company?.suburb ||
       "",
-    state: settings?.company_state || company?.company_state || company?.state || "",
+    state:
+      settings?.company_state ||
+      company?.company_state ||
+      company?.state ||
+      "",
     postcode:
       settings?.company_postcode ||
       (settings as any)?.company_postal_code ||
@@ -128,9 +193,30 @@ export const renderInvoicePdf = async ({
       (company as any)?.company_postal_code ||
       company?.postcode ||
       "",
-    email: settings?.company_email || company?.company_email || company?.email || "",
-    phone: settings?.company_phone || company?.company_phone || company?.phone || "",
-    logoUrl: settings?.logo_url || company?.logo_url || "",
+    email:
+      settings?.company_email ||
+      company?.company_email ||
+      company?.email ||
+      "",
+    phone:
+      settings?.company_phone ||
+      company?.company_phone ||
+      company?.phone ||
+      "",
+    abn:
+      (settings as any)?.tax_registration_number ||
+      settings?.gst_number ||
+      (settings as any)?.abn ||
+      (company as any)?.tax_registration_number ||
+      company?.gst_number ||
+      (company as any)?.abn ||
+      "",
+    logoUrl:
+      (settings as any)?.company_logo_url ||
+      settings?.logo_url ||
+      (company as any)?.company_logo_url ||
+      company?.logo_url ||
+      "",
   };
 
   console.log("=== PDF RENDERER ===");
@@ -300,13 +386,18 @@ export const renderInvoicePdf = async ({
       : "",
   ];
 
-  const siteLines = [
-    customer?.name || invoice.customer_name || "",
-    job?.site_address || "",
-    job?.suburb || job?.state || job?.postcode
-      ? `${job?.suburb || ""} ${job?.state || ""} ${job?.postcode || ""}`.trim()
-      : "",
-  ];
+  const siteAddressLine1 =
+    job?.site_address ||
+    invoice?.job_site_address ||
+    job?.address ||
+    job?.location ||
+    invoice?.job_location ||
+    "";
+  const siteAddressLine2 =
+    job?.suburb || job?.state || job?.postcode || invoice?.job_suburb || invoice?.job_state || invoice?.job_postcode
+      ? `${job?.suburb || invoice?.job_suburb || ""} ${job?.state || invoice?.job_state || ""} ${job?.postcode || invoice?.job_postcode || ""}`.trim()
+      : "";
+  const siteLines = [siteAddressLine1, siteAddressLine2];
 
   const customerBottom = drawInfoBlock(margin, "Attention Name", customerLines);
   const siteBottom = drawInfoBlock(margin + infoColWidth + infoGap, "Site Address", siteLines);
@@ -314,22 +405,27 @@ export const renderInvoicePdf = async ({
   let invoiceInfoY = infoStartY;
   const invoiceInfoX = margin + (infoColWidth + infoGap) * 2;
   const drawLabelValue = (label: string, value: string) => {
-    if (!value) return;
     doc.fontSize(baseFontSize - 1).font("Helvetica-Bold").fillColor(textColor);
     doc.text(`${label}: `, invoiceInfoX, invoiceInfoY, {
       width: infoColWidth,
       continued: true,
     });
     doc.fontSize(baseFontSize - 1).font("Helvetica").fillColor(textColor);
-    doc.text(value, { width: infoColWidth, continued: false });
+    doc.text(value || "-", { width: infoColWidth, continued: false });
     invoiceInfoY += infoLineHeight;
   };
 
   drawLabelValue(numberLabel, invoice.invoice_number || "");
-  drawLabelValue("Job number", job?.job_number || "");
-  drawLabelValue(dateLabel, new Date(invoice.created_at).toDateString());
-  drawLabelValue("Due Date", invoice.due_date ? new Date(invoice.due_date).toDateString() : "");
-  drawLabelValue("ABN", settings?.gst_number || settings?.abn || "");
+  drawLabelValue(
+    "Job Number",
+    inferJobNumber(job, invoice)
+  );
+  drawLabelValue(dateLabel, invoice?.created_at ? new Date(invoice.created_at).toDateString() : "");
+  drawLabelValue(
+    "Due Date",
+    resolveDueDateString(invoice, settings)
+  );
+  drawLabelValue("ABN", headerCompany.abn);
 
   const infoBottom = Math.max(customerBottom, siteBottom, invoiceInfoY);
   y = infoBottom + (isLandscape ? 5 : 25);

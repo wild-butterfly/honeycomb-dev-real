@@ -5,31 +5,69 @@ import React from "react";
 import styles from "./TeamScheduleCard.module.css";
 
 import {
-  UserGroupIcon,
-  ClockIcon,
-  CalendarDaysIcon,
-  ArrowTrendingUpIcon,
+  BuildingOffice2Icon,
+  MapPinIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
 } from "@heroicons/react/24/outline";
 
 interface Props {
   job: any;
+  sites?: Array<{
+    id: string;
+    name: string;
+    address: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+  }>;
 }
 
-const TeamScheduleCard: React.FC<Props> = ({ job }) => {
-  const assigned = job?.assigned_staff ?? 0;
-  const scheduled = job?.scheduled_hours ?? 0;
-  const logged = job?.logged_hours ?? 0;
+const TeamScheduleCard: React.FC<Props> = ({ job, sites = [] }) => {
+  const currentAddress = String(
+    job?.site_address || job?.address || job?.location || "",
+  )
+    .trim()
+    .toLowerCase();
 
-  const variance = logged - scheduled;
+  const currentSite =
+    sites.find((s) => String(s.id) === String(job?.id)) ||
+    sites.find((s) => s.address.trim().toLowerCase() === currentAddress) ||
+    sites[0];
+
+  const siteName =
+    job?.site_name || job?.site || job?.job_site_name || job?.location_name ||
+    currentSite?.name ||
+    job?.title ||
+    "—";
+  const siteAddress =
+    job?.site_address || currentSite?.address || job?.address || job?.location || "—";
+  const siteContact =
+    job?.site_contact_name || job?.contact_name || currentSite?.contactName || job?.client || "—";
+  const siteEmail =
+    job?.site_contact_email || job?.contact_email || currentSite?.contactEmail || job?.email || "";
+  const sitePhone =
+    job?.site_contact_phone ||
+    job?.site_phone ||
+    job?.contact_phone ||
+    currentSite?.contactPhone ||
+    job?.phone ||
+    "";
+
+  const otherSites = sites.filter(
+    (s) =>
+      s.address.trim().toLowerCase() !== siteAddress.trim().toLowerCase(),
+  );
 
   return (
     <div className={styles.card}>
       {/* HEADER */}
 
       <div className={styles.header}>
-        <UserGroupIcon className={styles.headerIcon} />
+        <BuildingOffice2Icon className={styles.headerIcon} />
 
-        <div className={styles.title}>Team & Scheduling</div>
+        <div className={styles.title}>Site</div>
       </div>
 
       {/* BODY */}
@@ -38,53 +76,72 @@ const TeamScheduleCard: React.FC<Props> = ({ job }) => {
         {/* ASSIGNED */}
 
         <div className={styles.row}>
-          <UserGroupIcon className={styles.icon} />
+          <BuildingOffice2Icon className={styles.icon} />
 
           <div>
-            <div className={styles.label}>Assigned Staff</div>
+            <div className={styles.label}>Site Name</div>
 
-            <div className={styles.value}>{assigned}</div>
+            <div className={styles.value}>{siteName}</div>
           </div>
         </div>
 
         {/* SCHEDULED */}
 
         <div className={styles.row}>
-          <ClockIcon className={styles.icon} />
+          <MapPinIcon className={styles.icon} />
 
           <div>
-            <div className={styles.label}>Scheduled Hours</div>
+            <div className={styles.label}>Site Address</div>
 
-            <div className={styles.value}>{scheduled}h</div>
+            <div className={styles.value}>{siteAddress}</div>
           </div>
         </div>
 
         {/* LOGGED */}
 
         <div className={styles.row}>
-          <CalendarDaysIcon className={styles.icon} />
+          <UserIcon className={styles.icon} />
 
           <div>
-            <div className={styles.label}>Logged Hours</div>
+            <div className={styles.label}>Site Contact</div>
 
-            <div className={styles.value}>{logged}h</div>
+            <div className={styles.value}>{siteContact}</div>
           </div>
         </div>
-
-        {/* VARIANCE */}
 
         <div className={styles.row}>
-          <ArrowTrendingUpIcon className={styles.icon} />
+          <EnvelopeIcon className={styles.icon} />
 
           <div>
-            <div className={styles.label}>Variance</div>
-
-            <div className={variance >= 0 ? styles.positive : styles.negative}>
-              {variance >= 0 ? "+" : ""}
-              {variance}h
-            </div>
+            <div className={styles.label}>Email</div>
+            <div className={styles.value}>{siteEmail || "—"}</div>
           </div>
         </div>
+
+        {/* PHONE */}
+
+        <div className={styles.row}>
+          <PhoneIcon className={styles.icon} />
+
+          <div>
+            <div className={styles.label}>Phone</div>
+            <div className={styles.value}>{sitePhone || "—"}</div>
+          </div>
+        </div>
+
+        {otherSites.length > 0 ? (
+          <>
+            <div className={styles.divider} />
+            <div className={styles.extraTitle}>Other Sites</div>
+            <div className={styles.siteList}>
+              {otherSites.slice(0, 3).map((site) => (
+                <div key={`${site.id}-${site.address}`} className={styles.siteItem}>
+                  {site.address}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
       </div>
     </div>
   );

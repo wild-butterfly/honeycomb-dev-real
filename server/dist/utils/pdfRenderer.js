@@ -7,6 +7,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.renderInvoicePdf = void 0;
 const pdfkit_1 = __importDefault(require("pdfkit"));
+const sharp_1 = __importDefault(require("sharp"));
+/** Convert an image buffer to grayscale (PNG output). */
+const toGrayscale = async (buffer) => {
+    return (0, sharp_1.default)(buffer).grayscale().png().toBuffer();
+};
 /**
  * Map font size string to point value
  */
@@ -32,8 +37,67 @@ const money = (val) => {
     const num = toSafeNumber(val);
     return `$${num.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` || "$0.00";
 };
+const parseDaysFromPaymentTerm = (term) => {
+    if (!term)
+        return null;
+    const lower = String(term).toLowerCase().trim();
+    if (!lower)
+        return null;
+    if (lower.includes("upon receipt"))
+        return 0;
+    const match = lower.match(/(\d+)/);
+    if (!match)
+        return null;
+    const days = Number(match[1]);
+    return Number.isFinite(days) ? days : null;
+};
+const resolveDueDateString = (invoice, settings) => {
+    if (invoice?.due_date)
+        return new Date(invoice.due_date).toDateString();
+    if (!invoice?.created_at)
+        return "-";
+    const period = String(invoice?.payment_period || "").toUpperCase();
+    const periodDaysMap = {
+        "5_DAYS": 5,
+        "7_DAYS": 7,
+        "14_DAYS": 14,
+        "21_DAYS": 21,
+        "30_DAYS": 30,
+        ON_COMPLETION: 0,
+    };
+    let days = periodDaysMap[period] ?? null;
+    if (days === null || period === "ON_COMPLETION") {
+        const settingsDays = parseDaysFromPaymentTerm(settings?.payment_terms);
+        if (settingsDays !== null)
+            days = settingsDays;
+    }
+    if (days === null)
+        days = 14;
+    const due = new Date(invoice.created_at);
+    due.setDate(due.getDate() + days);
+    return due.toDateString();
+};
+const inferJobNumber = (job, invoice) => {
+    const explicit = job?.job_number ||
+        invoice?.job_number ||
+        invoice?.job_no ||
+        invoice?.job_reference ||
+        "";
+    if (explicit)
+        return String(explicit);
+    const title = String(job?.title || invoice?.job_name || "").trim();
+    if (!title)
+        return "";
+    // Common pattern: "A1TT-28236a Test & Tag" -> "A1TT-28236a"
+    const firstToken = title.split(/\s+/)[0] || "";
+    if (/^[A-Za-z0-9][A-Za-z0-9-]{2,}$/.test(firstToken)) {
+        return firstToken;
+    }
+    return "";
+};
 const renderInvoicePdf = async ({ invoice, lineItems, template, settings, company, customer, job, res, }) => {
     const layout = template?.orientation === "landscape" ? "landscape" : "portrait";
+    const isLandscape = layout === "landscape";
     const doc = new pdfkit_1.default({
         size: "A4",
         layout,
@@ -44,10 +108,12 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     doc.pipe(res);
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
-    const margin = 40;
+    const margin = isLandscape ? 30 : 40;
     const contentWidth = pageWidth - margin * 2;
     const mainColor = template?.main_color || "#f59e0b";
     const borderColor = template?.border_color || "#e5e7eb";
+    const isBlackWhiteMode = (template?.border_color || "").toLowerCase() === "#111111" &&
+        (template?.table_header_background_color || "").toLowerCase() === "#6b7280";
     const borderWidth = parseFloat(template?.border_width || "1") || 1;
     const textColor = template?.text_color || "#111";
     const highlightColor = template?.highlight_color || "#fafafa";
@@ -60,6 +126,10 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     const descriptionBorder = template?.description_border_color || mainColor;
     const descriptionText = template?.description_text_color || "#374151";
     const documentTitle = template?.document_title || "Tax Invoice";
+    const isQuoteDocument = template?.document_type === "quote" ||
+        String(documentTitle).toLowerCase().includes("quote");
+    const numberLabel = isQuoteDocument ? "Quote number" : "Invoice number";
+    const dateLabel = isQuoteDocument ? "Quote Date" : "Invoice Date";
     const baseFontSize = getFontSize(template?.font_size);
     const headerCompany = {
         name: settings?.company_name ||
@@ -68,7 +138,10 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             company?.business_name ||
             company?.name ||
             "Company",
-        address: settings?.company_address || company?.company_address || company?.address || "",
+        address: settings?.company_address ||
+            company?.company_address ||
+            company?.address ||
+            "",
         city: settings?.company_city ||
             settings?.company_suburb ||
             company?.company_city ||
@@ -76,16 +149,36 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             company?.city ||
             company?.suburb ||
             "",
-        state: settings?.company_state || company?.company_state || company?.state || "",
+        state: settings?.company_state ||
+            company?.company_state ||
+            company?.state ||
+            "",
         postcode: settings?.company_postcode ||
             settings?.company_postal_code ||
             company?.company_postcode ||
             company?.company_postal_code ||
             company?.postcode ||
             "",
-        email: settings?.company_email || company?.company_email || company?.email || "",
-        phone: settings?.company_phone || company?.company_phone || company?.phone || "",
-        logoUrl: settings?.logo_url || company?.logo_url || "",
+        email: settings?.company_email ||
+            company?.company_email ||
+            company?.email ||
+            "",
+        phone: settings?.company_phone ||
+            company?.company_phone ||
+            company?.phone ||
+            "",
+        abn: settings?.tax_registration_number ||
+            settings?.gst_number ||
+            settings?.abn ||
+            company?.tax_registration_number ||
+            company?.gst_number ||
+            company?.abn ||
+            "",
+        logoUrl: settings?.company_logo_url ||
+            settings?.logo_url ||
+            company?.company_logo_url ||
+            company?.logo_url ||
+            "",
     };
     console.log("=== PDF RENDERER ===");
     console.log("headerCompany object:", JSON.stringify(headerCompany, null, 2));
@@ -93,10 +186,10 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     // ====================================================
     // HEADER SECTION
     // ====================================================
-    const headerHeight = 140;
-    const headerTop = 20;
-    const logoBoxWidth = 150;
-    const logoBoxHeight = 100;
+    const headerHeight = isLandscape ? 100 : 140;
+    const headerTop = isLandscape ? 10 : 20;
+    const logoBoxWidth = isLandscape ? 110 : 150;
+    const logoBoxHeight = isLandscape ? 70 : 100;
     const logoBoxPadding = 8;
     doc.rect(0, 0, pageWidth, headerHeight).fill(headerBgColor);
     doc
@@ -114,27 +207,29 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             .stroke();
         if (headerCompany.logoUrl) {
             try {
+                let logoBuffer;
                 if (headerCompany.logoUrl.startsWith("http")) {
                     const axios = require("axios");
                     const response = await axios.get(headerCompany.logoUrl, {
-                        responseType: "arraybuffer"
+                        responseType: "arraybuffer",
                     });
-                    doc.image(response.data, margin + logoBoxPadding, headerTop + logoBoxPadding, {
-                        fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
-                        align: "center",
-                        valign: "center",
-                    });
+                    logoBuffer = Buffer.from(response.data);
                 }
                 else {
+                    const fs = require("fs");
                     const logoPath = headerCompany.logoUrl.startsWith("/")
                         ? require("path").join(__dirname, "..", "..", headerCompany.logoUrl)
                         : headerCompany.logoUrl;
-                    doc.image(logoPath, margin + logoBoxPadding, headerTop + logoBoxPadding, {
-                        fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
-                        align: "center",
-                        valign: "center",
-                    });
+                    logoBuffer = fs.readFileSync(logoPath);
                 }
+                if (isBlackWhiteMode) {
+                    logoBuffer = await toGrayscale(logoBuffer);
+                }
+                doc.image(logoBuffer, margin + logoBoxPadding, headerTop + logoBoxPadding, {
+                    fit: [logoBoxWidth - logoBoxPadding * 2, logoBoxHeight - logoBoxPadding * 2],
+                    align: "center",
+                    valign: "center",
+                });
             }
             catch (err) {
                 console.warn("⚠️  Logo failed to load:", err.message);
@@ -147,9 +242,9 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     // Draw highlight background for company details
     const companyBoxPadding = 12;
     const companyBoxX = rightX - companyBoxPadding;
-    const companyBoxY = companyNameY - companyBoxPadding;
+    const companyBoxY = headerTop;
     const companyBoxWidth = 280 + companyBoxPadding * 2;
-    const companyBoxHeight = logoBoxHeight; // Match logo height
+    const companyBoxHeight = headerHeight - headerTop - 6;
     doc
         .rect(companyBoxX, companyBoxY, companyBoxWidth, companyBoxHeight)
         .fill(highlightColor);
@@ -198,14 +293,14 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             align: "right",
         });
     }
-    y = headerHeight + 24;
+    y = headerHeight + (isLandscape ? 14 : 24);
     // ====================================================
     // CUSTOMER & SITE ADDRESS SECTION
     // ====================================================
     const infoGap = 20;
     const infoColWidth = (contentWidth - infoGap * 2) / 3;
     const infoStartY = y;
-    const infoLineHeight = baseFontSize + 4;
+    const infoLineHeight = isLandscape ? baseFontSize + 2 : baseFontSize + 4;
     const customerIndent = template?.indent_customer_address ? 12 : 0;
     const drawInfoBlock = (x, title, lines) => {
         let blockY = infoStartY;
@@ -228,36 +323,37 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             ? `${customer?.suburb || ""} ${customer?.state || ""} ${customer?.postcode || ""}`.trim()
             : "",
     ];
-    const siteLines = [
-        customer?.name || invoice.customer_name || "",
-        job?.site_address || "",
-        job?.suburb || job?.state || job?.postcode
-            ? `${job?.suburb || ""} ${job?.state || ""} ${job?.postcode || ""}`.trim()
-            : "",
-    ];
+    const siteAddressLine1 = job?.site_address ||
+        invoice?.job_site_address ||
+        job?.address ||
+        job?.location ||
+        invoice?.job_location ||
+        "";
+    const siteAddressLine2 = job?.suburb || job?.state || job?.postcode || invoice?.job_suburb || invoice?.job_state || invoice?.job_postcode
+        ? `${job?.suburb || invoice?.job_suburb || ""} ${job?.state || invoice?.job_state || ""} ${job?.postcode || invoice?.job_postcode || ""}`.trim()
+        : "";
+    const siteLines = [siteAddressLine1, siteAddressLine2];
     const customerBottom = drawInfoBlock(margin, "Attention Name", customerLines);
     const siteBottom = drawInfoBlock(margin + infoColWidth + infoGap, "Site Address", siteLines);
     let invoiceInfoY = infoStartY;
     const invoiceInfoX = margin + (infoColWidth + infoGap) * 2;
     const drawLabelValue = (label, value) => {
-        if (!value)
-            return;
         doc.fontSize(baseFontSize - 1).font("Helvetica-Bold").fillColor(textColor);
         doc.text(`${label}: `, invoiceInfoX, invoiceInfoY, {
             width: infoColWidth,
             continued: true,
         });
         doc.fontSize(baseFontSize - 1).font("Helvetica").fillColor(textColor);
-        doc.text(value, { width: infoColWidth, continued: false });
+        doc.text(value || "-", { width: infoColWidth, continued: false });
         invoiceInfoY += infoLineHeight;
     };
-    drawLabelValue("Invoice number", invoice.invoice_number || "");
-    drawLabelValue("Job number", job?.job_number || "");
-    drawLabelValue("Invoice Date", new Date(invoice.created_at).toDateString());
-    drawLabelValue("Due Date", invoice.due_date ? new Date(invoice.due_date).toDateString() : "");
-    drawLabelValue("ABN", settings?.gst_number || settings?.abn || "");
+    drawLabelValue(numberLabel, invoice.invoice_number || "");
+    drawLabelValue("Job Number", inferJobNumber(job, invoice));
+    drawLabelValue(dateLabel, invoice?.created_at ? new Date(invoice.created_at).toDateString() : "");
+    drawLabelValue("Due Date", resolveDueDateString(invoice, settings));
+    drawLabelValue("ABN", headerCompany.abn);
     const infoBottom = Math.max(customerBottom, siteBottom, invoiceInfoY);
-    y = infoBottom + 25;
+    y = infoBottom + (isLandscape ? 5 : 25);
     // ====================================================
     // TITLE & DESCRIPTION
     // ====================================================
@@ -271,7 +367,7 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
         .font("Helvetica-Bold")
         .fillColor("#999")
         .text(` | ${invoice.invoice_number}`);
-    y += 28;
+    y += isLandscape ? 18 : 28;
     // Optional description/tagline
     if (template?.default_description) {
         const descBoxX = margin;
@@ -297,10 +393,10 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
             .text(template.default_description, descBoxX + descBorderWidth + descPaddingX, descBoxY + descPaddingY, {
             width: descTextWidth,
         });
-        y = descBoxY + descBoxHeight + 18;
+        y = descBoxY + descBoxHeight + (isLandscape ? 10 : 18);
     }
     else {
-        y += 10;
+        y += isLandscape ? 6 : 10;
     }
     // ====================================================
     // LINE ITEMS TABLE
@@ -414,14 +510,21 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     // ====================================================
     // TOTALS BOX (right-aligned)
     // ====================================================
-    // Page break prevention
-    if (y + 100 > pageHeight - 80) {
+    // Page break prevention — landscape has less vertical room so use a tighter threshold
+    if (y + 100 > pageHeight - (isLandscape ? 55 : 80)) {
         doc.addPage();
         y = margin;
     }
     if (template?.show_section_totals !== false) {
-        const totalsBoxWidth = Math.min(260, contentWidth);
-        const totalsBoxHeight = 90;
+        const totalsBoxWidth = Math.min(isLandscape ? 210 : 260, contentWidth);
+        const totalsBoxHeight = isLandscape ? 70 : 90;
+        const totalsPaddingX = isLandscape ? 8 : 12;
+        const totalsTopOffset = isLandscape ? 8 : 12;
+        const totalsLineGap = isLandscape ? 14 : 18;
+        const totalsDividerGap = isLandscape ? 10 : 16;
+        const totalsAfterDividerGap = isLandscape ? 7 : 10;
+        const totalsLabelSize = isLandscape ? baseFontSize - 1 : baseFontSize;
+        const totalsValueSize = isLandscape ? baseFontSize + 1 : baseFontSize + 4;
         const totalsBoxX = margin + contentWidth - totalsBoxWidth;
         doc
             .rect(totalsBoxX, y, totalsBoxWidth, totalsBoxHeight)
@@ -434,34 +537,34 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
         const subtotal = toSafeNumber(invoice.subtotal);
         const taxAmount = toSafeNumber(invoice.tax_amount);
         const totalWithTax = toSafeNumber(invoice.total_with_tax);
-        let totalY = y + 12;
-        doc.fontSize(baseFontSize).font("Helvetica").fillColor(textColor);
-        doc.text("Subtotal", totalsBoxX + 12, totalY);
-        doc.text(money(subtotal), totalsBoxX + 12, totalY, {
-            width: totalsBoxWidth - 24,
+        let totalY = y + totalsTopOffset;
+        doc.fontSize(totalsLabelSize).font("Helvetica").fillColor(textColor);
+        doc.text("Subtotal", totalsBoxX + totalsPaddingX, totalY);
+        doc.text(money(subtotal), totalsBoxX + totalsPaddingX, totalY, {
+            width: totalsBoxWidth - totalsPaddingX * 2,
             align: "right",
         });
-        totalY += 18;
-        doc.text("GST Amount", totalsBoxX + 12, totalY);
-        doc.text(money(taxAmount), totalsBoxX + 12, totalY, {
-            width: totalsBoxWidth - 24,
+        totalY += totalsLineGap;
+        doc.text("GST Amount", totalsBoxX + totalsPaddingX, totalY);
+        doc.text(money(taxAmount), totalsBoxX + totalsPaddingX, totalY, {
+            width: totalsBoxWidth - totalsPaddingX * 2,
             align: "right",
         });
-        totalY += 16;
+        totalY += totalsDividerGap;
         doc
             .strokeColor(mainColor)
             .lineWidth(Math.max(borderWidth, 2))
-            .moveTo(totalsBoxX + 12, totalY)
-            .lineTo(totalsBoxX + totalsBoxWidth - 12, totalY)
+            .moveTo(totalsBoxX + totalsPaddingX, totalY)
+            .lineTo(totalsBoxX + totalsBoxWidth - totalsPaddingX, totalY)
             .stroke();
-        totalY += 10;
-        doc.fontSize(baseFontSize + 4).font("Helvetica-Bold").fillColor(mainColor);
-        doc.text("Total", totalsBoxX + 12, totalY);
-        doc.text(money(totalWithTax), totalsBoxX + 12, totalY, {
-            width: totalsBoxWidth - 24,
+        totalY += totalsAfterDividerGap;
+        doc.fontSize(totalsValueSize).font("Helvetica-Bold").fillColor(mainColor);
+        doc.text("Total", totalsBoxX + totalsPaddingX, totalY);
+        doc.text(money(totalWithTax), totalsBoxX + totalsPaddingX, totalY, {
+            width: totalsBoxWidth - totalsPaddingX * 2,
             align: "right",
         });
-        y += totalsBoxHeight + 12;
+        y += totalsBoxHeight + (isLandscape ? 8 : 12);
     }
     // ====================================================
     // FOOTER
@@ -475,11 +578,11 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
         footerDetailsParts.push(`Bank Account: ${settings.bank_account}`);
     }
     if (invoice?.invoice_number) {
-        footerDetailsParts.push(`Invoice number: ${invoice.invoice_number}`);
+        footerDetailsParts.push(`${numberLabel}: ${invoice.invoice_number}`);
     }
     const footerDetailsText = footerDetailsParts.join(" ");
-    const footerTextSize = baseFontSize - 3;
-    const detailsTextSize = baseFontSize - 4;
+    const footerTextSize = isLandscape ? baseFontSize - 4 : baseFontSize - 3;
+    const detailsTextSize = isLandscape ? baseFontSize - 5 : baseFontSize - 4;
     doc.fontSize(footerTextSize).font("Helvetica");
     const footerTextHeight = footerText
         ? doc.heightOfString(footerText, { width: contentWidth })
@@ -488,12 +591,14 @@ const renderInvoicePdf = async ({ invoice, lineItems, template, settings, compan
     const detailsTextHeight = footerDetailsText
         ? doc.heightOfString(footerDetailsText, { width: contentWidth })
         : 0;
-    const footerPaddingTop = 16;
-    const footerDetailsMarginTop = 14;
-    const footerDetailsPaddingTop = 10;
-    const pageNumberGap = 12;
-    const pageNumberY = pageHeight - 49;
-    const footerTextGap = footerText ? 6 : 0;
+    const footerPaddingTop = isLandscape ? 10 : 16;
+    const footerDetailsMarginTop = isLandscape ? 8 : 14;
+    const footerDetailsPaddingTop = isLandscape ? 6 : 10;
+    const pageNumberGap = isLandscape ? 8 : 12;
+    // Keep inside PDFKit's printable area (respects bottom margin)
+    // Move landscape footer block up so the separator line sits higher.
+    const pageNumberY = isLandscape ? pageHeight - margin - 18 : pageHeight - 49;
+    const footerTextGap = footerText ? (isLandscape ? 4 : 6) : 0;
     const detailsTextY = footerDetailsText
         ? pageNumberY - pageNumberGap - detailsTextHeight
         : pageNumberY - pageNumberGap;

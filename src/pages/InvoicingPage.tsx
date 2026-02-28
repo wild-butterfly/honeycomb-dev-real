@@ -116,7 +116,6 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
       const payload = {
         ...invoiceData,
         jobId,
-        templateId: invoiceData.defaultTemplateId, // Use the default template if available
       };
 
       const newInvoice = await apiPost<any>("/invoices", payload);
@@ -207,7 +206,12 @@ const InvoicingPage: React.FC<InvoicingPageProps> = ({ jobId: propJobId }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to download invoice: ${response.statusText}`);
+        let detail = response.statusText;
+        try {
+          const body = await response.json();
+          detail = body.details || body.error || response.statusText;
+        } catch {}
+        throw new Error(`Failed to download invoice: ${detail}`);
       }
 
       // Create blob from response
