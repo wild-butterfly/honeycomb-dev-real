@@ -1,49 +1,64 @@
 /* ============ PAGE ============ */
 .homepage {
-  background: linear-gradient(110deg, #fffbe4 82%, #fcf7e3 130%);
+  background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   font-family: "Roboto", Arial, sans-serif;
-  padding-bottom: 0;
+  padding: 16px 16px 80px 16px;
   margin-bottom: 0;
   width: 100%;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - var(--header-h) - var(--footer-h));
 }
 
 /* ============ HERO ============ */
 .hero {
   text-align: center;
-  padding: 58px 16px 12px 16px; /* ⬅︎ alt boşluk 34px → 12px */
+  padding: 8px 16px 8px 16px;
   overflow: visible;
+  width: 100%;
 }
 
 .title {
   font-size: 2.6rem;
   color: #222;
   font-weight: 700;
-  margin-bottom: 9px;
+  margin-bottom: 6px;
   letter-spacing: 1px;
 }
 
 .subtitle {
   font-size: 1.17rem;
-  color: #4a3900;
-  margin-bottom: 22px; /* küçük dokunuş: 30px → 22px */
+  color: #435164;
+  margin-bottom: 6px;
   font-weight: 500;
+  letter-spacing: 0.15px;
 }
 
-/* CTA + Bee sarmalayıcı */
+.accentLine {
+  color: #b98a10;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 246, 214, 0.6);
+}
+
+.subtitle + .subtitle {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* CTA */
 .ctaWrap {
   position: relative;
   display: inline-block;
-  margin-top: 8px; /* 12px → 8px */
+  margin-top: 4px;
 }
 
 /* CTA button */
 .ctaBtn {
   display: inline-block;
-  background: #ffcc00;
+  background: #ffe066;
   color: #232323;
   font-size: 1.09rem;
   padding: 13px 36px;
@@ -66,121 +81,11 @@
   box-shadow: 0 6px 26px #ffd60030;
 }
 
-/* ============ FLYING BEE ============ */
-.flyingBee {
-  position: absolute;
-  left: calc(100% - 30px);
-  top: -15px;
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 4px 10px rgba(255, 214, 0, 0.45));
-  z-index: 3;
-  animation:
-    beeFlight 6s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
-    beeHover 3s ease-in-out 6s infinite;
-  will-change: transform, opacity;
-}
-
-/* 🐝 Masaüstü uçuş */
-@keyframes beeFlight {
-  0% {
-    opacity: 0;
-    transform: translate(120vw, -60vh) rotate(8deg) scale(0.98);
-  }
-  20% {
-    opacity: 0;
-    transform: translate(95vw, -50vh) rotate(5deg);
-  }
-  35% {
-    opacity: 0.9;
-    transform: translate(65vw, -34vh) rotate(-6deg);
-  }
-  60% {
-    transform: translate(28vw, -18vh) rotate(6deg);
-  }
-  85% {
-    transform: translate(8vw, -9vh) rotate(-4deg);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(0, -35px) rotate(-2deg);
-  }
-}
-
-/* 🐝 Hover efekti */
-@keyframes beeHover {
-  0% {
-    transform: translate(0, -35px) rotate(-2deg);
-  }
-  50% {
-    transform: translate(0, -42px) rotate(3deg);
-  }
-  100% {
-    transform: translate(0, -35px) rotate(-2deg);
-  }
-}
-
-/* ====== MOBİL AYARI (mevcut animasyon medya blokların aynen kalsın) ====== */
-@media (max-width: 900px) {
-  .flyingBee {
-    left: calc(100% - 24px);
-    top: -20px;
-    width: 56px;
-    height: 56px;
-    animation:
-      beeFlightMob 5.5s cubic-bezier(0.45, 0.05, 0.2, 0.95) 0s both,
-      beeHoverMob 2.6s ease-in-out 5.5s infinite;
-  }
-
-  @keyframes beeFlightMob {
-    0% {
-      opacity: 0;
-      transform: translate(110vw, -58vh) rotate(10deg) scale(0.98);
-    }
-    25% {
-      opacity: 0;
-      transform: translate(85vw, -46vh) rotate(5deg);
-    }
-    45% {
-      opacity: 0.9;
-      transform: translate(55vw, -30vh) rotate(-6deg);
-    }
-    75% {
-      transform: translate(20vw, -15vh) rotate(5deg);
-    }
-    100% {
-      opacity: 1;
-      transform: translate(0, -28px) rotate(-2deg);
-    }
-  }
-
-  @keyframes beeHoverMob {
-    0% {
-      transform: translate(0, -28px) rotate(-2deg);
-    }
-    50% {
-      transform: translate(0, -34px) rotate(3deg);
-    }
-    100% {
-      transform: translate(0, -28px) rotate(-2deg);
-    }
-  }
-}
-
-/* Erişilebilirlik */
-@media (prefers-reduced-motion: reduce) {
-  .flyingBee {
-    animation: none;
-    transform: translate(0, -28px);
-  }
-}
-
 /* ============ FEATURES ============ */
 .featuresSection {
-  margin: 28px auto 8px auto;
+  margin: 36px auto 0 auto;
   max-width: 1050px;
+  width: 100%;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -190,7 +95,7 @@
 .featuresTitle {
   font-size: 2rem;
   text-align: center;
-  margin-bottom: 28px; /* 32px → 28px */
+  margin-bottom: 12px;
   color: #b99a2a;
   font-weight: 800;
   letter-spacing: 0.5px;
@@ -200,14 +105,14 @@
   display: flex;
   justify-content: center;
   align-items: stretch;
-  gap: 28px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
 .featureCard {
-  background: #fff;
+  background-color: #fff;
   border-radius: 18px;
-  padding: 36px 20px 24px 20px; /* alt pad biraz az */
+  padding: 18px 16px 12px 16px;
   box-shadow:
     0 4px 28px #ffe06622,
     0 1px 14px #ffe06611 inset;
@@ -217,8 +122,8 @@
     transform 0.16s,
     box-shadow 0.17s,
     border 0.12s;
-  min-width: 270px;
-  max-width: 320px;
+  min-width: 250px;
+  max-width: 300px;
   margin-bottom: 0;
 }
 .featureCard:hover {
@@ -254,6 +159,11 @@
 
 /* ---------- Homepage Responsive (Pricing ile aynı mantık, tam düzeltme) ---------- */
 @media (max-width: 1000px) {
+  .homepage {
+    height: auto;
+    overflow: visible;
+  }
+
   .featuresGrid {
     flex-direction: column;
     align-items: center;
@@ -274,13 +184,32 @@
   }
 
   .hero {
-    padding: 36px 12px 12px;
+    padding: 30px 12px 12px;
   }
   .title {
     font-size: 1.6rem;
   }
   .subtitle {
-    font-size: 1rem;
+    font-size: 1.17rem;
+    color: #39485c;
+    margin-bottom: 6px;
+    font-weight: 500;
+    letter-spacing: 0.15px;
+  }
+
+  .accentLine {
+    background: linear-gradient(180deg, #d3a018 0%, #b98706 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #b98706;
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 245, 210, 0.55);
+  }
+
+  .subtitle + .subtitle {
+    margin-top: 0;
+    margin-bottom: 12px;
   }
 
   .featuresSection {
@@ -290,3 +219,11 @@
     width: 90%;
   }
 }
+
+@media (max-width: 700px) {
+  .homepage {
+    justify-content: center;
+  }
+}
+
+

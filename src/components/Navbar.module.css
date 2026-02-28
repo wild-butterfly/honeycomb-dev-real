@@ -4,8 +4,8 @@
   justify-content: space-between;
   height: 65px;
   padding: 0 32px;
-  background: linear-gradient(110deg, #fffbe4 80%, #ffe066 120%);
-  border: 2px solid #b99a2a;
+  background: linear-gradient(110deg, #fffde4 85%, #f6e6c4 140%);
+  border: 2px solid #ffe066;
   box-shadow: 0 2px 16px #ffd6000a;
   font-family: "Roboto", Arial, sans-serif;
   position: sticky;
@@ -60,17 +60,20 @@
 /* --- BUTTONS --- */
 .btn,
 .btnSecondary {
-  padding: 6px 18px;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 1.08rem;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 0.97rem;
+  padding: 7px 16px;
   text-decoration: none;
-  border: 2px solid #050505;
   transition:
-    background 0.18s,
-    color 0.18s,
+    background 0.15s,
+    color 0.13s,
     border 0.14s;
-  display: inline-block;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
   min-width: 80px;
   max-width: 140px;
   width: auto;
@@ -78,25 +81,33 @@
   text-align: center;
   box-sizing: border-box;
 }
+
 .btn {
-  background: #ffcc00;
-  color: #222;
+  background: #ffe066;
+  color: #1f1f1f;
+  border: 2px solid #1f1f1f;
 }
+
 .btn:hover,
 .btn:focus {
-  background: #fff;
-  color: #222;
-  border-color: #050505;
+  background: #ffe066;
+  color: #1f1f1f;
+  border-color: #1f1f1f;
+  transform: translateY(-1px);
 }
+
 .btnSecondary {
-  background: #fff;
-  color: #222;
+  background: #fffef8;
+  color: #9a760a;
+  border: 2px solid #c9a227;
 }
+
 .btnSecondary:hover,
 .btnSecondary:focus {
-  background: #ffcc00;
-  color: #222;
-  border-color: #050505;
+  background: #fff9e7;
+  color: #7f6208;
+  border-color: #b8921f;
+  transform: translateY(-1px);
 }
 
 /* LİNKS */
