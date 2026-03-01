@@ -11,12 +11,15 @@ import {
 } from "@heroicons/react/24/outline";
 
 import type { Assignment, Employee, LabourEntry } from "../types/calendar";
+import { JOB_PHASES } from "../pages/DashboardPage";
+import { getPhaseFromRawStatus } from "../types/JobLifecycle";
 
 interface Props {
   job: any;
   assignments: Assignment[];
   employees: Employee[];
   labourEntries: LabourEntry[];
+  onStatusChange?: (newPhaseKey: string) => void;
 }
 
 function round1(n: number) {
@@ -42,9 +45,12 @@ const PhaseCard: React.FC<Props> = ({
   assignments,
   employees,
   labourEntries,
+  onStatusChange,
 }) => {
-  const phases = ["quoted", "scheduled", "active", "completed", "invoiced"];
-  const status = String(job?.status ?? "active").toLowerCase();
+  const status = String(job?.status ?? "new").toLowerCase();
+  const currentPhase = getPhaseFromRawStatus(status);
+  const activePhaseConfig =
+    JOB_PHASES.find((phase) => phase.key === currentPhase) ?? JOB_PHASES[0];
 
   const derived = useMemo(() => {
     let scheduled = 0;
@@ -94,18 +100,36 @@ const PhaseCard: React.FC<Props> = ({
 
       <div className={styles.header}>
         <div>
-          <div className={styles.phaseTabs}>
-            {phases.map((p) => (
+          <div className={styles.phaseControl}>
+            <div
+              className={styles.phaseBadge}
+              style={{ borderColor: activePhaseConfig.color }}
+            >
               <span
-                key={p}
-                data-phase={p}
-                className={`${styles.phaseTab} ${
-                  status === p ? styles.activePhase : ""
-                }`}
-              >
-                {p}
+                className={styles.phaseBadgeDot}
+                style={{ backgroundColor: activePhaseConfig.color }}
+              />
+              <span className={styles.phaseBadgeText}>
+                {activePhaseConfig.label}
               </span>
-            ))}
+            </div>
+
+            <label className={styles.phaseSelectWrap}>
+              <span className={styles.phaseSelectLabel}>Job Phase</span>
+              <select
+                className={styles.phaseSelect}
+                value={currentPhase}
+                onChange={(e) => onStatusChange?.(e.target.value)}
+                disabled={!onStatusChange}
+                aria-label="Select job phase"
+              >
+                {JOB_PHASES.map((phase) => (
+                  <option key={phase.key} value={phase.key}>
+                    {phase.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <h1 className={styles.title}>{job?.title ?? "Untitled job"}</h1>

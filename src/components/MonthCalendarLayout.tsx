@@ -289,7 +289,9 @@ const MonthCalendarLayout: React.FC<Props> = ({
                 {hoverDay === key && !itemsToday.length && (
                   <button
                     className={styles.slotAddButton}
-                    onClick={() => {
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
                       if (suppressClickRef.current) return;
 
                       const start = new Date(day);

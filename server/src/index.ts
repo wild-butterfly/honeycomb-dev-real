@@ -27,6 +27,7 @@ import pdfRoutes from "./routes/pdf";
 import serviceCatalogsRoutes from "./routes/serviceCatalogs";
 import generalSettingsRoutes from "./routes/generalSettings";
 import labourReasonsRoutes from "./routes/labourReasons";
+import gaugesRoutes from "./routes/gauges";
 
 dotenv.config();
 
@@ -113,6 +114,9 @@ app.use("/api", serviceCatalogsRoutes);
 app.use("/api/general-settings", requireAuth, withDbContext, generalSettingsRoutes);
 
 app.use("/api/labour-reasons", requireAuth, withDbContext, labourReasonsRoutes);
+
+/* FLOWODY GAUGE SYSTEM */
+app.use("/api/gauges", requireAuth, withDbContext, gaugesRoutes);
 
 /* 404 */
 

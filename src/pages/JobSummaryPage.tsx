@@ -7,7 +7,7 @@ import LeftSidebar from "../components/LeftSidebar";
 import DashboardNavbar from "../components/DashboardNavbar";
 import Footer from "../components/Footer";
 import styles from "./JobSummaryPage.module.css";
-import { apiGet, logout } from "../services/api";
+import { apiGet, apiPut, logout } from "../services/api";
 
 import PhaseCard from "../components/PhaseCard";
 import CustomerCard from "../components/CustomerCard";
@@ -111,6 +111,21 @@ const JobSummaryPage: React.FC = () => {
     load();
   }, [id]);
 
+  /* ================= STATUS CHANGE ================= */
+
+  const handleStatusChange = async (newPhaseKey: string) => {
+    if (!id || !job) return;
+    // Optimistic update
+    setJob((prev) => prev ? { ...prev, status: newPhaseKey } : prev);
+    try {
+      await apiPut(`/jobs/${id}`, { status: newPhaseKey });
+    } catch (err) {
+      console.error("Failed to update job status:", err);
+      // Revert on failure
+      setJob((prev) => prev ? { ...prev, status: job.status } : prev);
+    }
+  };
+
   /* ================= DERIVED ================= */
 
   const customerSites = useMemo(() => {
@@ -178,6 +193,7 @@ const JobSummaryPage: React.FC = () => {
               assignments={assignments}
               employees={employees}
               labourEntries={labourEntries}
+              onStatusChange={handleStatusChange}
             />
 
             {/* CUSTOMER + TEAM */}

@@ -244,7 +244,9 @@ const WeekCalendarLayout: React.FC<Props> = ({
                 {hoverSlot === cellId && !itemsInCell.length && (
                   <button
                     className={styles.slotAddButton}
-                    onClick={() => {
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
                       if (suppressClickRef.current) return;
 
                       const start = new Date(day);

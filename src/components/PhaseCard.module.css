@@ -54,17 +54,22 @@
 
   font-size: 12px;
   font-weight: 700;
+  font-family: inherit;
 
   background: linear-gradient(135deg, #fff7d6, #fff0bf);
   color: #7c5a12;
   border: 1px solid rgba(233, 188, 84, 0.55);
 
   box-shadow:
-    0 6px 16px rgba(255, 214, 0, 0.18),
+    0 4px 12px rgba(255, 214, 0, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
 
-  text-transform: capitalize;
   letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
 }
 
 .phaseTab::before {
@@ -72,70 +77,123 @@
   width: 8px;
   height: 8px;
   border-radius: 6px;
-  background: #e4b73d;
+  flex-shrink: 0;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
-.phaseTab[data-phase="quoted"]::before {
-  background: #f0c24b;
-}
-
-.phaseTab[data-phase="scheduled"]::before {
-  background: #f4b000;
-}
-
-.phaseTab[data-phase="active"]::before {
-  background: #e59a00;
-}
-
-.phaseTab[data-phase="completed"]::before {
-  background: #7cc56f;
-}
-
-.phaseTab[data-phase="invoiced"]::before {
-  background: #5fa8ff;
-}
+.phaseTab[data-phase="new"]::before          { background: #FFC8C8; }
+.phaseTab[data-phase="quote"]::before        { background: #FFD9A8; }
+.phaseTab[data-phase="quote_sent"]::before   { background: #FFF4A8; }
+.phaseTab[data-phase="quote_accepted"]::before { background: #C8F0D4; }
+.phaseTab[data-phase="scheduled"]::before    { background: #B8DEFF; }
+.phaseTab[data-phase="in_progress"]::before  { background: #DDB8FF; }
+.phaseTab[data-phase="completed"]::before    { background: #B8ECEC; }
 
 .phaseTab:hover {
   border-color: rgba(212, 158, 0, 0.8);
   color: #5b430f;
+  transform: translateY(-1px);
 }
 
 .activePhase {
-  background: linear-gradient(135deg, #ffd84d, #f2b400);
-  color: #3b2f0b;
-  border-color: rgba(212, 158, 0, 0.9);
-  box-shadow:
-    0 10px 22px rgba(240, 180, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
+  color: #2b2400;
+  font-weight: 900;
+  /* border-color is set inline from the phase color */
   position: relative;
-  animation: activeGlow 2.6s ease-in-out infinite;
+  transform: translateY(-1px);
 }
 
-.activePhase::after {
-  content: "";
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: -6px;
-  height: 2px;
+.phaseControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.phaseBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #ffd84d, #f2b400);
-  box-shadow: 0 0 10px rgba(240, 180, 0, 0.45);
+  border: 1px solid rgba(233, 188, 84, 0.6);
+  background: linear-gradient(135deg, #fff7d6, #fff1c2);
+  box-shadow:
+    0 6px 16px rgba(255, 214, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
-@keyframes activeGlow {
-  0%,
-  100% {
-    box-shadow:
-      0 10px 22px rgba(240, 180, 0, 0.35),
-      0 0 0 1px rgba(255, 214, 0, 0.35) inset;
-  }
-  50% {
-    box-shadow:
-      0 14px 28px rgba(240, 180, 0, 0.55),
-      0 0 0 1px rgba(255, 214, 0, 0.45) inset;
-  }
+.phaseBadgeDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.phaseBadgeText {
+  font-size: 12px;
+  font-weight: 800;
+  color: #4a3b17;
+  letter-spacing: 0.01em;
+}
+
+.phaseSelectWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phaseSelectLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8c7430;
+}
+
+.phaseSelect {
+  min-width: 170px;
+  height: 34px;
+  padding: 0 34px 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(233, 188, 84, 0.65);
+  background:
+    linear-gradient(135deg, rgba(255, 247, 214, 0.96), rgba(255, 240, 191, 0.95));
+  color: #4a3b17;
+  font-size: 13px;
+  font-weight: 700;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #8c7430 50%),
+    linear-gradient(135deg, #8c7430 50%, transparent 50%),
+    linear-gradient(135deg, rgba(255, 247, 214, 0.96), rgba(255, 240, 191, 0.95));
+  background-position:
+    calc(100% - 16px) 14px,
+    calc(100% - 11px) 14px,
+    0 0;
+  background-size:
+    5px 5px,
+    5px 5px,
+    100% 100%;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 5px 14px rgba(255, 214, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.phaseSelect:focus {
+  outline: none;
+  border-color: #d7a700;
+  box-shadow:
+    0 0 0 3px rgba(255, 214, 0, 0.24),
+    0 6px 16px rgba(255, 214, 0, 0.16);
+}
+
+.phaseSelect:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* TITLE */
@@ -189,6 +247,23 @@
   grid-template-columns: repeat(4, 1fr);
 
   gap: 20px;
+}
+
+@media (max-width: 980px) {
+  .phaseControl {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .phaseSelectWrap {
+    width: 100%;
+  }
+
+  .phaseSelect {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 /* SECTION */

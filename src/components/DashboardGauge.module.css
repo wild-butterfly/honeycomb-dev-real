@@ -1,0 +1,255 @@
+/* DashboardGauge Component Styles */
+
+.gauge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  background: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 260px;
+  min-width: 200px;
+}
+
+.gauge:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* ================= Header ================= */
+.header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #232323;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.description {
+  font-size: 0.8rem;
+  color: #7a7a7a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pendingLegend {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pendingLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #232323;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.pendingSwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+/* ================= Center ================= */
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 8px;
+}
+
+.jobCount {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #232323;
+  line-height: 1;
+}
+
+.jobLabel {
+  font-size: 0.9rem;
+  color: #7a7a7a;
+  margin-top: 4px;
+}
+
+/* ================= Bottom ================= */
+.bottom {
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.totalValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #232323;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= Hover Breakdown ================= */
+.breakdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  min-width: 240px;
+  z-index: 100;
+  padding: 12px;
+}
+
+.breakdownTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #232323;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.breakdownList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breakdownItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 6px 0;
+}
+
+.statusName {
+  color: #374151;
+  font-weight: 500;
+}
+
+.statusCount {
+  color: #b99a2a;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ================= Responsive ================= */
+@media (max-width: 768px) {
+  .gauge {
+    min-height: 220px;
+    min-width: 150px;
+    padding: 16px;
+  }
+
+  .jobCount {
+    font-size: 2.5rem;
+  }
+
+  .label {
+    font-size: 0.95rem;
+  }
+
+  .description {
+    font-size: 0.75rem;
+  }
+
+  .totalValue {
+    font-size: 1rem;
+  }
+}
+
+/* ================= Dark Mode ================= */
+:global([data-theme="dark"]) .gauge {
+  background: #1c1b2d;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .gauge:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+:global([data-theme="dark"]) .label {
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .description {
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .pendingLegendItem {
+  background: rgba(19, 18, 31, 0.72);
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .pendingSwatch {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+:global([data-theme="dark"]) .jobCount {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .jobLabel {
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .bottom {
+  border-top-color: rgba(139, 92, 246, 0.15);
+}
+
+:global([data-theme="dark"]) .totalValue {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .breakdown {
+  background: #13121f;
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="dark"]) .breakdownTitle {
+  color: #ede9ff;
+  border-bottom-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .statusName {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .statusCount {
+  color: #a78bfa;
+}

@@ -1,4 +1,4 @@
-// Created by Clevermode © 2025
+// Created by Clevermode Â© 2025
 
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "./CalendarPage.module.css";
@@ -38,7 +38,7 @@ const safeDate = (v: any): Date | null => {
   if (v instanceof Date) return v;
 
   if (typeof v === "string") {
-    // PostgreSQL timestamp → LOCAL Date (UTC kaydırma yok)
+    // PostgreSQL timestamp â†’ LOCAL Date (UTC kaydÄ±rma yok)
     const d = new Date(v.replace(" ", "T"));
     return isNaN(d.getTime()) ? null : d;
   }
@@ -47,7 +47,7 @@ const safeDate = (v: any): Date | null => {
 };
 
 /* =========================================================
-   DATE → SQL (LOCAL TIME)
+   DATE â†’ SQL (LOCAL TIME)
 ========================================================= */
 
 function toLocalSqlTime(d: Date) {
@@ -83,6 +83,10 @@ const CalendarPage: React.FC = () => {
     jobId: number;
     assignmentId: number | null;
   } | null>(null);
+  const isCreatingJobRef = React.useRef(false);
+  const lastCreateSlotRef = React.useRef<{ key: string; at: number } | null>(
+    null,
+  );
   const location = useLocation();
 
   const cloneContext = useMemo(() => {
@@ -169,7 +173,7 @@ const CalendarPage: React.FC = () => {
         address: j.address ?? "",
         notes: j.notes ?? "",
         color: j.color ?? "#fffdf0",
-        status: j.status ?? "active",
+        status: j.status ?? "new",
         contact_name: j.contact_name ?? null,
         contact_email: j.contact_email ?? null,
         contact_phone: j.contact_phone ?? null,
@@ -205,18 +209,31 @@ const CalendarPage: React.FC = () => {
   /* ================= ADD JOB + ASSIGNMENT ================= */
 
   const handleAddJobAt = async (employeeId: number, start: Date, end: Date) => {
+    const slotKey = `${employeeId}:${start.getTime()}:${end.getTime()}`;
+    const now = Date.now();
+    if (
+      lastCreateSlotRef.current &&
+      lastCreateSlotRef.current.key === slotKey &&
+      now - lastCreateSlotRef.current.at < 2000
+    ) {
+      return;
+    }
+    lastCreateSlotRef.current = { key: slotKey, at: now };
+
+    if (isCreatingJobRef.current) return;
+    isCreatingJobRef.current = true;
     try {
       setOpenContext(null);
 
       /* -------------------------------------------------- */
-      /* CREATE JOB — company_id gönderme
+      /* CREATE JOB â€” company_id gÃ¶nderme
        backend header'dan alacak
     -------------------------------------------------- */
 
       const payload = {
         title: "New Job",
-        status: "active",
-        // ❌ REMOVE company_id
+        status: "new",
+        // âŒ REMOVE company_id
       };
 
       console.log("Creating job (company via header)");
@@ -246,6 +263,8 @@ const CalendarPage: React.FC = () => {
       console.error(err);
 
       alert("No company selected.\n\nPlease select a company first.");
+    } finally {
+      isCreatingJobRef.current = false;
     }
   };
 
@@ -256,28 +275,26 @@ const CalendarPage: React.FC = () => {
     start: Date,
     end: Date,
   ) => {
+    if (isCreatingJobRef.current) return;
+    isCreatingJobRef.current = true;
     if (!cloneContext) {
       console.error("Clone context missing");
-
+      isCreatingJobRef.current = false;
       return;
     }
 
     try {
       await apiPost("/assignments", {
         job_id: cloneContext.jobId,
-
         employee_id: employeeId,
-
         start_time: toLocalSqlTime(start),
-
         end_time: toLocalSqlTime(end),
       });
-
-      console.log("✅ Assignment cloned");
-
       await loadAll();
     } catch (err) {
-      console.error("❌ Clone Assignment failed:", err);
+      console.error("Clone assignment failed:", err);
+    } finally {
+      isCreatingJobRef.current = false;
     }
   };
   /* ================= FILTER ================= */
@@ -380,6 +397,7 @@ const CalendarPage: React.FC = () => {
           <aside className={styles.jobsColumn}>
             <SidebarJobs
               items={calendarItems}
+              jobs={jobs}
               jobFilter={jobFilter}
               onJobFilterChange={setJobFilter}
               onJobClick={(jobId) =>

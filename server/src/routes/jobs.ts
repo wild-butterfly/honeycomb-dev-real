@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as controller from "../controllers/jobs.controller";
+import * as financialsController from "../controllers/jobFinancials.controller";
 import { withDbContext } from "../middleware/dbContext";
 import { requireAuth, requireRole } from "../middleware/authMiddleware";
 
@@ -70,6 +71,20 @@ router.delete(
   requireRole(["admin"]),
   controller.deleteLabour
 );
+
+
+/* ===============================
+   JOB FINANCIALS
+================================ */
+
+/* GET job financials */
+router.get("/:jobId/financials", financialsController.getJobFinancials);
+
+/* CREATE job financials */
+router.post("/:jobId/financials", requireRole(["admin"]), financialsController.createJobFinancials);
+
+/* UPDATE job financials */
+router.put("/:jobId/financials/:id", requireRole(["admin"]), financialsController.updateJobFinancials);
 
 
 export default router;

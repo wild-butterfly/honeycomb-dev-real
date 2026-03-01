@@ -1,5 +1,1 @@
-export type JobStatus =
-  | "active"
-  | "completed"
-  | "return"
-  | "quote"
+export type JobStatus = import("./calendar").JobStatus;

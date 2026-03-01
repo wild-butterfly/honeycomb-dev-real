@@ -3,13 +3,16 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import styles from "./SidebarJobs.module.css";
 
-import type { JobStatus } from "../types/calendar";
+import type { CalendarJob, JobStatus } from "../types/calendar";
 import type { CalendarItem } from "../utils/calendarItems";
+import { getStatusLabel, normalizeJobStatus } from "../types/JobLifecycle";
+import { getStatusColor } from "../types/GaugeData";
 
 type JobFilter = "all" | "unassigned" | JobStatus;
 
 type Props = {
   items: CalendarItem[];
+  jobs?: CalendarJob[];
   onJobClick: (jobId: number) => void;
   jobFilter: JobFilter;
   onJobFilterChange: (filter: JobFilter) => void;
@@ -19,27 +22,18 @@ type Props = {
    STATUS UI
 ========================================================= */
 
-const statusColors: Record<JobStatus, string> = {
-  active: "#dff5f5",
-  completed: "#d8f5d2",
-  return: "#fff3cd",
-  quote: "#e8ddff",
-};
+const FILTER_OPTIONS: Array<{ value: JobFilter; label: string }> = [
+  { value: "all", label: "All Jobs" },
+  { value: "unassigned", label: "Unassigned" },
+  { value: "draft", label: "Draft" },
+  { value: "new", label: "New Request" },
+  { value: "needs_quote", label: "To Quote" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
 
-const statusLabel: Record<JobStatus, string> = {
-  active: "ACTIVE",
-  completed: "COMPLETED",
-  return: "NEED TO RETURN",
-  quote: "QUOTE",
-};
-
-const FILTER_LABELS: Record<JobFilter, string> = {
-  all: "All Jobs",
-  unassigned: "Unassigned",
-  active: "Active",
-  completed: "Completed",
-  return: "Need to Return",
-  quote: "Quote",
+const getFilterLabel = (filter: JobFilter): string => {
+  return FILTER_OPTIONS.find((option) => option.value === filter)?.label || "All Jobs";
 };
 
 /* =========================================================
@@ -48,6 +42,7 @@ const FILTER_LABELS: Record<JobFilter, string> = {
 
 const SidebarJobs: React.FC<Props> = ({
   items,
+  jobs = [],
   onJobClick,
   jobFilter,
   onJobFilterChange,
@@ -91,6 +86,20 @@ const SidebarJobs: React.FC<Props> = ({
       }
     >();
 
+    // Seed with all jobs so unassigned drafts are visible in sidebar.
+    for (const job of jobs) {
+      map.set(job.id, {
+        jobId: job.id,
+        title: job.title ?? "",
+        client: job.client ?? "",
+        color: job.color,
+        status: job.status,
+        assignmentCount: Array.isArray(job.assignments)
+          ? job.assignments.length
+          : 0,
+      });
+    }
+
     for (const item of items) {
       if (!map.has(item.jobId)) {
         map.set(item.jobId, {
@@ -107,7 +116,7 @@ const SidebarJobs: React.FC<Props> = ({
     }
 
     return Array.from(map.values());
-  }, [items]);
+  }, [items, jobs]);
 
   /* =========================================================
      FILTER + SEARCH
@@ -147,21 +156,21 @@ const SidebarJobs: React.FC<Props> = ({
           className={styles.filterButton}
           onClick={() => setDropdownOpen((p) => !p)}
         >
-          {FILTER_LABELS[jobFilter]} ▾
+          {getFilterLabel(jobFilter)} ▾
         </button>
 
         {dropdownOpen && (
           <div className={styles.dropdownMenu}>
-            {(Object.keys(FILTER_LABELS) as JobFilter[]).map((f) => (
+            {FILTER_OPTIONS.map((option) => (
               <div
-                key={f}
+                key={option.value}
                 className={styles.dropdownItem}
                 onClick={() => {
-                  onJobFilterChange(f);
+                  onJobFilterChange(option.value);
                   setDropdownOpen(false);
                 }}
               >
-                {FILTER_LABELS[f]}
+                {option.label}
               </div>
             ))}
           </div>
@@ -198,9 +207,9 @@ const SidebarJobs: React.FC<Props> = ({
               {job.status && (
                 <span
                   className={styles.sidebarStatusBadge}
-                  style={{ background: statusColors[job.status] }}
+                  style={{ background: getStatusColor(normalizeJobStatus(job.status)) }}
                 >
-                  {statusLabel[job.status]}
+                  {getStatusLabel(normalizeJobStatus(job.status)).toUpperCase()}
                 </span>
               )}
 

@@ -1,9 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import StatusBoardChart from "../components/StatusBoardChart";
-import PaymentsPieChart from "../components/PaymentsPieChart";
-import JobsOverTimeChart from "../components/JobsOverTimeChart";
 import AddTask from "../components/AddTask";
 import NewJobModal from "../components/NewJobModal";
 import AddCustomerModal from "../components/AddCustomerModal";
@@ -17,12 +14,30 @@ import styles from "./DashboardPage.module.css";
 import taskStyles from "./DashboardTasksCard.module.css";
 import {
   Briefcase,
-  UserPlus,
+  CalendarBlank,
+  CheckCircle,
+  Clock,
+  CurrencyDollar,
   FileText,
   PencilLine,
+  TrendUp,
+  UserPlus,
+  Wrench,
+  Receipt,
   XCircle,
 } from "phosphor-react";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import {
+  GAUGE_COLORS,
+  getStatusColor,
+  isQuoteExpired,
+} from "../types/GaugeData";
+import {
+  JobPhase,
+  JobStatus,
+  getPhaseFromRawStatus,
+  getStatusLabel,
+} from "../types/JobLifecycle";
 
 import {
   createTask,
@@ -53,11 +68,149 @@ type EmployeeType = {
   avatar?: string;
 };
 
+// Helper to convert lowercase status string to JobStatus enum
+const stringToJobStatus = (rawStatus: string): JobStatus => {
+  const s = String(rawStatus || "")
+    .trim()
+    .toLowerCase();
+
+  // PENDING phase statuses
+  if (s === "draft") return JobStatus.DRAFT;
+  if (s === "new" || s === "start") return JobStatus.NEW;
+  if (s === "needs_quote" || s === "needs quote" || s === "pending")
+    return JobStatus.NEEDS_QUOTE;
+
+  // QUOTING phase statuses
+  // Legacy: "pricing", "quoting", "quote", "estimate" → QUOTE_PREPARING
+  if (s === "pricing" || s === "quoting" || s === "quote" || s === "estimate")
+    return JobStatus.QUOTE_PREPARING;
+  if (s === "quote_preparing" || s === "quote preparing")
+    return JobStatus.QUOTE_PREPARING;
+  if (s === "quote_sent" || s === "quote sent" || s === "quotesent")
+    return JobStatus.QUOTE_SENT;
+  if (s === "quote_viewed" || s === "quote viewed")
+    return JobStatus.QUOTE_VIEWED;
+  if (s === "quote_accepted" || s === "quote accepted" || s === "quoteaccepted")
+    return JobStatus.QUOTE_ACCEPTED;
+  if (s === "quote_declined" || s === "quote declined")
+    return JobStatus.QUOTE_DECLINED;
+
+  // SCHEDULED phase statuses
+  // Legacy: "scheduling", "schedule" → SCHEDULED
+  if (s === "scheduled" || s === "scheduling" || s === "schedule")
+    return JobStatus.SCHEDULED;
+  if (s === "assigned") return JobStatus.ASSIGNED;
+
+  // IN_PROGRESS phase statuses
+  // Legacy: "active" → IN_PROGRESS
+  if (
+    s === "in_progress" ||
+    s === "in progress" ||
+    s === "inprogress" ||
+    s === "active"
+  )
+    return JobStatus.IN_PROGRESS;
+  if (s === "on_site" || s === "on site") return JobStatus.ON_SITE;
+  if (s === "working") return JobStatus.WORKING;
+  if (s === "waiting_parts" || s === "waiting parts")
+    return JobStatus.WAITING_PARTS;
+
+  // COMPLETED phase statuses
+  // Legacy: "complete", "back_costing", "back costing", "need to return" → COMPLETED
+  if (
+    s === "completed" ||
+    s === "complete" ||
+    s === "back_costing" ||
+    s === "back costing" ||
+    s === "need to return"
+  )
+    return JobStatus.COMPLETED;
+  if (s === "ready_to_invoice" || s === "ready to invoice")
+    return JobStatus.READY_TO_INVOICE;
+
+  // INVOICING phase statuses
+  // Legacy: "invoice", "invoicing", "invoiced" → INVOICE_SENT
+  if (
+    s === "invoice" ||
+    s === "invoicing" ||
+    s === "invoiced" ||
+    s === "invoice_sent" ||
+    s === "invoice sent"
+  )
+    return JobStatus.INVOICE_SENT;
+  if (s === "invoice_draft" || s === "invoice draft")
+    return JobStatus.INVOICE_DRAFT;
+  if (s === "awaiting_payment" || s === "awaiting payment")
+    return JobStatus.AWAITING_PAYMENT;
+
+  // PAID phase statuses
+  // Legacy: "payment" → PAID
+  if (s === "paid" || s === "payment") return JobStatus.PAID;
+  if (s === "partially_paid" || s === "partially paid")
+    return JobStatus.PARTIALLY_PAID;
+  if (s === "overdue") return JobStatus.OVERDUE;
+
+  // Default to NEEDS_QUOTE for unknown statuses (better than DRAFT)
+  return JobStatus.NEEDS_QUOTE;
+};
+
+// Helper to normalize status string to phase key
+const normalizePhaseFromStatus = (rawStatus: string): string => {
+  return getPhaseFromRawStatus(rawStatus);
+};
+
+// The 7 Flowody job phases
+export const JOB_PHASES = [
+  {
+    key: JobPhase.PENDING,
+    label: "Pending",
+    color: GAUGE_COLORS[JobPhase.PENDING],
+  },
+  {
+    key: JobPhase.QUOTING,
+    label: "Quoting",
+    color: GAUGE_COLORS[JobPhase.QUOTING],
+  },
+  {
+    key: JobPhase.SCHEDULED,
+    label: "Scheduled",
+    color: GAUGE_COLORS[JobPhase.SCHEDULED],
+  },
+  {
+    key: JobPhase.IN_PROGRESS,
+    label: "In Progress",
+    color: GAUGE_COLORS[JobPhase.IN_PROGRESS],
+  },
+  {
+    key: JobPhase.COMPLETED,
+    label: "Completed",
+    color: GAUGE_COLORS[JobPhase.COMPLETED],
+  },
+  {
+    key: JobPhase.INVOICING,
+    label: "Invoicing",
+    color: GAUGE_COLORS[JobPhase.INVOICING],
+  },
+  { key: JobPhase.PAID, label: "Paid", color: GAUGE_COLORS[JobPhase.PAID] },
+] as const;
+
+export type JobPhaseKey = (typeof JOB_PHASES)[number]["key"];
+
+// Returns the display label + pastel color for any raw DB phase/status string
+export const getPhaseInfo = (rawStatus: string) => {
+  const s = String(rawStatus || "")
+    .trim()
+    .toLowerCase();
+  return (
+    JOB_PHASES.find((p) => p.key === s) ?? JOB_PHASES[0] // default to "Pending"
+  );
+};
+
 type JobType = {
   id: string;
   title: string;
   jobType: "CHARGE UP" | "ESTIMATE";
-  status: "Pending" | "Active" | "Complete";
+  status: string; // raw DB phase key (e.g. "new", "quote", "in_progress")
   customer: string;
   date: string;
   assignedEmployeeIds: number[];
@@ -202,9 +355,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [jobTypeFilter, setJobTypeFilter] = useState<
     "" | "CHARGE UP" | "ESTIMATE"
   >("");
-  const [jobStatusFilter, setJobStatusFilter] = useState<
-    "" | "Pending" | "Active" | "Complete"
-  >("");
+  const [jobStatusFilter, setJobStatusFilter] = useState<string>("");
+  const [gaugeTimePeriod, setGaugeTimePeriod] = useState<
+    "today" | "week" | "month"
+  >("month");
 
   const [openHeaderMenu, setOpenHeaderMenu] = useState<
     null | "jobType" | "status"
@@ -254,13 +408,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         const jobType: JobType["jobType"] =
           jobTypeRaw === "ESTIMATE" ? "ESTIMATE" : "CHARGE UP";
 
-        const statusRaw = String(j.status ?? "Pending");
-        const status: JobType["status"] =
-          statusRaw === "Active" ||
-          statusRaw === "Complete" ||
-          statusRaw === "Pending"
-            ? statusRaw
-            : "Pending";
+        // Use the raw DB status string directly — normalizeStage handles bucketing
+        const status = String(j.status ?? "new")
+          .trim()
+          .toLowerCase();
 
         // date can be ISO or already dd/mm/yyyy
         const date = toDDMMYYYY(safeDate(j.created_at_iso ?? j.created_at));
@@ -320,7 +471,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         title: job.title,
         jobType: job.jobType === "ESTIMATE" ? "ESTIMATE" : "CHARGE_UP",
         customer: job.customer,
-        status: "Pending",
+        status: "new",
       });
 
       setShowNewJobModal(false);
@@ -354,7 +505,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         selectedAssignee === "all" || who.includes(selectedAssignee);
 
       const matchesStatus =
-        jobStatusFilter === "" || job.status === jobStatusFilter;
+        jobStatusFilter === "" || job.status === jobStatusFilter.toLowerCase();
 
       const matchesType = jobTypeFilter === "" || job.jobType === jobTypeFilter;
 
@@ -362,16 +513,60 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     });
   }, [jobs, search, selectedAssignee, jobStatusFilter, jobTypeFilter]);
 
-  const statusBuckets = ["Pending", "Active", "Complete"] as const;
+  /* ───────── Gauge time-period filter ───────── */
+  const gaugeFilteredJobs = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
-  const statusBoardData = useMemo(() => {
-    return statusBuckets.map((statusName) => {
-      const jobsInThisStatus = visibleJobs.filter(
-        (j) => j.status === statusName,
-      );
-      return { name: statusName, jobs: jobsInThisStatus.length, value: 0 };
+    const todayISO = now.toISOString().slice(0, 10);
+
+    // Week: Monday of the current week
+    const dayOfWeek = (now.getDay() + 6) % 7; // 0=Mon…6=Sun
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - dayOfWeek);
+
+    // Month: 1st of current month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const parseDDMMYYYY = (s: string): Date | null => {
+      const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);
+      if (!m) return null;
+      return new Date(+m[3], +m[2] - 1, +m[1]);
+    };
+
+    return visibleJobs.filter((job) => {
+      const d = parseDDMMYYYY(job.date);
+      if (!d) return true; // can't parse → include
+      if (gaugeTimePeriod === "today")
+        return d.toISOString().slice(0, 10) === todayISO;
+      if (gaugeTimePeriod === "week") return d >= weekStart;
+      return d >= monthStart; // "month"
     });
-  }, [visibleJobs]);
+  }, [visibleJobs, gaugeTimePeriod]);
+
+  const statusGaugeData = useMemo(() => {
+    const buckets: Record<string, number> = {
+      [JobPhase.PENDING]: 0,
+      [JobPhase.QUOTING]: 0,
+      [JobPhase.SCHEDULED]: 0,
+      [JobPhase.IN_PROGRESS]: 0,
+      [JobPhase.COMPLETED]: 0,
+      [JobPhase.INVOICING]: 0,
+      [JobPhase.PAID]: 0,
+    };
+
+    for (const job of gaugeFilteredJobs) {
+      const stage = normalizePhaseFromStatus(job.status);
+      if (stage in buckets) buckets[stage] += 1;
+    }
+
+    return JOB_PHASES.map((phase) => ({
+      key: phase.key,
+      label: phase.label,
+      value: buckets[phase.key] ?? 0,
+      color: phase.color,
+    }));
+  }, [gaugeFilteredJobs]);
 
   /* ───────── Task logic ───────── */
 
@@ -607,21 +802,156 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         />
 
         <div className={styles.chartsSection}>
-          <AssigneeFilterBar
-            employees={employees}
-            selectedAssignee={selectedAssignee}
-            onChange={setSelectedAssignee}
-          />
+          <div className={styles.gaugeWrapperCard}>
+            {/* ── Card header: title + time-period pills ── */}
+            <div className={styles.gaugeWrapperHeader}>
+              <span className={styles.gaugeWrapperTitle}>
+                Flowody Job Lifecycle
+              </span>
+              <div className={styles.gaugePeriodPills}>
+                {(["today", "week", "month"] as const).map((p) => (
+                  <button
+                    key={p}
+                    className={`${styles.gaugePeriodPill} ${gaugeTimePeriod === p ? styles.gaugePeriodPillActive : ""}`}
+                    onClick={() => setGaugeTimePeriod(p)}
+                  >
+                    {p === "today"
+                      ? "Today"
+                      : p === "week"
+                        ? "This Week"
+                        : "This Month"}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <div className={styles.chartsRow}>
-            <div className={styles.chartCard}>
-              <StatusBoardChart data={statusBoardData} />
-            </div>
-            <div className={styles.chartCard}>
-              <PaymentsPieChart data={visibleJobs as any} />
-            </div>
-            <div className={styles.chartCard}>
-              <JobsOverTimeChart data={visibleJobs as any} />
+            <AssigneeFilterBar
+              employees={employees}
+              selectedAssignee={selectedAssignee}
+              onChange={setSelectedAssignee}
+            />
+
+            <div className={styles.statusGaugeRow}>
+              {/* ── All 7 Flowody gauges with multi-colored status segments ── */}
+              {statusGaugeData.map((gauge) => {
+                const max = Math.max(gaugeFilteredJobs.length, 1);
+                const percent = Math.min((gauge.value / max) * 100, 100);
+                const totalAngle = Math.round((percent / 100) * 360);
+                const isPendingGauge = gauge.key === JobPhase.PENDING;
+                const pendingStatusOrder: JobStatus[] = [
+                  JobStatus.DRAFT,
+                  JobStatus.NEW,
+                  JobStatus.NEEDS_QUOTE,
+                ];
+
+                // Build multi-segment conic gradient based on phase-specific jobs' statuses
+                const phaseJobs = gaugeFilteredJobs.filter((job) => {
+                  const s = String(job.status || "")
+                    .trim()
+                    .toLowerCase();
+                  return gauge.key === normalizePhaseFromStatus(s);
+                });
+
+                // Count jobs by status within this phase
+                const statusCounts: Partial<Record<JobStatus, number>> = {};
+                phaseJobs.forEach((job) => {
+                  const statusEnum = stringToJobStatus(job.status || "");
+                  const statusKey = statusEnum; // use enum directly as key
+                  statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
+                });
+
+                const statusEntries: Array<[JobStatus, number]> = isPendingGauge
+                  ? pendingStatusOrder.map((status) => [
+                      status,
+                      statusCounts[status] || 0,
+                    ])
+                  : (Object.entries(statusCounts) as Array<
+                      [JobStatus, number]
+                    >);
+
+                // Build conic gradient with proportional segments for each status
+                let cursor = 0;
+                const gradientStops: string[] = [];
+                statusEntries
+                  .filter(([, count]) => count > 0)
+                  .forEach(([statusKey, count]) => {
+                    const deg = (count / Math.max(gauge.value, 1)) * totalAngle;
+                    const start = cursor;
+                    const color = getStatusColor(statusKey) || gauge.color;
+                    gradientStops.push(
+                      `${color} ${start}deg ${cursor + deg}deg`,
+                    );
+                    cursor += deg;
+                  });
+                // Fill remainder with light gray if needed
+                if (cursor < 360) {
+                  gradientStops.push(`#ebebeb ${cursor}deg 360deg`);
+                }
+                const gradient =
+                  gauge.value > 0 && gradientStops.length > 0
+                    ? `conic-gradient(from -90deg, ${gradientStops.join(", ")})`
+                    : "conic-gradient(from -90deg, #ebebeb 0deg 360deg)";
+
+                // Check if any Quote Sent jobs are expired
+                const hasExpiredQuotes =
+                  gauge.key === JobPhase.QUOTING &&
+                  phaseJobs.some(
+                    (j) => j.status?.toLowerCase() === "quote_sent",
+                  );
+
+                return (
+                  <div
+                    key={gauge.key}
+                    className={`${styles.statusGaugeCard} ${
+                      hasExpiredQuotes ? styles.statusGaugeExpired : ""
+                    }`}
+                  >
+                    <div className={styles.statusGaugeTitle}>{gauge.label}</div>
+                    {hasExpiredQuotes && (
+                      <div className={styles.expiredBadge}>⚠ Expired</div>
+                    )}
+                    <div className={styles.statusGaugeMeter}>
+                      <div
+                        className={styles.statusGaugeArc}
+                        style={{ background: gradient } as React.CSSProperties}
+                      />
+                      <div className={styles.statusGaugeValue}>
+                        <span className={styles.statusGaugeCount}>
+                          {gauge.value}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Status breakdown on hover */}
+                    <div className={styles.statusBreakdown}>
+                      {(isPendingGauge
+                        ? statusEntries
+                        : statusEntries
+                            .filter(([, count]) => count > 0)
+                            .sort(([, a], [, b]) => b - a)
+                      ).map(([statusKey, count]) => (
+                        <div key={statusKey} className={styles.breakdownRow}>
+                          <span
+                            className={styles.breakdownDot}
+                            style={{
+                              background: getStatusColor(statusKey),
+                            }}
+                          />
+                          <span className={styles.breakdownLabel}>
+                            {getStatusLabel(statusKey)}
+                          </span>
+                          <span className={styles.breakdownCount}>
+                            {count} ·{" "}
+                            {gauge.value > 0
+                              ? Math.round((count / gauge.value) * 100)
+                              : 0}
+                            %
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -738,7 +1068,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                               setOpenHeaderMenu(null);
                             }}
                           >
-                            Charge Up
+                            Payments
                           </button>
 
                           <button
@@ -756,7 +1086,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
                       {jobTypeFilter && (
                         <div className={styles.thActiveFilter}>
-                          {jobTypeFilter}
+                          {jobTypeFilter === "CHARGE UP"
+                            ? "Payments"
+                            : jobTypeFilter}
                         </div>
                       )}
                     </th>
@@ -794,44 +1126,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             All
                           </button>
 
-                          <button
-                            type="button"
-                            className={styles.thMenuItem}
-                            onClick={() => {
-                              setJobStatusFilter("Pending");
-                              setOpenHeaderMenu(null);
-                            }}
-                          >
-                            Pending
-                          </button>
-
-                          <button
-                            type="button"
-                            className={styles.thMenuItem}
-                            onClick={() => {
-                              setJobStatusFilter("Active");
-                              setOpenHeaderMenu(null);
-                            }}
-                          >
-                            Active
-                          </button>
-
-                          <button
-                            type="button"
-                            className={styles.thMenuItem}
-                            onClick={() => {
-                              setJobStatusFilter("Complete");
-                              setOpenHeaderMenu(null);
-                            }}
-                          >
-                            Complete
-                          </button>
+                          {JOB_PHASES.map((phase) => (
+                            <button
+                              key={phase.key}
+                              type="button"
+                              className={styles.thMenuItem}
+                              onClick={() => {
+                                setJobStatusFilter(phase.key);
+                                setOpenHeaderMenu(null);
+                              }}
+                            >
+                              {phase.label}
+                            </button>
+                          ))}
                         </div>
                       )}
 
                       {jobStatusFilter && (
                         <div className={styles.thActiveFilter}>
-                          {jobStatusFilter}
+                          {getPhaseInfo(jobStatusFilter).label}
                         </div>
                       )}
                     </th>
@@ -884,26 +1197,107 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     </tr>
                   ) : (
                     visibleJobs.map((job) => {
-                      const jobTypeChip =
-                        job.jobType === "CHARGE UP" ? (
-                          <span className={styles.jobTypeChipModern}>
-                            <FileText
-                              size={12}
-                              weight="regular"
-                              className={styles.jobTypeChipIconModern}
-                            />
-                            Charge Up
-                          </span>
-                        ) : (
-                          <span className={styles.jobTypeChipModern}>
-                            <PencilLine
-                              size={12}
-                              weight="regular"
-                              className={styles.jobTypeChipIconModern}
-                            />
-                            Estimate
-                          </span>
-                        );
+                      const normalizedStatus = stringToJobStatus(job.status);
+                      const statusChipLabel = getStatusLabel(normalizedStatus);
+                      const statusChipColor = getStatusColor(normalizedStatus);
+                      const isPendingPhase =
+                        normalizedStatus === JobStatus.DRAFT ||
+                        normalizedStatus === JobStatus.NEW;
+                      const isQuotingPhase =
+                        normalizedStatus === JobStatus.NEEDS_QUOTE ||
+                        normalizedStatus === JobStatus.QUOTE_PREPARING ||
+                        normalizedStatus === JobStatus.QUOTE_SENT ||
+                        normalizedStatus === JobStatus.QUOTE_VIEWED ||
+                        normalizedStatus === JobStatus.QUOTE_DECLINED ||
+                        normalizedStatus === JobStatus.QUOTE_ACCEPTED;
+                      const isScheduledPhase =
+                        normalizedStatus === JobStatus.SCHEDULED ||
+                        normalizedStatus === JobStatus.ASSIGNED;
+                      const isProgressPhase =
+                        normalizedStatus === JobStatus.IN_PROGRESS ||
+                        normalizedStatus === JobStatus.ON_SITE ||
+                        normalizedStatus === JobStatus.WORKING ||
+                        normalizedStatus === JobStatus.WAITING_PARTS;
+                      const isCompletedPhase =
+                        normalizedStatus === JobStatus.COMPLETED ||
+                        normalizedStatus === JobStatus.READY_TO_INVOICE;
+                      const isInvoicingPhase =
+                        normalizedStatus === JobStatus.INVOICE_DRAFT ||
+                        normalizedStatus === JobStatus.INVOICE_SENT ||
+                        normalizedStatus === JobStatus.AWAITING_PAYMENT;
+                      const jobTypeChip = isPendingPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <Clock
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Pending
+                        </span>
+                      ) : isQuotingPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <PencilLine
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Quoting
+                        </span>
+                      ) : isScheduledPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <CalendarBlank
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Scheduled
+                        </span>
+                      ) : isProgressPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <Wrench
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Progress
+                        </span>
+                      ) : isCompletedPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <CheckCircle
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Completed
+                        </span>
+                      ) : isInvoicingPhase ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <Receipt
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Invoicing
+                        </span>
+                      ) : job.jobType === "CHARGE UP" ? (
+                        <span className={styles.jobTypeChipModern}>
+                          <CurrencyDollar
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Payments
+                        </span>
+                      ) : (
+                        <span className={styles.jobTypeChipModern}>
+                          <TrendUp
+                            size={12}
+                            weight="regular"
+                            className={styles.jobTypeChipIconModern}
+                          />
+                          Estimate
+                        </span>
+                      );
 
                       return (
                         <tr key={job.id} className={styles.jobRow}>
@@ -911,15 +1305,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
                           <td>
                             <span
-                              className={
-                                job.status === "Active"
-                                  ? styles.statusActive
-                                  : job.status === "Complete"
-                                    ? styles.statusComplete
-                                    : styles.statusPending
-                              }
+                              className={styles.statusChip}
+                              style={{ background: statusChipColor }}
                             >
-                              {job.status}
+                              {statusChipLabel}
                             </span>
                           </td>
 

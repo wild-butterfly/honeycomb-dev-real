@@ -1,4 +1,4 @@
-// Created by Honeycomb © 2025
+// Created by Honeycomb ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2025
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -8,6 +8,13 @@ import { useNavigate } from "react-router-dom";
 import type { CalendarJob, Employee, Assignment } from "../types/calendar";
 import { apiGet, apiPost, apiPut, apiDelete } from "../services/api";
 import ConfirmModal from "./ConfirmModal";
+import {
+  JobPhase,
+  JobStatus,
+  getStatusLabel,
+  getStatusesForPhase,
+  normalizeJobStatus,
+} from "../types/JobLifecycle";
 
 import {
   UserIcon,
@@ -67,7 +74,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   const backdropRef = useRef<HTMLDivElement>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
-  // 🔒 ACTIVE JOB GUARD (race condition fix)
+  // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ACTIVE JOB GUARD (race condition fix)
   const activeJobIdRef = useRef<number | null>(null);
 
   const navigate = useNavigate();
@@ -82,13 +89,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   const [notes, setNotes] = useState(job.notes ?? "");
   const [color, setColor] = useState(job.color ?? "#fff9e6");
 
-  type UIStatus = "active" | "completed" | "return" | "quote";
-  const [status, setStatus] = useState<UIStatus>(
-    job.status === "completed" ||
-      job.status === "return" ||
-      job.status === "quote"
-      ? job.status
-      : "active",
+  const [status, setStatus] = useState<JobStatus>(
+    normalizeJobStatus(job.status ?? JobStatus.NEW),
   );
 
   /* ASSIGNMENTS */
@@ -107,7 +109,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   }, [primaryAssignment]);
 
   const formattedDate = useMemo(() => {
-    if (!startDate) return "—";
+    if (!startDate) return "-";
     return startDate.toLocaleDateString("en-AU", {
       weekday: "long",
       day: "numeric",
@@ -117,14 +119,14 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
   }, [startDate]);
 
   const formattedTimeRange = useMemo(() => {
-    if (!startDate || !endDate) return "—";
+    if (!startDate || !endDate) return "-";
     const fmt = (d: Date) =>
       d.toLocaleTimeString("en-AU", {
         hour: "numeric",
         minute: "2-digit",
       });
 
-    return `${fmt(startDate)} – ${fmt(endDate)}`;
+    return `${fmt(startDate)} - ${fmt(endDate)}`;
   }, [startDate, endDate]);
 
   const durationHours = useMemo(() => {
@@ -148,7 +150,8 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     setContactName(job.contact_name ?? "");
     setContactEmails(job.contact_email ? [job.contact_email] : []);
     setContactPhones(job.contact_phone ? [job.contact_phone] : []);
-  }, [job.id]);
+    setStatus(normalizeJobStatus(job.status ?? JobStatus.NEW));
+  }, [job.id, job.status, job.contact_name, job.contact_email, job.contact_phone]);
 
   /* ================= LOAD ASSIGNMENTS ================= */
 
@@ -193,11 +196,6 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     });
 
     return map;
-  }, [assignments]);
-
-  const derivedStatus = useMemo(() => {
-    if (!assignments.length) return "active";
-    return assignments.every((a) => a.completed) ? "completed" : "active";
   }, [assignments]);
 
   /* ================= STAFF ACTIONS ================= */
@@ -254,6 +252,23 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
     navigate(`/dashboard/jobs/${job.id}`);
   };
 
+  const statusOptionsByPhase = useMemo(
+    () =>
+      [
+        { phase: JobPhase.PENDING, label: "Pending" },
+        { phase: JobPhase.QUOTING, label: "Quoting" },
+        { phase: JobPhase.SCHEDULED, label: "Scheduled" },
+        { phase: JobPhase.IN_PROGRESS, label: "In Progress" },
+        { phase: JobPhase.COMPLETED, label: "Completed" },
+        { phase: JobPhase.INVOICING, label: "Invoicing" },
+        { phase: JobPhase.PAID, label: "Paid" },
+      ].map((group) => ({
+        ...group,
+        statuses: getStatusesForPhase(group.phase),
+      })),
+    [],
+  );
+
   /* ================= RENDER ================= */
 
   return (
@@ -269,7 +284,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
         {/* HEADER */}
         <div className={styles.modalTop}>
           <button className={styles.closeBtn} onClick={onClose}>
-            ×
+            x
           </button>
         </div>
 
@@ -332,7 +347,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               <span>{address}</span>
             </a>
           ) : (
-            <Value>—</Value>
+            <Value>-</Value>
           )}
         </Section>
 
@@ -392,7 +407,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
               )}
 
               {!contactName && !contactEmails[0] && !contactPhones[0] && (
-                <Value>—</Value>
+                <Value>-</Value>
               )}
             </div>
           )}
@@ -430,7 +445,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                   <div
                     key={empId}
                     className={styles.staffChip}
-                    title={emp.name} // 👈 hover tooltip
+                    title={emp.name} // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€¹Ã¢â‚¬Â  hover tooltip
                   >
                     <div className={styles.staffAvatar2}>{initials}</div>
 
@@ -442,7 +457,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                           if (first) removeAssignment(first.id);
                         }}
                       >
-                        ×
+                        ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â
                       </button>
                     )}
                   </div>
@@ -464,23 +479,23 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
 
                   const viewportHeight = window.innerHeight;
 
-                  // ➕ butonun dikey ortası
+                  // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¾ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ butonun dikey ortasÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±
                   const buttonCenterY = r.top + r.height / 2;
 
                   let top: number;
 
-                  // Alt tarafa sığmıyorsa yukarı kaydır
+                  // Alt tarafa sÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€¦Ã‚Â¸mÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±yorsa yukarÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â± kaydÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±r
                   if (
                     buttonCenterY + PICKER_HEIGHT / 2 >
                     viewportHeight - MARGIN
                   ) {
                     top = viewportHeight - PICKER_HEIGHT - MARGIN;
                   }
-                  // Üst tarafa taşıyorsa aşağı kaydır
+                  // ÃƒÆ’Ã†â€™Ãƒâ€¦Ã¢â‚¬Å“st tarafa taÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±yorsa aÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€¦Ã‚Â¸aÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â± kaydÃƒÆ’Ã¢â‚¬Å¾Ãƒâ€šÃ‚Â±r
                   else if (buttonCenterY - PICKER_HEIGHT / 2 < MARGIN) {
                     top = MARGIN;
                   }
-                  // 🎯 Butonun orta üstüne hizala
+                  // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€šÃ‚Â¯ Butonun orta ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼stÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¼ne hizala
                   else {
                     top = buttonCenterY - PICKER_HEIGHT / 2;
                   }
@@ -504,19 +519,20 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             <select
               className={styles.statusSelect}
               value={status}
-              onChange={(e) => setStatus(e.target.value as UIStatus)}
+              onChange={(e) => setStatus(normalizeJobStatus(e.target.value))}
             >
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="return">Need to Return</option>
-              <option value="quote">Quote</option>
+              {statusOptionsByPhase.map((group) => (
+                <optgroup key={group.phase} label={group.label}>
+                  {group.statuses.map((itemStatus) => (
+                    <option key={itemStatus} value={itemStatus}>
+                      {getStatusLabel(itemStatus)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           ) : (
-            <Value>
-              {derivedStatus
-                ? derivedStatus.charAt(0).toUpperCase() + derivedStatus.slice(1)
-                : "—"}
-            </Value>
+            <Value>{getStatusLabel(status)}</Value>
           )}
         </Section>
 
@@ -537,7 +553,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
             className={`${styles.btnBase} ${styles.primaryBtn}`}
             onClick={handleViewJob}
           >
-            View Job →
+            View Job
           </button>
         </Section>
 
@@ -638,13 +654,13 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                       }`}
                       onClick={() => {
                         if (assigned) {
-                          // 🔁 REMOVE (toggle off)
+                          // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â REMOVE (toggle off)
                           const list = assignmentsByEmployee.get(emp.id);
                           if (list?.[0]) {
                             removeAssignment(list[0].id);
                           }
                         } else {
-                          // ➕ ADD (toggle on)
+                          // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¾ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ADD (toggle on)
                           addEmployee(emp.id);
                         }
                       }}
@@ -659,7 +675,7 @@ const CalendarJobDetailsModal: React.FC<Props> = ({
                       </div>
 
                       {assigned && (
-                        <span className={styles.staffPickerCheck}>✓</span>
+                        <span className={styles.staffPickerCheck}>v</span>
                       )}
                     </button>
                   );
@@ -693,7 +709,9 @@ const Section: React.FC<{ label: string; children: React.ReactNode }> = ({
 );
 
 const Value: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <div className={styles.sectionValue}>{children || "—"}</div>
+  <div className={styles.sectionValue}>{children || "-"}</div>
 );
 
 export default CalendarJobDetailsModal;
+
+

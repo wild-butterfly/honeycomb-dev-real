@@ -676,6 +676,8 @@ const DesktopCalendarLayout: React.FC<Props> = ({
                         <button
                           className={styles.slotAddButton}
                           onClick={(ev) => {
+                            ev.preventDefault();
+                            ev.stopPropagation();
                             if (suppressClickRef.current) return;
                             onAddJobAt(emp.id, s, e);
                           }}

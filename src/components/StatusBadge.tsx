@@ -1,34 +1,23 @@
 import React from "react";
 import styles from "./StatusBadge.module.css";
 import type { JobStatus } from "../types/JobStatus";
+import { getStatusLabel, normalizeJobStatus } from "../types/JobLifecycle";
+import { getStatusColor } from "../types/GaugeData";
 
 type Props = {
   status?: JobStatus;
 };
 
-const statusColors: Record<JobStatus, string> = {
-  active: "#dff5f5",
-  completed: "#d8f5d2",
-  return: "#fff3cd",
-  quote: "#e8ddff",
-};
-
-const statusLabel: Record<JobStatus, string> = {
-  active: "ACTIVE",
-  completed: "COMPLETED",
-  return: "NEED TO RETURN",
-  quote: "QUOTE",
-};
-
 const StatusBadge: React.FC<Props> = ({ status }) => {
   if (!status) return null;
+  const normalized = normalizeJobStatus(status);
 
   return (
     <span
       className={styles.badge}
-      style={{ backgroundColor: statusColors[status] }}
+      style={{ backgroundColor: getStatusColor(normalized) }}
     >
-      {statusLabel[status]}
+      {getStatusLabel(normalized).toUpperCase()}
     </span>
   );
 };

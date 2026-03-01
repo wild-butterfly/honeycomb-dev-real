@@ -1,0 +1,349 @@
+/* JobProfitTab Component Styles */
+
+.profitTab {
+  padding: 24px;
+  background: #fafafa;
+  border-radius: 12px;
+  min-height: 400px;
+}
+
+/* ================= Header ================= */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #232323;
+  margin: 0;
+}
+
+.editBtn {
+  background: #b99a2a;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.editBtn:hover {
+  background: #a88921;
+  transform: translateY(-1px);
+}
+
+/* ================= Summary Display ================= */
+.summary {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-size: 1rem;
+}
+
+.rowLabel {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.rowValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* ================= Cost Section ================= */
+.costSummary {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.costHeader {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.costRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 0.95rem;
+}
+
+.costLabel {
+  color: #6b7280;
+}
+
+.costValue {
+  font-weight: 600;
+  color: #232323;
+  font-size: 1rem;
+}
+
+.costDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 12px 0;
+}
+
+/* ================= Profit & Margin ================= */
+.profitSection {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.profitRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+}
+
+.profitLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.profitValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.marginValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* ================= Edit Form ================= */
+.editForm {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+}
+
+.editForm h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #b99a2a;
+  box-shadow: 0 0 0 3px rgba(185, 154, 42, 0.1);
+}
+
+/* ================= Cost Section (Edit) ================= */
+.costSection {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #f3f4f6;
+}
+
+.costTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+}
+
+/* ================= Form Actions ================= */
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 7px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: #b99a2a;
+  color: #fff;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #a88921;
+  transform: translateY(-1px);
+}
+
+.btnSecondary {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+/* ================= Empty State ================= */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.empty p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+/* ================= Loading State ================= */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+/* ================= Dark Mode ================= */
+:global([data-theme="dark"]) .profitTab {
+  background: #0f0e17;
+}
+
+:global([data-theme="dark"]) .editForm {
+  background: #1c1b2d;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .editForm h3 {
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .summary {
+  background: #1c1b2d;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .rowLabel {
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .rowValue {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .costHeader {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .costLabel {
+  color: #9b93bb;
+}
+
+:global([data-theme="dark"]) .costValue {
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .profitLabel {
+  color: #c4b5fd;
+}
+
+:global([data-theme="dark"]) .label {
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .input {
+  background: #13121f;
+  border-color: rgba(139, 92, 246, 0.2);
+  color: #ede9ff;
+}
+
+:global([data-theme="dark"]) .input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+}
+
+:global([data-theme="dark"]) .editBtn {
+  background: #8b5cf6;
+}
+
+:global([data-theme="dark"]) .editBtn:hover {
+  background: #a78bfa;
+}
+
+:global([data-theme="dark"]) .btnSecondary {
+  background: rgba(139, 92, 246, 0.1);
+  color: #c4bce8;
+}
+
+:global([data-theme="dark"]) .btnSecondary:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .empty {
+  background: #1c1b2d;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+:global([data-theme="dark"]) .empty p {
+  color: #9b93bb;
+}
